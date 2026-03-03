@@ -66,16 +66,7 @@ const Layout = () => {
           )}
         </Link>
         <div className="flex items-center gap-2">
-          {/* Mobile Dark Mode Toggle */}
-          <button
-            onClick={() => dispatch(toggleTheme())}
-            className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-crypto-bg transition-colors"
-            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-
-          {/* Mobile Notifications */}
+            {/* Mobile Notifications */}
           <Link to="/notifications" className="relative p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-crypto-bg transition-colors">
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
@@ -106,15 +97,6 @@ const Layout = () => {
 
       {/* Desktop Header with Notifications & Avatar */}
       <div className="hidden lg:flex fixed top-0 right-0 left-64 z-30 bg-white dark:bg-crypto-card border-b border-gray-200 dark:border-crypto-border px-6 py-3 items-center justify-end gap-4">
-        {/* Dark Mode Toggle */}
-        <button
-          onClick={() => dispatch(toggleTheme())}
-          className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-crypto-bg transition-colors"
-          title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        >
-          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </button>
-
         {/* Notifications */}
         <div className="relative" ref={notificationRef}>
           <button 
