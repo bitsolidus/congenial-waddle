@@ -40,7 +40,6 @@ const userSchema = new mongoose.Schema({
   internalWallet: {
     type: String,
     default: null,
-    unique: true,
     sparse: true
   },
   // Deposit addresses for each cryptocurrency (admin-assigned)
