@@ -185,7 +185,7 @@ router.get('/sessions', protect, async (req, res) => {
 // @route   POST /api/chat/message
 // @desc    Send a message
 // @access  Public (with session validation)
-router.post('/message', [
+router.post('/message', optionalProtect, [
   body('sessionId').notEmpty().withMessage('Session ID is required'),
   body('message').notEmpty().trim().withMessage('Message is required'),
   body('guestEmail').optional().isEmail(),
@@ -245,7 +245,7 @@ router.post('/message', [
 // @route   GET /api/chat/messages/:sessionId
 // @desc    Get messages for a session
 // @access  Public (with validation)
-router.get('/messages/:sessionId', async (req, res) => {
+router.get('/messages/:sessionId', optionalProtect, async (req, res) => {
   try {
     const { sessionId } = req.params;
     const { guestEmail } = req.query;
