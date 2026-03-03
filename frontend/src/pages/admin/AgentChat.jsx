@@ -13,7 +13,7 @@ import {
   MoreVertical,
   Search,
   Inbox,
-  Transfer,
+  ArrowRightLeft,
   Building2
 } from 'lucide-react';
 
@@ -408,7 +408,7 @@ const AgentChat = () => {
                     onClick={openTransferModal}
                     className="px-4 py-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg text-sm font-medium flex items-center gap-2"
                   >
-                    <Transfer className="w-4 h-4" />
+                    <ArrowRightLeft className="w-4 h-4" />
                     Transfer
                   </button>
                   <button
