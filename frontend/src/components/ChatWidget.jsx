@@ -370,10 +370,12 @@ const ChatWidget = () => {
                             </h4>
                             <div className="space-y-3 mb-4">
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label htmlFor="guestName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                   Full Name *
                                 </label>
                                 <input
+                                  id="guestName"
+                                  name="guestName"
                                   type="text"
                                   value={guestName}
                                   onChange={(e) => setGuestName(e.target.value)}
@@ -383,10 +385,12 @@ const ChatWidget = () => {
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                <label htmlFor="guestEmail" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                   Email Address *
                                 </label>
                                 <input
+                                  id="guestEmail"
+                                  name="guestEmail"
                                   type="email"
                                   value={guestEmail}
                                   onChange={(e) => setGuestEmail(e.target.value)}
@@ -455,6 +459,8 @@ const ChatWidget = () => {
 
                         {/* Subject Input */}
                         <input
+                          id="chatSubject"
+                          name="chatSubject"
                           type="text"
                           value={subject}
                           onChange={(e) => setSubject(e.target.value)}
@@ -527,6 +533,8 @@ const ChatWidget = () => {
                     <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700">
                       <div className="flex gap-2">
                         <input
+                          id="chatMessage"
+                          name="chatMessage"
                           type="text"
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
