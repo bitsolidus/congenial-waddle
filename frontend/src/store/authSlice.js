@@ -50,7 +50,18 @@ export const register = createAsyncThunk(
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      // Handle validation errors (array) or single message
+      const errorData = error.response?.data;
+      let errorMessage = 'Registration failed';
+      
+      if (errorData?.errors && Array.isArray(errorData.errors)) {
+        // Validation errors from express-validator
+        errorMessage = errorData.errors.map(e => e.msg).join(', ');
+      } else if (errorData?.message) {
+        errorMessage = errorData.message;
+      }
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );

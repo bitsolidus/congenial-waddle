@@ -71,7 +71,7 @@ const Register = () => {
   };
 
   const passwordRequirements = [
-    { label: 'At least 8 characters', met: formData.password.length >= 8 },
+    { label: 'At least 6 characters', met: formData.password.length >= 6 },
     { label: 'Contains lowercase letter', met: /[a-z]/.test(formData.password) },
     { label: 'Contains uppercase letter', met: /[A-Z]/.test(formData.password) },
     { label: 'Contains number', met: /[0-9]/.test(formData.password) },
