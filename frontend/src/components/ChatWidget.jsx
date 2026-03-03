@@ -343,9 +343,9 @@ const ChatWidget = () => {
               <>
                 {!session ? (
                   /* Start Chat Form */
-                  <div className="p-6 flex flex-col items-center justify-center h-96">
+                  <div className="overflow-y-auto" style={{ height: 'calc(500px - 64px)' }}>
                     {!showStartForm ? (
-                      <>
+                      <div className="p-6 flex flex-col items-center justify-center h-full">
                         <MessageCircle className="w-16 h-16 text-purple-200 mb-4" />
                         <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                           How can we help?
@@ -359,9 +359,9 @@ const ChatWidget = () => {
                         >
                           Start Chat
                         </button>
-                      </>
+                      </div>
                     ) : (
-                      <div className="w-full max-w-sm">
+                      <div className="p-6 w-full">
                         {/* Guest Info Form (for non-logged in users) */}
                         {!isAuthenticated && !isGuestMode && (
                           <div className="mb-4">
