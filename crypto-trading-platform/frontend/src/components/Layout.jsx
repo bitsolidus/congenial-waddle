@@ -1,9 +1,10 @@
 import { Outlet, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { Menu, X, Bell, User } from 'lucide-react';
+import { Menu, X, Bell, User, Moon, Sun } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Sidebar from './Sidebar';
 import { fetchNotifications, markNotificationRead, markAllNotificationsRead } from '../store/notificationSlice';
+import { toggleTheme } from '../store/themeSlice';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -14,6 +15,8 @@ const Layout = () => {
   const { config: siteConfig } = useSelector((state) => state.siteConfig);
   const { items: notifications, unreadCount } = useSelector((state) => state.notifications);
   const { user } = useSelector((state) => state.auth);
+  const { theme } = useSelector((state) => state.theme);
+  const isDarkMode = theme === 'dark';
   const dispatch = useDispatch();
 
   const getAvatarUrl = (avatar) => {
@@ -63,6 +66,15 @@ const Layout = () => {
           )}
         </Link>
         <div className="flex items-center gap-2">
+          {/* Mobile Dark Mode Toggle */}
+          <button
+            onClick={() => dispatch(toggleTheme())}
+            className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-crypto-bg transition-colors"
+            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+
           {/* Mobile Notifications */}
           <Link to="/notifications" className="relative p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-crypto-bg transition-colors">
             <Bell className="w-5 h-5" />
@@ -94,6 +106,15 @@ const Layout = () => {
 
       {/* Desktop Header with Notifications & Avatar */}
       <div className="hidden lg:flex fixed top-0 right-0 left-64 z-30 bg-white dark:bg-crypto-card border-b border-gray-200 dark:border-crypto-border px-6 py-3 items-center justify-end gap-4">
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={() => dispatch(toggleTheme())}
+          className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-crypto-bg transition-colors"
+          title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
+
         {/* Notifications */}
         <div className="relative" ref={notificationRef}>
           <button 

@@ -15,12 +15,9 @@ import {
   Wallet,
   Award,
   LogOut,
-  Send,
-  Moon,
-  Sun
+  Send
 } from 'lucide-react';
 import { logout } from '../store/authSlice';
-import { toggleTheme } from '../store/themeSlice';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -30,8 +27,6 @@ const Sidebar = ({ mobileOpen = false, onClose }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { config: siteConfig } = useSelector((state) => state.siteConfig);
-  const { theme } = useSelector((state) => state.theme);
-  const isDarkMode = theme === 'dark';
 
   const handleLogout = () => {
     dispatch(logout());
@@ -138,15 +133,8 @@ const Sidebar = ({ mobileOpen = false, onClose }) => {
         )}
       </div>
 
-      {/* Theme Toggle & Logout */}
+      {/* Logout */}
       <div className="absolute bottom-16 left-0 right-0 p-4 space-y-2">
-        <button
-          onClick={() => dispatch(toggleTheme())}
-          className="flex items-center space-x-3 px-4 py-3 w-full rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-crypto-bg transition-colors"
-        >
-          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          <span className="font-medium">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-        </button>
         <button
           onClick={handleLogout}
           className="flex items-center space-x-3 px-4 py-3 w-full rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-crypto-bg transition-colors"
