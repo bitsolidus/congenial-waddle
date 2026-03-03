@@ -33,6 +33,7 @@ const ChatWidget = () => {
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [chatSettings, setChatSettings] = useState(null);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const messagesEndRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -199,24 +200,32 @@ const ChatWidget = () => {
     }
   };
 
-  const closeChat = async () => {
-    if (session && window.confirm('Are you sure you want to close this chat?')) {
-      try {
-        await axios.put(`/api/chat/session/${session._id}/close`);
-        setSession(null);
-        setMessages([]);
-        setIsOpen(false);
-        
-        // Clear guest session from localStorage
-        if (isGuestMode) {
-          localStorage.removeItem('guestChatSession');
-          setIsGuestMode(false);
-          setGuestName('');
-          setGuestEmail('');
-        }
-      } catch (error) {
-        console.error('Close chat error:', error);
+  const handleCloseClick = () => {
+    if (session) {
+      setShowCloseConfirm(true);
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  const confirmCloseChat = async () => {
+    if (!session) return;
+    try {
+      await axios.put(`/api/chat/session/${session._id}/close`);
+      setSession(null);
+      setMessages([]);
+      setIsOpen(false);
+      setShowCloseConfirm(false);
+      
+      // Clear guest session from localStorage
+      if (isGuestMode) {
+        localStorage.removeItem('guestChatSession');
+        setIsGuestMode(false);
+        setGuestName('');
+        setGuestEmail('');
       }
+    } catch (error) {
+      console.error('Close chat error:', error);
     }
   };
 
@@ -333,7 +342,7 @@ const ChatWidget = () => {
                   {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
                 </button>
                 <button
-                  onClick={() => session ? closeChat() : setIsOpen(false)}
+                  onClick={handleCloseClick}
                   className="p-1 hover:bg-white/20 rounded"
                 >
                   <X className="w-4 h-4" />
@@ -559,6 +568,52 @@ const ChatWidget = () => {
                 )}
               </>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Close Chat Confirmation Modal */}
+      <AnimatePresence>
+        {showCloseConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full p-6"
+            >
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="w-6 h-6 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Close Chat Session?
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Are you sure you want to close this chat? You won't be able to send or receive messages after closing.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCloseConfirm(false)}
+                  className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium transition-colors"
+                >
+                  Keep Chat Open
+                </button>
+                <button
+                  onClick={confirmCloseChat}
+                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Close Chat
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
