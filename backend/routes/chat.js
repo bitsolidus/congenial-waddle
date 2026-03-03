@@ -116,6 +116,7 @@ router.post('/session', optionalProtect, [
       
       sessionData.userId = req.user._id;
     } else {
+      console.log('Chat session 400 error - req.user:', req.user ? 'exists' : 'null', 'isGuest:', isGuest, 'guestName:', guestName, 'guestEmail:', guestEmail);
       return res.status(400).json({ message: 'Either login or provide guest information' });
     }
     

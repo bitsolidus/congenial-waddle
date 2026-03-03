@@ -170,7 +170,7 @@ const ChatWidget = () => {
       setDepartment('general');
       fetchMessages(response.data.session._id);
     } catch (error) {
-      console.error('Start chat error:', error);
+      console.error('Start chat error:', error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
