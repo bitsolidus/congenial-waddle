@@ -421,70 +421,73 @@ const ChatWidget = () => {
 
                         {/* Show department selection only for authenticated users or after guest info */}
                         {(isAuthenticated || isGuestMode) && (
-                          <>
+                          <div className="w-full">
                             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
                               Select a Department
                             </h4>
                         
-                        {/* Department Selection */}
-                        <div className="space-y-2 mb-4">
-                          {[
-                            { id: 'general', name: 'General Support', icon: '💬', desc: 'General inquiries' },
-                            { id: 'technical', name: 'Technical Support', icon: '🔧', desc: 'Technical issues' },
-                            { id: 'billing', name: 'Billing & Payments', icon: '💳', desc: 'Payment questions' },
-                            { id: 'trading', name: 'Trading Support', icon: '📈', desc: 'Trading help' },
-                            { id: 'kyc', name: 'KYC & Verification', icon: '🆔', desc: 'Verification support' },
-                            { id: 'vip', name: 'VIP Support', icon: '⭐', desc: 'Priority support' }
-                          ].map((dept) => (
-                            <button
-                              key={dept.id}
-                              onClick={() => setDepartment(dept.id)}
-                              className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
-                                department === dept.id
-                                  ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20'
-                                  : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
-                              }`}
-                            >
-                              <span className="text-2xl">{dept.icon}</span>
-                              <div className="flex-1">
-                                <p className="font-medium text-gray-900 dark:text-white">{dept.name}</p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{dept.desc}</p>
-                              </div>
-                              {department === dept.id && (
-                                <CheckCircle className="w-5 h-5 text-purple-600" />
-                              )}
-                            </button>
-                          ))}
-                        </div>
+                            {/* Department Selection */}
+                            <div className="space-y-2 mb-4">
+                              {[
+                                { id: 'general', name: 'General Support', icon: '💬', desc: 'General inquiries' },
+                                { id: 'technical', name: 'Technical Support', icon: '🔧', desc: 'Technical issues' },
+                                { id: 'billing', name: 'Billing & Payments', icon: '💳', desc: 'Payment questions' },
+                                { id: 'trading', name: 'Trading Support', icon: '📈', desc: 'Trading help' },
+                                { id: 'kyc', name: 'KYC & Verification', icon: '🆔', desc: 'Verification support' },
+                                { id: 'vip', name: 'VIP Support', icon: '⭐', desc: 'Priority support' }
+                              ].map((dept) => (
+                                <button
+                                  key={dept.id}
+                                  type="button"
+                                  onClick={() => setDepartment(dept.id)}
+                                  className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
+                                    department === dept.id
+                                      ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20'
+                                      : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
+                                  }`}
+                                >
+                                  <span className="text-2xl">{dept.icon}</span>
+                                  <div className="flex-1">
+                                    <p className="font-medium text-gray-900 dark:text-white">{dept.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">{dept.desc}</p>
+                                  </div>
+                                  {department === dept.id && (
+                                    <CheckCircle className="w-5 h-5 text-purple-600" />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
 
-                        {/* Subject Input */}
-                        <input
-                          id="chatSubject"
-                          name="chatSubject"
-                          type="text"
-                          value={subject}
-                          onChange={(e) => setSubject(e.target.value)}
-                          placeholder="Briefly describe your issue..."
-                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-4 text-sm"
-                        />
+                            {/* Subject Input */}
+                            <input
+                              id="chatSubject"
+                              name="chatSubject"
+                              type="text"
+                              value={subject}
+                              onChange={(e) => setSubject(e.target.value)}
+                              placeholder="Briefly describe your issue..."
+                              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white mb-4 text-sm"
+                            />
                         
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => setShowStartForm(false)}
-                            className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={startChat}
-                            disabled={loading || !department}
-                            className="flex-1 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium disabled:opacity-50"
-                          >
-                            {loading ? 'Starting...' : 'Start Chat'}
-                          </button>
-                        </div>
-                      </>
-                      )}
+                            <div className="flex gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setShowStartForm(false)}
+                                className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={startChat}
+                                disabled={loading || !department}
+                                className="flex-1 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium disabled:opacity-50"
+                              >
+                                {loading ? 'Starting...' : 'Start Chat'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
