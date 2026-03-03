@@ -304,18 +304,20 @@ const ChatWidget = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm">
-                    {session?.agentId ? session.agentId.username : 'Support Team'}
+                    {session?.agentId?.username || session?.agentId?.firstName 
+                      ? `${session.agentId.firstName || ''} ${session.agentId.lastName || ''}`.trim() || session.agentId.username
+                      : 'Support Team'}
                   </h3>
                   <p className="text-xs text-purple-200 flex items-center gap-1">
                     {session?.status === 'active' ? (
                       <>
                         <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                        Online
+                        {session?.department ? `${session.department.charAt(0).toUpperCase() + session.department.slice(1)} Department` : 'Online'}
                       </>
                     ) : session?.status === 'waiting' ? (
                       <>
                         <Clock className="w-3 h-3" />
-                        Waiting for agent...
+                        Waiting for {session?.department ? `${session.department}...` : 'agent...'}
                       </>
                     ) : (
                       'Start a conversation'

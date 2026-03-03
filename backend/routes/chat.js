@@ -288,6 +288,102 @@ router.get('/messages/:sessionId', optionalProtect, async (req, res) => {
   }
 });
 
+// @route   PUT /api/chat/agent/session/:id/transfer
+// @desc    Transfer chat to different department and auto-assign agent
+// @access  Private (Agent/Admin)
+router.put('/agent/session/:id/transfer', protect, async (req, res) => {
+  try {
+    if (!req.user.isAgent && !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+    
+    const { department, reason } = req.body;
+    const validDepartments = ['general', 'technical', 'billing', 'trading', 'kyc', 'vip'];
+    
+    if (!validDepartments.includes(department)) {
+      return res.status(400).json({ message: 'Invalid department' });
+    }
+    
+    const session = await ChatSession.findById(req.params.id);
+    if (!session) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+    
+    const oldDepartment = session.department;
+    const previousAgentId = session.agentId;
+    
+    // Find an available agent in the target department
+    const targetAgent = await User.findOne({
+      isAgent: true,
+      isActive: true,
+      department: department,
+      agentStatus: 'online',
+      $expr: { $lt: ['$activeChatCount', '$maxConcurrentChats'] }
+    }).sort({ activeChatCount: 1 });
+    
+    // Update session
+    session.department = department;
+    
+    // If found an agent, assign them
+    if (targetAgent) {
+      // Update previous agent's chat count if exists
+      if (previousAgentId) {
+        await User.findByIdAndUpdate(previousAgentId, { $inc: { activeChatCount: -1 } });
+      }
+      
+      session.agentId = targetAgent._id;
+      session.status = 'active';
+      
+      // Add to assignment history
+      session.assignmentHistory.push({
+        agentId: targetAgent._id,
+        assignedAt: new Date()
+      });
+      
+      // Update new agent's chat count
+      await User.findByIdAndUpdate(targetAgent._id, { $inc: { activeChatCount: 1 } });
+    } else {
+      // No agent available, put back to waiting
+      if (previousAgentId) {
+        await User.findByIdAndUpdate(previousAgentId, { $inc: { activeChatCount: -1 } });
+        session.agentId = null;
+      }
+      session.status = 'waiting';
+    }
+    
+    // Record transfer in history
+    session.transferHistory.push({
+      fromAgentId: previousAgentId,
+      toAgentId: session.agentId,
+      transferredBy: req.user._id,
+      reason: reason || `Transferred from ${oldDepartment} to ${department}`
+    });
+    
+    await session.save();
+    
+    // Create system message about transfer
+    const transferMessage = targetAgent 
+      ? `Chat transferred to ${department} department. Agent ${targetAgent.firstName || targetAgent.username} has been assigned.`
+      : `Chat transferred to ${department} department. Waiting for an available agent.`;
+    
+    await ChatMessage.create({
+      sessionId: session._id,
+      senderId: req.user._id,
+      senderType: 'system',
+      message: transferMessage
+    });
+    
+    res.json({
+      success: true,
+      session,
+      message: 'Chat transferred successfully'
+    });
+  } catch (error) {
+    console.error('Transfer session error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   PUT /api/chat/session/:id/close
 // @desc    Close a chat session
 // @access  Private

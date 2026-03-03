@@ -12,7 +12,9 @@ import {
   ArrowLeft,
   MoreVertical,
   Search,
-  Inbox
+  Inbox,
+  Transfer,
+  Building2
 } from 'lucide-react';
 
 const AgentChat = () => {
@@ -26,6 +28,9 @@ const AgentChat = () => {
   const [agents, setAgents] = useState([]);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedSessionForAssign, setSelectedSessionForAssign] = useState(null);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [transferDepartment, setTransferDepartment] = useState('');
+  const [transferReason, setTransferReason] = useState('');
   const [user, setUser] = useState(null);
   const [departments, setDepartments] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState('all');
@@ -140,6 +145,33 @@ const AgentChat = () => {
   const openAssignModal = (session) => {
     setSelectedSessionForAssign(session);
     setShowAssignModal(true);
+  };
+
+  const openTransferModal = () => {
+    setTransferDepartment(activeSession?.department || '');
+    setTransferReason('');
+    setShowTransferModal(true);
+  };
+
+  const transferSession = async () => {
+    if (!activeSession || !transferDepartment) return;
+    try {
+      await axios.put(`/api/chat/agent/session/${activeSession._id}/transfer`, {
+        department: transferDepartment,
+        reason: transferReason
+      });
+      fetchSessions();
+      fetchMessages(activeSession._id);
+      // Refresh active session
+      const response = await axios.get(`/api/chat/agent/sessions`);
+      const updatedSession = response.data.sessions.find(s => s._id === activeSession._id);
+      if (updatedSession) {
+        setActiveSession(updatedSession);
+      }
+      setShowTransferModal(false);
+    } catch (error) {
+      console.error('Transfer session error:', error);
+    }
   };
 
   const sendMessage = async (e) => {
@@ -373,6 +405,13 @@ const AgentChat = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <button
+                    onClick={openTransferModal}
+                    className="px-4 py-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded-lg text-sm font-medium flex items-center gap-2"
+                  >
+                    <Transfer className="w-4 h-4" />
+                    Transfer
+                  </button>
+                  <button
                     onClick={closeSession}
                     className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg text-sm font-medium"
                   >
@@ -497,6 +536,105 @@ const AgentChat = () => {
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Transfer Department Modal */}
+      <AnimatePresence>
+        {showTransferModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Building2 className="w-5 h-5" />
+                  Transfer to Department
+                </h2>
+                <button
+                  onClick={() => setShowTransferModal(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Transfer this chat to a different department. An available agent will be automatically assigned.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Select Department
+                  </label>
+                  <div className="space-y-2">
+                    {[
+                      { id: 'general', name: 'General Support', icon: '💬' },
+                      { id: 'technical', name: 'Technical Support', icon: '🔧' },
+                      { id: 'billing', name: 'Billing & Payments', icon: '💳' },
+                      { id: 'trading', name: 'Trading Support', icon: '📈' },
+                      { id: 'kyc', name: 'KYC & Verification', icon: '🆔' },
+                      { id: 'vip', name: 'VIP Support', icon: '⭐' }
+                    ].map((dept) => (
+                      <button
+                        key={dept.id}
+                        onClick={() => setTransferDepartment(dept.id)}
+                        className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all text-left ${
+                          transferDepartment === dept.id
+                            ? 'border-purple-600 bg-purple-50 dark:bg-purple-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-purple-300'
+                        }`}
+                      >
+                        <span className="text-xl">{dept.icon}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{dept.name}</span>
+                        {transferDepartment === dept.id && (
+                          <CheckCircle className="w-5 h-5 text-purple-600 ml-auto" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Transfer Reason (Optional)
+                  </label>
+                  <textarea
+                    value={transferReason}
+                    onChange={(e) => setTransferReason(e.target.value)}
+                    placeholder="Why are you transferring this chat?"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm resize-none"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+                <button
+                  onClick={() => setShowTransferModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={transferSession}
+                  disabled={!transferDepartment || transferDepartment === activeSession?.department}
+                  className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white rounded-lg font-medium"
+                >
+                  Transfer Chat
                 </button>
               </div>
             </motion.div>
