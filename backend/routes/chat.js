@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import { protect, adminOnly } from '../middleware/auth.js';
+import { protect, adminOnly, optionalProtect } from '../middleware/auth.js';
 import ChatSession from '../models/ChatSession.js';
 import ChatMessage from '../models/ChatMessage.js';
 import User from '../models/User.js';
@@ -76,7 +76,7 @@ router.get('/settings', async (req, res) => {
 // @route   POST /api/chat/session
 // @desc    Create a new chat session (authenticated or guest)
 // @access  Public
-router.post('/session', [
+router.post('/session', optionalProtect, [
   body('subject').optional().trim(),
   body('department').optional().isIn(['general', 'technical', 'billing', 'trading', 'kyc', 'vip']),
   body('guestName').optional().trim(),
