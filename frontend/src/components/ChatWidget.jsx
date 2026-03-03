@@ -12,7 +12,8 @@ import {
   User,
   Clock,
   Check,
-  CheckCheck
+  CheckCheck,
+  CheckCircle
 } from 'lucide-react';
 
 const ChatWidget = () => {
