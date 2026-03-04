@@ -10,7 +10,12 @@ const chatMessageSchema = new mongoose.Schema({
   senderId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false,
+    default: null
+  },
+  senderName: {
+    type: String,
+    default: null // Used for guest users
   },
   senderType: {
     type: String,

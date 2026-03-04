@@ -68,8 +68,7 @@ const transactionSchema = new mongoose.Schema({
   },
   transactionHash: {
     type: String,
-    default: null,
-    index: true
+    default: null
   },
   network: {
     type: String,
