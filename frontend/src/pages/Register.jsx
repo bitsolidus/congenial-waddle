@@ -10,7 +10,7 @@ import { getCurrencyByCountry } from '../utils/currency';
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, error } = useSelector((state) => state.auth);
+  const { isLoading, error, registrationSuccess } = useSelector((state) => state.auth);
   
   const [formData, setFormData] = useState({
     username: '',
@@ -25,13 +25,14 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
+    if (registrationSuccess) {
+      // Navigate to success page with email
+      navigate('/register-success', { state: { email: formData.email } });
     }
     return () => {
       dispatch(clearError());
     };
-  }, [isAuthenticated, navigate, dispatch]);
+  }, [registrationSuccess, navigate, dispatch, formData.email]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

@@ -46,8 +46,9 @@ export const register = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await axios.post('/api/auth/register', userData);
-      localStorage.setItem('token', response.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      // Don't auto-login - just return success data
+      // Store email for verification page
+      localStorage.setItem('pendingVerificationEmail', userData.email);
       return response.data;
     } catch (error) {
       // Handle validation errors (array) or single message
@@ -95,6 +96,7 @@ const initialState = {
   isAuthenticated: !!token,
   isLoading: !!token, // Set loading to true if token exists (need to verify it)
   error: null,
+  registrationSuccess: false,
 };
 
 const authSlice = createSlice({
@@ -109,6 +111,10 @@ const authSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
+    },
+    clearRegistrationSuccess: (state) => {
+      state.registrationSuccess = false;
+      localStorage.removeItem('pendingVerificationEmail');
     },
     setUser: (state, action) => {
       state.user = action.payload;
@@ -135,15 +141,17 @@ const authSlice = createSlice({
       .addCase(register.pending, (state) => {
         state.isLoading = true;
         state.error = null;
+        state.registrationSuccess = false;
       })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
+        state.registrationSuccess = true;
+        // Don't set isAuthenticated or user - user needs to verify email first
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        state.registrationSuccess = false;
       })
       // Fetch Profile
       .addCase(fetchProfile.pending, (state) => {
@@ -170,7 +178,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError, setUser } = authSlice.actions;
+export const { logout, clearError, setUser, clearRegistrationSuccess } = authSlice.actions;
 
 // Initialize auth from localStorage
 export const initializeAuth = () => (dispatch) => {
