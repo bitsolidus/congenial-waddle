@@ -117,7 +117,7 @@ const ThemeInitializer = () => {
 };
 
 // Auth initializer
-const AuthInitializer = () => {
+const AuthInitializer = ({ children }) => {
   const dispatch = useDispatch();
   const { isAuthenticated, user, isLoading } = useSelector((state) => state.auth);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -149,7 +149,7 @@ const AuthInitializer = () => {
     );
   }
 
-  return null;
+  return children;
 };
 
 function App() {
@@ -157,8 +157,8 @@ function App() {
     <Provider store={store}>
       <Router>
         <ThemeInitializer />
-        <AuthInitializer />
         <Toast />
+        <AuthInitializer>
         <Routes>
           {/* Public Website Routes */}
           <Route path="/" element={<Home />} />
@@ -219,6 +219,7 @@ function App() {
         
         {/* Chat Widget - Available on all pages */}
         <ChatWidget />
+        </AuthInitializer>
       </Router>
     </Provider>
   );
