@@ -1290,18 +1290,22 @@ router.post('/user/:userId/resend-verification', protect, adminOnly, async (req,
     // Send verification email
     const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
     
+    let emailSent = false;
     try {
-      await sendVerificationEmail(user.email, user.username, verificationLink);
+      const result = await sendVerificationEmail(user.email, user.username, verificationLink);
+      emailSent = result?.success !== false;
     } catch (emailError) {
       console.error('Failed to send verification email:', emailError);
-      return res.status(500).json({ 
-        message: 'Failed to send verification email. Please check email configuration.' 
-      });
+      // Don't fail the request - return the link so admin can share it manually
     }
 
     res.json({
       success: true,
-      message: 'Verification email sent successfully',
+      message: emailSent 
+        ? 'Verification email sent successfully' 
+        : 'Email could not be sent (check SMTP config). Use the verification link below.',
+      emailSent,
+      verificationLink, // Always return link so admin can share manually
       user: {
         id: user._id,
         username: user.username,

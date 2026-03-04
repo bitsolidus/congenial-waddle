@@ -245,10 +245,15 @@ const AdminUserDetail = () => {
   const handleResendVerification = async () => {
     try {
       const response = await axios.post(`/api/admin/user/${userId}/resend-verification`);
-      setVerificationLink(response.data.verificationLink);
-      setShowVerificationLink(true);
-      setNotification({ message: 'Verification email sent successfully', type: 'success' });
-      setTimeout(() => setNotification(null), 3000);
+      if (response.data.verificationLink) {
+        setVerificationLink(response.data.verificationLink);
+        setShowVerificationLink(true);
+      }
+      setNotification({ 
+        message: response.data.message || 'Verification email sent successfully', 
+        type: response.data.emailSent === false ? 'warning' : 'success' 
+      });
+      setTimeout(() => setNotification(null), 5000);
     } catch (err) {
       setNotification({ message: err.response?.data?.message || 'Failed to send verification email', type: 'error' });
       setTimeout(() => setNotification(null), 3000);
@@ -635,6 +640,8 @@ const AdminUserDetail = () => {
                     {editingEmail ? (
                       <div className="space-y-2">
                         <input
+                          id="admin-edit-email"
+                          name="adminEditEmail"
                           type="email"
                           value={newEmail}
                           onChange={(e) => setNewEmail(e.target.value)}
@@ -731,6 +738,8 @@ const AdminUserDetail = () => {
                       </div>
                       <div className="flex gap-2">
                         <input
+                          id="admin-verification-link"
+                          name="verificationLink"
                           type="text"
                           value={verificationLink}
                           readOnly
