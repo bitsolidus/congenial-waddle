@@ -10,7 +10,7 @@ import AdminSettings from '../models/AdminSettings.js';
 import SiteConfig from '../models/SiteConfig.js';
 import DepositConfirmation from '../models/DepositConfirmation.js';
 import { upload, uploadBranding } from '../config/upload.js';
-import { sendKycApprovedEmail, sendKycRejectedEmail, sendPasswordResetEmail } from '../config/email.js';
+import { sendKycApprovedEmail, sendKycRejectedEmail, sendPasswordResetEmail, sendVerificationEmail } from '../config/email.js';
 
 const router = express.Router();
 
@@ -1287,14 +1287,21 @@ router.post('/user/:userId/resend-verification', protect, adminOnly, async (req,
     user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     await user.save();
 
-    // TODO: Send actual email here
-    // For now, we'll just return the verification link
+    // Send verification email
     const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
+    
+    try {
+      await sendVerificationEmail(user.email, user.username, verificationLink);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      return res.status(500).json({ 
+        message: 'Failed to send verification email. Please check email configuration.' 
+      });
+    }
 
     res.json({
       success: true,
       message: 'Verification email sent successfully',
-      verificationLink, // In production, remove this and actually send email
       user: {
         id: user._id,
         username: user.username,
