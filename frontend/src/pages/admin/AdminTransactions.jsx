@@ -53,6 +53,8 @@ const AdminTransactions = () => {
         
         {/* Filter */}
         <select
+          id="transaction-filter"
+          name="transactionFilter"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           className="input-field w-full md:w-48"

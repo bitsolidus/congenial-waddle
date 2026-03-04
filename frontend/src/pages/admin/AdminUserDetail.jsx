@@ -899,6 +899,8 @@ const AdminUserDetail = () => {
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
                           <input
+                            id="profile-username"
+                            name="profileUsername"
                             type="text"
                             value={profileData.username}
                             onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value }))}
@@ -908,6 +910,8 @@ const AdminUserDetail = () => {
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
                           <input
+                            id="profile-name"
+                            name="profileName"
                             type="text"
                             value={profileData.name}
                             onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
@@ -919,6 +923,8 @@ const AdminUserDetail = () => {
                             Joined Date
                           </label>
                           <input
+                            id="profile-created-at"
+                            name="profileCreatedAt"
                             type="date"
                             value={profileData.createdAt}
                             onChange={(e) => setProfileData(prev => ({ ...prev, createdAt: e.target.value }))}
@@ -1036,6 +1042,8 @@ const AdminUserDetail = () => {
                         </p>
                         <div className="flex gap-2">
                           <input
+                            id="password-reset-link"
+                            name="passwordResetLink"
                             type="text"
                             value={passwordResetLink}
                             readOnly
@@ -1240,6 +1248,8 @@ const AdminUserDetail = () => {
                 <div className="flex-1 min-w-0">
                   {editingWallet ? (
                     <input
+                      id="wallet-address"
+                      name="walletAddress"
                       type="text"
                       value={walletAddress}
                       onChange={(e) => setWalletAddress(e.target.value)}
@@ -1330,6 +1340,8 @@ const AdminUserDetail = () => {
                       Deposit Address (Manual Input or Auto-Generate)
                     </label>
                     <input
+                      id="user-address"
+                      name="userAddress"
                       type="text"
                       value={address || ''}
                       onChange={(e) => {
@@ -1501,6 +1513,8 @@ const AdminUserDetail = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400">Track user login history and account activities.</p>
             </div>
             <select
+              id="activity-filter"
+              name="activityFilter"
               value={activityFilter}
               onChange={(e) => setActivityFilter(e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
@@ -1614,6 +1628,8 @@ const AdminUserDetail = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
                   <input
+                    id="generate-start-date"
+                    name="generateStartDate"
                     type="date"
                     value={generateForm.startDate}
                     onChange={(e) => setGenerateForm(prev => ({ ...prev, startDate: e.target.value }))}
@@ -1623,6 +1639,8 @@ const AdminUserDetail = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
                   <input
+                    id="generate-end-date"
+                    name="generateEndDate"
                     type="date"
                     value={generateForm.endDate}
                     onChange={(e) => setGenerateForm(prev => ({ ...prev, endDate: e.target.value }))}
@@ -1632,6 +1650,8 @@ const AdminUserDetail = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Number of Transactions</label>
                   <input
+                    id="generate-count"
+                    name="generateCount"
                     type="number"
                     min="1"
                     max="100"
@@ -1724,6 +1744,8 @@ const AdminUserDetail = () => {
                     Amount ({fundForm.crypto})
                   </label>
                   <input
+                    id="fund-amount"
+                    name="fundAmount"
                     type="number"
                     step={fundForm.crypto === 'USDT' ? '0.01' : '0.000001'}
                     min="0.01"
@@ -1769,6 +1791,8 @@ const AdminUserDetail = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reason *</label>
                     <textarea
+                      id="fund-reason"
+                      name="fundReason"
                       value={fundForm.reason}
                       onChange={(e) => setFundForm(prev => ({ ...prev, reason: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -1993,6 +2017,8 @@ const AdminUserDetail = () => {
                   Reason for Change (Optional)
                 </label>
                 <textarea
+                  id="tier-reason"
+                  name="tierReason"
                   value={tierReason}
                   onChange={(e) => setTierReason(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"

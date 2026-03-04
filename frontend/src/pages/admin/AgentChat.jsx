@@ -249,6 +249,8 @@ const AgentChat = () => {
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500 dark:text-gray-400">Department:</span>
             <select
+              id="agent-department-filter"
+              name="agentDepartmentFilter"
               value={selectedDepartment}
               onChange={(e) => setSelectedDepartment(e.target.value)}
               className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -453,6 +455,8 @@ const AgentChat = () => {
               <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex gap-2">
                   <input
+                    id="agent-chat-message"
+                    name="agentChatMessage"
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
@@ -613,6 +617,8 @@ const AgentChat = () => {
                     Transfer Reason (Optional)
                   </label>
                   <textarea
+                    id="transfer-reason"
+                    name="transferReason"
                     value={transferReason}
                     onChange={(e) => setTransferReason(e.target.value)}
                     placeholder="Why are you transferring this chat?"

@@ -471,6 +471,8 @@ const AdminSettings = () => {
                     Site Name
                   </label>
                   <input
+                    id="site-name"
+                    name="siteName"
                     type="text"
                     value={siteConfig.siteName}
                     onChange={(e) => setSiteConfig(prev => ({ ...prev, siteName: e.target.value }))}
@@ -483,6 +485,8 @@ const AdminSettings = () => {
                     Site Description
                   </label>
                   <textarea
+                    id="site-description"
+                    name="siteDescription"
                     value={siteConfig.siteDescription}
                     onChange={(e) => setSiteConfig(prev => ({ ...prev, siteDescription: e.target.value }))}
                     className="input-field w-full h-24"
@@ -494,6 +498,8 @@ const AdminSettings = () => {
                     Meta Title
                   </label>
                   <input
+                    id="meta-title"
+                    name="metaTitle"
                     type="text"
                     value={siteConfig.meta.title}
                     onChange={(e) => setSiteConfig(prev => ({ ...prev, meta: { ...prev.meta, title: e.target.value } }))}
@@ -506,6 +512,8 @@ const AdminSettings = () => {
                     Meta Description
                   </label>
                   <textarea
+                    id="meta-description"
+                    name="metaDescription"
                     value={siteConfig.meta.description}
                     onChange={(e) => setSiteConfig(prev => ({ ...prev, meta: { ...prev.meta, description: e.target.value } }))}
                     className="input-field w-full h-20"
@@ -517,6 +525,8 @@ const AdminSettings = () => {
                     Meta Keywords
                   </label>
                   <input
+                    id="meta-keywords"
+                    name="metaKeywords"
                     type="text"
                     value={siteConfig.meta.keywords}
                     onChange={(e) => setSiteConfig(prev => ({ ...prev, meta: { ...prev.meta, keywords: e.target.value } }))}
@@ -643,12 +653,16 @@ const AdminSettings = () => {
                   </label>
                   <div className="flex items-center gap-2">
                     <input
+                      id="primary-color-picker"
+                      name="primaryColorPicker"
                       type="color"
                       value={siteConfig.branding.primaryColor}
                       onChange={(e) => setSiteConfig(prev => ({ ...prev, branding: { ...prev.branding, primaryColor: e.target.value } }))}
                       className="w-10 h-10 rounded cursor-pointer"
                     />
                     <input
+                      id="primary-color-text"
+                      name="primaryColorText"
                       type="text"
                       value={siteConfig.branding.primaryColor}
                       onChange={(e) => setSiteConfig(prev => ({ ...prev, branding: { ...prev.branding, primaryColor: e.target.value } }))}
@@ -662,12 +676,16 @@ const AdminSettings = () => {
                   </label>
                   <div className="flex items-center gap-2">
                     <input
+                      id="secondary-color-picker"
+                      name="secondaryColorPicker"
                       type="color"
                       value={siteConfig.branding.secondaryColor}
                       onChange={(e) => setSiteConfig(prev => ({ ...prev, branding: { ...prev.branding, secondaryColor: e.target.value } }))}
                       className="w-10 h-10 rounded cursor-pointer"
                     />
                     <input
+                      id="secondary-color-text"
+                      name="secondaryColorText"
                       type="text"
                       value={siteConfig.branding.secondaryColor}
                       onChange={(e) => setSiteConfig(prev => ({ ...prev, branding: { ...prev.branding, secondaryColor: e.target.value } }))}
@@ -681,12 +699,16 @@ const AdminSettings = () => {
                   </label>
                   <div className="flex items-center gap-2">
                     <input
+                      id="accent-color-picker"
+                      name="accentColorPicker"
                       type="color"
                       value={siteConfig.branding.accentColor}
                       onChange={(e) => setSiteConfig(prev => ({ ...prev, branding: { ...prev.branding, accentColor: e.target.value } }))}
                       className="w-10 h-10 rounded cursor-pointer"
                     />
                     <input
+                      id="accent-color-text"
+                      name="accentColorText"
                       type="text"
                       value={siteConfig.branding.accentColor}
                       onChange={(e) => setSiteConfig(prev => ({ ...prev, branding: { ...prev.branding, accentColor: e.target.value } }))}
