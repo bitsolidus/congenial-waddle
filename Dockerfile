@@ -56,7 +56,7 @@ EXPOSE 80 5000
 # Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'nginx' >> /app/start.sh && \
-    echo 'cd /app/backend && node server.js' >> /app/start.sh && \
+    echo 'cd /app/backend && BACKEND_PORT=5000 node server.js' >> /app/start.sh && \
     chmod +x /app/start.sh
 
 # Start both nginx and backend
