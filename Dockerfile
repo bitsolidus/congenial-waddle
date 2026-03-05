@@ -1,0 +1,63 @@
+# Multi-stage Dockerfile for BitSolidus
+# Stage 1: Build Frontend
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install frontend dependencies
+RUN npm ci
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build frontend
+RUN npm run build
+
+# Stage 2: Build Backend
+FROM node:20-alpine AS backend-builder
+
+WORKDIR /app/backend
+
+# Copy backend package files
+COPY backend/package*.json ./
+
+# Install backend dependencies
+RUN npm ci --only=production
+
+# Copy backend source
+COPY backend/ ./
+
+# Stage 3: Production Image
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install nginx for serving frontend
+RUN apk add --no-cache nginx
+
+# Copy backend from builder
+COPY --from=backend-builder /app/backend /app/backend
+
+# Copy frontend build from builder
+COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/http.d/default.conf
+
+# Create uploads directory
+RUN mkdir -p /app/backend/uploads
+
+# Expose ports
+EXPOSE 80 5000
+
+# Create startup script
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'nginx' >> /app/start.sh && \
+    echo 'cd /app/backend && node server.js' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# Start both nginx and backend
+CMD ["/app/start.sh"]
