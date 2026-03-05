@@ -1,0 +1,8 @@
+{
+  "build_pack": "dockercompose",
+  "docker_compose_location": "/docker-compose.yml",
+  "docker_compose_custom_start_command": "",
+  "docker_compose_custom_build_command": "",
+  "redirect_to_https": true,
+  "instant_deploy": false
+}
