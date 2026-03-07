@@ -51,7 +51,7 @@ COPY nginx.conf /etc/nginx/http.d/default.conf
 RUN mkdir -p /app/backend/uploads
 
 # Expose ports
-EXPOSE 80 5000
+EXPOSE 8080 5000
 
 # Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
