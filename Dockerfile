@@ -2,6 +2,9 @@
 # Stage 1: Build Frontend
 FROM node:20-alpine AS frontend-builder
 
+# Accept build arguments
+ARG VITE_API_URL
+
 WORKDIR /app/frontend
 
 # Copy frontend package files
@@ -13,7 +16,8 @@ RUN npm ci
 # Copy frontend source
 COPY frontend/ ./
 
-# Build frontend
+# Build frontend with API URL
+ENV VITE_API_URL=${VITE_API_URL}
 RUN npm run build
 
 # Stage 2: Build Backend
