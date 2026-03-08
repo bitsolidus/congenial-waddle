@@ -91,24 +91,15 @@ router.post(
         // Don't fail registration if email fails, just log it
       }
 
-      // Generate token
-      const token = generateToken(user._id);
-
+      // Don't return token - user needs to verify email first
       res.status(201).json({
         success: true,
         message: 'Registration successful. Please check your email to verify your account.',
-        token,
         user: {
           id: user._id,
           username: user.username,
           email: user.email,
-          balance: user.balance,
-          tier: user.tier,
-          kycStatus: user.kycStatus,
-          settings: user.settings,
-          emailVerified: user.emailVerified,
-          country: user.country,
-          currency: user.settings?.currency || 'USD'
+          emailVerified: user.isEmailVerified
         }
       });
     } catch (error) {

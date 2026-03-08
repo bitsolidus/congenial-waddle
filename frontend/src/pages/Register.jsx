@@ -26,13 +26,19 @@ const Register = () => {
 
   useEffect(() => {
     if (registrationSuccess) {
+      // Clear any existing token from previous sessions
+      localStorage.removeItem('token');
       // Navigate to success page with email
       navigate('/register-success', { state: { email: formData.email } });
     }
+  }, [registrationSuccess, navigate, formData.email]);
+
+  // Clear error on unmount
+  useEffect(() => {
     return () => {
       dispatch(clearError());
     };
-  }, [registrationSuccess, navigate, dispatch, formData.email]);
+  }, [dispatch]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

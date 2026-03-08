@@ -49,6 +49,9 @@ export const register = createAsyncThunk(
       // Don't auto-login - just return success data
       // Store email for verification page
       localStorage.setItem('pendingVerificationEmail', userData.email);
+      // Clear any existing token - user needs to verify email first
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
       return response.data;
     } catch (error) {
       // Handle validation errors (array) or single message
@@ -142,16 +145,22 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
         state.registrationSuccess = false;
+        state.isAuthenticated = false;
+        state.user = null;
       })
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.registrationSuccess = true;
+        state.isAuthenticated = false;
+        state.user = null;
         // Don't set isAuthenticated or user - user needs to verify email first
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
         state.registrationSuccess = false;
+        state.isAuthenticated = false;
+        state.user = null;
       })
       // Fetch Profile
       .addCase(fetchProfile.pending, (state) => {
