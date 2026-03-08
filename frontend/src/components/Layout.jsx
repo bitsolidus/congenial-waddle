@@ -1,4 +1,4 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Menu, X, Bell, User, Moon, Sun } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -9,6 +9,7 @@ import { toggleTheme } from '../store/themeSlice';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Layout = () => {
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef(null);
@@ -131,10 +132,14 @@ const Layout = () => {
                     <div 
                       key={notification._id}
                       className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-crypto-bg cursor-pointer ${!notification.isRead ? 'bg-purple-50 dark:bg-purple-900/20' : ''}`}
-                      onClick={() => !notification.isRead && dispatch(markNotificationRead(notification._id))}
+                      onClick={() => {
+                        if (!notification.isRead) dispatch(markNotificationRead(notification._id));
+                        setShowNotifications(false);
+                        navigate(`/notifications?id=${notification._id}`);
+                      }}
                     >
                       <p className="text-sm text-gray-900 dark:text-white">{notification.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{notification.message}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{notification.message}</p>
                       <p className="text-xs text-gray-400 mt-1">{new Date(notification.createdAt).toLocaleDateString()}</p>
                     </div>
                   ))

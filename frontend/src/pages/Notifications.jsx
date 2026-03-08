@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bell, Check, CheckCheck, Trash2, RefreshCw } from 'lucide-react';
 import { 
@@ -11,12 +12,29 @@ import {
 
 const Notifications = () => {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const highlightedId = searchParams.get('id');
   const { items: notifications, unreadCount, loading, pagination } = useSelector((state) => state.notifications);
   const [filter, setFilter] = useState('all'); // 'all' or 'unread'
+  const [expandedId, setExpandedId] = useState(highlightedId);
 
   useEffect(() => {
     dispatch(fetchNotifications({ unreadOnly: filter === 'unread' }));
   }, [dispatch, filter]);
+
+  // Expand highlighted notification when page loads
+  useEffect(() => {
+    if (highlightedId) {
+      setExpandedId(highlightedId);
+      // Scroll to the notification after a short delay
+      setTimeout(() => {
+        const element = document.getElementById(`notification-${highlightedId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }, [highlightedId]);
 
   const handleMarkRead = (id) => {
     dispatch(markNotificationRead(id));
@@ -122,11 +140,12 @@ const Notifications = () => {
             {notifications.map((notification) => (
               <motion.div
                 key={notification._id}
+                id={`notification-${notification._id}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                   !notification.isRead ? 'bg-purple-50 dark:bg-purple-900/10' : ''
-                }`}
+                } ${highlightedId === notification._id ? 'ring-2 ring-purple-500 ring-inset' : ''}`}
               >
                 <div className="flex items-start gap-4">
                   {/* Icon */}
@@ -137,17 +156,31 @@ const Notifications = () => {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
-                      <div>
+                      <div className="flex-1">
                         <h3 className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
                           {notification.title}
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <p className={`text-sm text-gray-600 dark:text-gray-400 mt-1 ${expandedId === notification._id ? '' : 'line-clamp-2'}`}>
                           {notification.message}
                         </p>
+                        {notification.data && expandedId === notification._id && (
+                          <div className="mt-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                            <pre className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                              {JSON.stringify(notification.data, null, 2)}
+                            </pre>
+                          </div>
+                        )}
                       </div>
                       
                       {/* Actions */}
                       <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => setExpandedId(expandedId === notification._id ? null : notification._id)}
+                          className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-xs text-purple-600 dark:text-purple-400"
+                          title={expandedId === notification._id ? 'Collapse' : 'Expand'}
+                        >
+                          {expandedId === notification._id ? 'Less' : 'More'}
+                        </button>
                         {!notification.isRead && (
                           <button
                             onClick={() => handleMarkRead(notification._id)}
