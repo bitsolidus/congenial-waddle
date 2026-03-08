@@ -121,7 +121,7 @@ const ThemeInitializer = () => {
 // Auth initializer
 const AuthInitializer = ({ children }) => {
   const dispatch = useDispatch();
-  const { isAuthenticated, user, isLoading } = useSelector((state) => state.auth);
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
@@ -139,8 +139,9 @@ const AuthInitializer = ({ children }) => {
     initAuth();
   }, [dispatch, user]);
 
-  // Show loading spinner while checking auth
-  if (isInitializing || isLoading) {
+  // Show loading spinner only during initial auth check
+  // Don't block the app for registration/login operations
+  if (isInitializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col items-center gap-4">

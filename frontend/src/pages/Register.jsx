@@ -132,6 +132,7 @@ const Register = () => {
                 onChange={handleChange}
                 className="input-field pl-10"
                 placeholder="Choose a username"
+                autoComplete="username"
               />
             </div>
           </div>
@@ -279,6 +280,7 @@ const Register = () => {
                 onChange={handleChange}
                 className="input-field pl-10 pr-10"
                 placeholder="Create a password"
+                autoComplete="new-password"
               />
               <button
                 type="button"
@@ -339,6 +341,7 @@ const Register = () => {
                 onChange={handleChange}
                 className={`input-field pl-10 pr-10 ${formData.confirmPassword && !passwordsMatch ? 'border-red-500' : ''}`}
                 placeholder="Confirm your password"
+                autoComplete="new-password"
               />
               <button
                 type="button"
