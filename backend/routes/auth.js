@@ -82,14 +82,12 @@ router.post(
         emailVerificationExpires: verificationExpires
       });
 
-      // Send verification email
-      const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
-      try {
-        await sendVerificationEmail(email, username, verificationLink);
-      } catch (emailError) {
-        console.error('Failed to send verification email:', emailError);
-        // Don't fail registration if email fails, just log it
-      }
+      // Send verification email (non-blocking)
+      const verificationLink = `${process.env.FRONTEND_URL || 'https://bitsolidus.io'}/verify-email?token=${verificationToken}`;
+      // Fire and forget - don't await, don't block registration
+      sendVerificationEmail(email, username, verificationLink).catch(emailError => {
+        console.error('Failed to send verification email:', emailError.message);
+      });
 
       // Don't return token - user needs to verify email first
       res.status(201).json({
