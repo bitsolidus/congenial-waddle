@@ -32,6 +32,7 @@ import Transactions from './pages/Transactions';
 import TransactionDetail from './pages/TransactionDetail';
 import BuyGas from './pages/BuyGas';
 import TierUpgrade from './pages/TierUpgrade';
+import Notifications from './pages/Notifications';
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin';
@@ -194,6 +195,7 @@ function App() {
               <Route path="/transactions/:id" element={<TransactionDetail />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/kyc" element={<KYC />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Route>
           </Route>
           
