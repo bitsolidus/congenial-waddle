@@ -336,7 +336,7 @@ router.get('/verify-email', async (req, res) => {
     }
 
     // Update user
-    user.emailVerified = true;
+    user.isEmailVerified = true;
     user.emailVerificationToken = null;
     user.emailVerificationExpires = null;
     await user.save();
@@ -346,6 +346,81 @@ router.get('/verify-email', async (req, res) => {
       await sendWelcomeEmail(user.email, user.username);
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
+    }
+
+    // Create admin notification
+    try {
+      const { default: Notification } = await import('../models/Notification.js');
+      await Notification.create({
+        userId: null, // System notification for admins
+        type: 'email_verified',
+        title: 'Email Verified',
+        message: `${user.username} (${user.email}) has verified their email address.`,
+        data: {
+          userId: user._id,
+          username: user.username,
+          email: user.email,
+          verifiedAt: new Date()
+        }
+      });
+    } catch (notifError) {
+      console.error('Failed to create admin notification:', notifError);
+    }
+
+    // Send admin email notification
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+      if (adminEmail) {
+        const subject = '✅ New Email Verification - BitSolidus';
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center; color: white;">
+              <h1 style="margin: 0; font-size: 24px;">Email Verified</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">A user has verified their email</p>
+            </div>
+            <div style="padding: 30px; background: #f9fafb;">
+              <div style="background: white; padding: 20px; border-radius: 8px;">
+                <h2 style="color: #1f2937; margin-top: 0;">User Details</h2>
+                <p><strong>Username:</strong> ${user.username}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p><strong>Verified At:</strong> ${new Date().toLocaleString()}</p>
+              </div>
+              <div style="text-align: center; margin-top: 30px;">
+                <a href="${process.env.ADMIN_URL || 'https://bitsolidus.io/admin'}/users/${user._id}" 
+                   style="background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                  View User Profile
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+        const text = `Email Verified - ${user.username} (${user.email}) has verified their email address.`;
+        
+        // Use nodemailer directly for custom admin emails
+        const nodemailer = await import('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: process.env.SMTP_PORT || 587,
+          secure: process.env.SMTP_PORT === '465',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+        
+        await transporter.sendMail({
+          from: `"${process.env.FROM_NAME || 'BitSolidus'}" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+          to: adminEmail,
+          subject,
+          text,
+          html
+        });
+      }
+    } catch (adminEmailError) {
+      console.error('Failed to send admin notification email:', adminEmailError);
     }
 
     res.json({
