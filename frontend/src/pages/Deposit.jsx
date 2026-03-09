@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,21 +16,35 @@ import {
   Loader2,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Link as LinkIcon,
+  RefreshCw,
+  Shield
 } from 'lucide-react';
-import { fetchTransactions } from '../store/walletSlice';
+import { fetchTransactions, fetchBalance } from '../store/walletSlice';
 import { copyToClipboard, truncateAddress, formatCurrency, formatRelativeTime, getStatusColor } from '../utils/helpers';
 import { CRYPTOCURRENCIES } from '../utils/constants';
 import axios from 'axios';
 
 const Deposit = () => {
   const dispatch = useDispatch();
-  const { transactions, isLoading } = useSelector((state) => state.wallet);
+  const { transactions, isLoading, balance } = useSelector((state) => state.wallet);
+  const { user } = useSelector((state) => state.auth);
   
   const [selectedCrypto, setSelectedCrypto] = useState(CRYPTOCURRENCIES[0]);
   const [depositAddress, setDepositAddress] = useState('');
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('deposit');
+  
+  // Wallet connection states
+  const [connectedWallet, setConnectedWallet] = useState(null);
+  const [walletAddress, setWalletAddress] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState('');
+  
+  // Deposit tracking
+  const [depositStatus, setDepositStatus] = useState('idle'); // idle, checking, detected, confirmed
+  const [detectedDeposit, setDetectedDeposit] = useState(null);
   
   // Deposit confirmation form state
   const [showConfirmationForm, setShowConfirmationForm] = useState(false);
@@ -46,9 +60,21 @@ const Deposit = () => {
 
   useEffect(() => {
     dispatch(fetchTransactions({ type: 'deposit', limit: 5 }));
+    dispatch(fetchBalance());
     generateDepositAddress();
     fetchPendingConfirmations();
   }, [dispatch, selectedCrypto]);
+
+  // Auto-check for deposit status if wallet is connected
+  useEffect(() => {
+    if (!connectedWallet || !walletAddress) return;
+    
+    const checkInterval = setInterval(() => {
+      checkDepositStatus();
+    }, 15000); // Check every 15 seconds
+    
+    return () => clearInterval(checkInterval);
+  }, [connectedWallet, walletAddress, depositAddress]);
 
   const fetchPendingConfirmations = async () => {
     try {
@@ -119,10 +145,103 @@ const Deposit = () => {
   };
 
   const walletOptions = [
-    { id: 'metamask', name: 'MetaMask', icon: '🦊' },
-    { id: 'walletconnect', name: 'WalletConnect', icon: '🔗' },
-    { id: 'manual', name: 'Manual Transfer', icon: '✏️' },
+    { id: 'metamask', name: 'MetaMask', icon: '🦊', type: 'evm' },
+    { id: 'walletconnect', name: 'WalletConnect', icon: '🔗', type: 'universal' },
+    { id: 'manual', name: 'Manual Transfer', icon: '✏️', type: 'manual' },
   ];
+
+  // Connect to MetaMask
+  const connectMetaMask = async () => {
+    setIsConnecting(true);
+    setConnectionError('');
+    
+    try {
+      if (!window.ethereum) {
+        throw new Error('MetaMask not installed. Please install MetaMask extension.');
+      }
+      
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      
+      if (accounts.length > 0) {
+        setWalletAddress(accounts[0]);
+        setConnectedWallet('metamask');
+        
+        // Listen for account changes
+        window.ethereum.on('accountsChanged', (newAccounts) => {
+          if (newAccounts.length > 0) {
+            setWalletAddress(newAccounts[0]);
+          } else {
+            disconnectWallet();
+          }
+        });
+        
+        // Listen for chain changes
+        window.ethereum.on('chainChanged', () => {
+          window.location.reload();
+        });
+      }
+    } catch (err) {
+      setConnectionError(err.message || 'Failed to connect wallet');
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
+  // Connect wallet handler
+  const connectWallet = async (walletId) => {
+    if (walletId === 'metamask') {
+      await connectMetaMask();
+    } else if (walletId === 'walletconnect') {
+      // WalletConnect integration would go here
+      setConnectionError('WalletConnect coming soon');
+    } else if (walletId === 'manual') {
+      setConnectedWallet('manual');
+    }
+  };
+
+  // Disconnect wallet
+  const disconnectWallet = () => {
+    setConnectedWallet(null);
+    setWalletAddress('');
+    setDepositStatus('idle');
+    setDetectedDeposit(null);
+    if (window.ethereum) {
+      window.ethereum.removeAllListeners('accountsChanged');
+      window.ethereum.removeAllListeners('chainChanged');
+    }
+  };
+
+  // Check deposit status
+  const checkDepositStatus = useCallback(async () => {
+    if (!depositAddress || !walletAddress) return;
+    
+    setDepositStatus('checking');
+    try {
+      // This would be an API call to check blockchain
+      const response = await axios.get('/api/deposit/check-status', {
+        params: {
+          address: depositAddress,
+          fromAddress: walletAddress,
+          crypto: selectedCrypto.symbol
+        }
+      });
+      
+      if (response.data.detected) {
+        setDetectedDeposit(response.data.deposit);
+        setDepositStatus('detected');
+        
+        // Refresh balance and transactions
+        dispatch(fetchBalance());
+        dispatch(fetchTransactions({ type: 'deposit', limit: 5 }));
+      }
+    } catch (err) {
+      console.error('Failed to check deposit status:', err);
+    } finally {
+      if (depositStatus !== 'detected') {
+        setDepositStatus('idle');
+      }
+    }
+  }, [depositAddress, walletAddress, selectedCrypto.symbol, dispatch, depositStatus]);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -237,19 +356,83 @@ const Deposit = () => {
             {/* Wallet Connection Options */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Connect Wallet
+                {connectedWallet ? 'Connected Wallet' : 'Connect Wallet (Optional)'}
               </label>
-              <div className="space-y-2">
-                {walletOptions.map((wallet) => (
-                  <button
-                    key={wallet.id}
-                    className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-crypto-border hover:border-primary-500 transition-colors"
-                  >
-                    <span className="text-2xl">{wallet.icon}</span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">{wallet.name}</span>
-                  </button>
-                ))}
-              </div>
+              
+              {connectionError && (
+                <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400">{connectionError}</p>
+                </div>
+              )}
+              
+              {connectedWallet ? (
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">
+                        {walletOptions.find(w => w.id === connectedWallet)?.icon}
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {walletOptions.find(w => w.id === connectedWallet)?.name}
+                      </span>
+                      <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs rounded-full">
+                        Connected
+                      </span>
+                    </div>
+                    <button
+                      onClick={disconnectWallet}
+                      className="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-mono">
+                    {truncateAddress(walletAddress)}
+                  </p>
+                  
+                  {/* Deposit Status */}
+                  {depositStatus === 'checking' && (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Checking for deposits...
+                    </div>
+                  )}
+                  
+                  {depositStatus === 'detected' && detectedDeposit && (
+                    <div className="mt-3 p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                        Deposit Detected!
+                      </p>
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        {detectedDeposit.amount} {selectedCrypto.symbol} received
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {walletOptions.map((wallet) => (
+                    <button
+                      key={wallet.id}
+                      onClick={() => connectWallet(wallet.id)}
+                      disabled={isConnecting}
+                      className="w-full flex items-center space-x-3 p-3 rounded-lg border border-gray-200 dark:border-crypto-border hover:border-primary-500 transition-colors disabled:opacity-50"
+                    >
+                      <span className="text-2xl">{wallet.icon}</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {wallet.name}
+                      </span>
+                      {isConnecting && wallet.id === 'metamask' && (
+                        <Loader2 className="w-4 h-4 animate-spin ml-auto" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Connecting your wallet enables automatic deposit detection and faster confirmations.
+              </p>
             </div>
 
             {/* Minimum Deposit Notice */}
