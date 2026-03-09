@@ -32,15 +32,22 @@ export const verifyEmailConnection = async () => {
 };
 
 // Send email helper
-const sendEmail = async (to, subject, html, text) => {
+const sendEmail = async (to, subject, html, text, replyTo = null) => {
   try {
-    const info = await transporter.sendMail({
+    const mailOptions = {
       from: `"${process.env.FROM_NAME || 'BitSolidus'}" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
       to,
       subject,
       text,
       html
-    });
+    };
+    
+    // Add reply-to if provided
+    if (replyTo) {
+      mailOptions.replyTo = replyTo;
+    }
+    
+    const info = await transporter.sendMail(mailOptions);
     console.log('Email sent:', info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
@@ -49,9 +56,75 @@ const sendEmail = async (to, subject, html, text) => {
   }
 };
 
+// Fetch site config for email branding
+const getEmailBranding = async () => {
+  try {
+    const { default: SiteConfig } = await import('../models/SiteConfig.js');
+    const config = await SiteConfig.getConfig();
+    return {
+      siteName: config.siteName || 'BitSolidus',
+      siteUrl: process.env.FRONTEND_URL || 'https://bitsolidus.io',
+      emailLogo: config.emailBranding?.logo || config.logo || null,
+      primaryColor: config.emailBranding?.primaryColor || '#7c3aed',
+      secondaryColor: config.emailBranding?.secondaryColor || '#4f46e5',
+      supportEmail: config.emailBranding?.supportEmail || config.contact?.email || 'support@bitsolidus.tech',
+      replyToEmail: config.emailBranding?.replyToEmail || 'support@bitsolidus.tech',
+      supportUrl: config.contact?.supportUrl || 'https://bitsolidus.io/support',
+      liveChatUrl: config.contact?.liveChatUrl || 'https://bitsolidus.io/chat',
+      showSupportLink: config.emailBranding?.showSupportLink !== false,
+      showLiveChatLink: config.emailBranding?.showLiveChatLink !== false
+    };
+  } catch (error) {
+    console.error('Failed to fetch email branding:', error);
+    return {
+      siteName: 'BitSolidus',
+      siteUrl: 'https://bitsolidus.io',
+      emailLogo: null,
+      primaryColor: '#7c3aed',
+      secondaryColor: '#4f46e5',
+      supportEmail: 'support@bitsolidus.tech',
+      replyToEmail: 'support@bitsolidus.tech',
+      supportUrl: 'https://bitsolidus.io/support',
+      liveChatUrl: 'https://bitsolidus.io/chat',
+      showSupportLink: true,
+      showLiveChatLink: true
+    };
+  }
+};
+
 // Email Templates
 const getEmailTemplate = (type, data) => {
-  const { siteName = 'BitSolidus', siteUrl = 'https://bitsolidus.io' } = data;
+  const { 
+    siteName = 'BitSolidus', 
+    siteUrl = 'https://bitsolidus.io',
+    emailLogo = null,
+    primaryColor = '#7c3aed',
+    secondaryColor = '#4f46e5',
+    supportEmail = 'support@bitsolidus.tech',
+    supportUrl = 'https://bitsolidus.io/support',
+    liveChatUrl = 'https://bitsolidus.io/chat',
+    showSupportLink = true,
+    showLiveChatLink = true
+  } = data;
+  
+  const logoHtml = emailLogo ? `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="${emailLogo}" alt="${siteName}" style="max-height: 60px; max-width: 200px;" />
+    </div>
+  ` : '';
+  
+  const supportSection = (showSupportLink || showLiveChatLink) ? `
+    <div style="border-top: 1px solid #e5e7eb; margin-top: 30px; padding-top: 20px; text-align: center;">
+      <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">Need help? We're here for you:</p>
+      <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+        ${showSupportLink ? `<a href="${supportUrl}" style="display: inline-block; padding: 10px 20px; background: #f3f4f6; color: #374151; text-decoration: none; border-radius: 6px; font-size: 14px;">📧 Contact Support</a>` : ''}
+        ${showLiveChatLink ? `<a href="${liveChatUrl}" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor}); color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">💬 Live Chat</a>` : ''}
+      </div>
+      <p style="color: #9ca3af; font-size: 12px; margin-top: 15px;">
+        Or reply to this email at <a href="mailto:${supportEmail}" style="color: ${primaryColor};">${supportEmail}</a>
+      </p>
+    </div>
+  ` : '';
   
   const baseTemplate = (content) => `
     <!DOCTYPE html>
@@ -62,10 +135,10 @@ const getEmailTemplate = (type, data) => {
       <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #7c3aed, #4f46e5); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .header { background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor}); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
         .header h1 { color: white; margin: 0; font-size: 24px; }
         .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
-        .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+        .button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor}); color: white; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
         .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 12px; }
         .info-box { background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 15px 0; }
         .warning { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; }
@@ -76,10 +149,12 @@ const getEmailTemplate = (type, data) => {
     <body>
       <div class="container">
         <div class="header">
+          ${logoHtml}
           <h1>${siteName}</h1>
         </div>
         <div class="content">
           ${content}
+          ${supportSection}
         </div>
         <div class="footer">
           <p>© ${new Date().getFullYear()} ${siteName}. All rights reserved.</p>
@@ -209,39 +284,50 @@ const getEmailTemplate = (type, data) => {
 
 // Export email functions
 export const sendVerificationEmail = async (to, username, verificationLink, siteName = 'BitSolidus') => {
-  const html = getEmailTemplate('verification', { username, verificationLink, siteName });
-  const text = `Welcome to ${siteName}! Hi ${username}, Please verify your email by clicking this link: ${verificationLink}. This link expires in 24 hours.`;
-  return sendEmail(to, `Verify Your Email - ${siteName}`, html, text);
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('verification', { 
+    username, 
+    verificationLink, 
+    siteName: branding.siteName,
+    ...branding
+  });
+  const text = `Welcome to ${branding.siteName}! Hi ${username}, Please verify your email by clicking this link: ${verificationLink}. This link expires in 24 hours.`;
+  return sendEmail(to, `Verify Your Email - ${branding.siteName}`, html, text, branding.replyToEmail);
 };
 
 export const sendWelcomeEmail = async (to, username, siteName = 'BitSolidus', siteUrl = 'https://bitsolidus.io') => {
-  const html = getEmailTemplate('welcome', { username, siteName, siteUrl });
-  const text = `Welcome to ${siteName}, ${username}! Your email has been verified successfully. Visit us at ${siteUrl}`;
-  return sendEmail(to, `Welcome to ${siteName}!`, html, text);
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('welcome', { username, siteName: branding.siteName, siteUrl: branding.siteUrl, ...branding });
+  const text = `Welcome to ${branding.siteName}, ${username}! Your email has been verified successfully. Visit us at ${branding.siteUrl}`;
+  return sendEmail(to, `Welcome to ${branding.siteName}!`, html, text, branding.replyToEmail);
 };
 
 export const sendPasswordResetEmail = async (to, username, resetLink, siteName = 'BitSolidus') => {
-  const html = getEmailTemplate('password-reset', { username, resetLink, siteName });
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('password-reset', { username, resetLink, siteName: branding.siteName, ...branding });
   const text = `Password Reset Request. Hi ${username}, Reset your password here: ${resetLink}. This link expires in 1 hour.`;
-  return sendEmail(to, `Password Reset Request - ${siteName}`, html, text);
+  return sendEmail(to, `Password Reset Request - ${branding.siteName}`, html, text, branding.replyToEmail);
 };
 
 export const sendKycSubmittedEmail = async (to, username, siteName = 'BitSolidus') => {
-  const html = getEmailTemplate('kyc-submitted', { username, siteName });
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('kyc-submitted', { username, siteName: branding.siteName, ...branding });
   const text = `KYC Submission Received. Hi ${username}, Your KYC documents have been submitted and are under review.`;
-  return sendEmail(to, `KYC Submission Received - ${siteName}`, html, text);
+  return sendEmail(to, `KYC Submission Received - ${branding.siteName}`, html, text, branding.replyToEmail);
 };
 
 export const sendKycApprovedEmail = async (to, username, siteName = 'BitSolidus', siteUrl = 'https://bitsolidus.io') => {
-  const html = getEmailTemplate('kyc-approved', { username, siteName, siteUrl });
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('kyc-approved', { username, siteName: branding.siteName, siteUrl: branding.siteUrl, ...branding });
   const text = `KYC Verification Approved! Hi ${username}, Your identity has been verified successfully!`;
-  return sendEmail(to, `KYC Approved - ${siteName}`, html, text);
+  return sendEmail(to, `KYC Approved - ${branding.siteName}`, html, text, branding.replyToEmail);
 };
 
 export const sendKycRejectedEmail = async (to, username, rejectionReason, siteName = 'BitSolidus', siteUrl = 'https://bitsolidus.io') => {
-  const html = getEmailTemplate('kyc-rejected', { username, rejectionReason, siteName, siteUrl });
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('kyc-rejected', { username, rejectionReason, siteName: branding.siteName, siteUrl: branding.siteUrl, ...branding });
   const text = `KYC Verification Update. Hi ${username}, Your KYC could not be approved.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`;
-  return sendEmail(to, `KYC Update - ${siteName}`, html, text);
+  return sendEmail(to, `KYC Update - ${branding.siteName}`, html, text, branding.replyToEmail);
 };
 
 // Send deposit notification to admin

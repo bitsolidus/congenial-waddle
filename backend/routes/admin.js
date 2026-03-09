@@ -1183,6 +1183,41 @@ router.post('/site-config/upload-loading-icon', protect, adminOnly, uploadBrandi
   }
 });
 
+// @route   POST /api/admin/site-config/upload-email-logo
+// @desc    Upload email logo
+// @access  Admin
+router.post('/site-config/upload-email-logo', protect, adminOnly, uploadBranding.single('emailLogo'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const emailLogoUrl = `/uploads/${req.file.filename}`;
+    
+    let config = await SiteConfig.findOne();
+    if (!config) {
+      config = new SiteConfig();
+    }
+    
+    // Initialize emailBranding if it doesn't exist
+    if (!config.emailBranding) {
+      config.emailBranding = {};
+    }
+    config.emailBranding.logo = emailLogoUrl;
+    config.updatedBy = req.user._id;
+    await config.save();
+
+    res.json({
+      success: true,
+      message: 'Email logo uploaded successfully',
+      emailLogoUrl
+    });
+  } catch (error) {
+    console.error('Upload email logo error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   PUT /api/admin/change-password
 // @desc    Change admin password
 // @access  Admin

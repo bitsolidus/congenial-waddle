@@ -65,7 +65,21 @@ const siteConfigSchema = new mongoose.Schema({
   contact: {
     email: { type: String, default: 'support@bitsolidus.tech' },
     phone: { type: String, default: null },
-    address: { type: String, default: null }
+    address: { type: String, default: null },
+    supportUrl: { type: String, default: 'https://bitsolidus.io/support' },
+    liveChatUrl: { type: String, default: 'https://bitsolidus.io/chat' }
+  },
+  
+  // Email Branding
+  emailBranding: {
+    logo: { type: String, default: null }, // URL to email logo image
+    showLogo: { type: Boolean, default: true },
+    primaryColor: { type: String, default: '#7c3aed' },
+    secondaryColor: { type: String, default: '#4f46e5' },
+    supportEmail: { type: String, default: 'support@bitsolidus.tech' },
+    replyToEmail: { type: String, default: 'support@bitsolidus.tech' },
+    showSupportLink: { type: Boolean, default: true },
+    showLiveChatLink: { type: Boolean, default: true }
   },
   
   // Platform Settings
