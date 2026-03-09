@@ -34,8 +34,8 @@ const TierUpgrade = () => {
 
   const tiers = [
     {
-      id: 'standard',
-      name: 'Standard',
+      id: 'bronze',
+      name: 'Bronze',
       color: 'gray',
       icon: Users,
       description: 'Basic account for new users',
@@ -51,8 +51,8 @@ const TierUpgrade = () => {
       ]
     },
     {
-      id: 'verified',
-      name: 'Verified',
+      id: 'silver',
+      name: 'Silver',
       color: 'blue',
       icon: Shield,
       description: 'For users who completed KYC',
@@ -69,8 +69,8 @@ const TierUpgrade = () => {
       ]
     },
     {
-      id: 'premium',
-      name: 'Premium',
+      id: 'gold',
+      name: 'Gold',
       color: 'purple',
       icon: TrendingUp,
       description: 'For active traders',
@@ -105,7 +105,7 @@ const TierUpgrade = () => {
         'Exclusive events & rewards'
       ],
       requirements: [
-        { label: 'Premium Tier for 6+ months', key: 'premiumDuration', threshold: 180 },
+        { label: 'Gold Tier for 6+ months', key: 'premiumDuration', threshold: 180 },
         { label: 'Trading Volume: $1,000,000+', key: 'tradingVolume', threshold: 1000000 },
         { label: 'Account Age: 1+ year', key: 'accountAge', threshold: 365 },
         { label: '10+ Successful Referrals', key: 'referrals', threshold: 10 }
@@ -140,7 +140,7 @@ const TierUpgrade = () => {
   };
 
   const getCurrentTierIndex = () => {
-    return tiers.findIndex(t => t.id === (user?.tier || 'standard'));
+    return tiers.findIndex(t => t.id === (user?.tier || 'bronze'));
   };
 
   const isRequirementMet = (req) => {
@@ -160,7 +160,7 @@ const TierUpgrade = () => {
     return tier.requirements.every(req => isRequirementMet(req));
   };
 
-  const currentTier = tiers[getCurrentTierIndex()];
+  const currentTier = tiers[getCurrentTierIndex()] || tiers[0];
   const nextTier = getNextTier();
 
   if (loading) {
