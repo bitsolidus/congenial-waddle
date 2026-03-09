@@ -66,8 +66,165 @@ const Notifications = () => {
         return '🔒';
       case 'promo':
         return '🎁';
+      case 'email_verified':
+        return '✉️';
       default:
         return '📢';
+    }
+  };
+
+  // Format notification data into a professional display
+  const formatNotificationData = (type, data) => {
+    if (!data) return null;
+
+    switch (type) {
+      case 'deposit':
+        return (
+          <div className="mt-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">💰</span>
+              <span className="font-semibold text-green-800 dark:text-green-200">Deposit Details</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Amount:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                  {data.amount} {data.crypto || data.cryptocurrency}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Status:</span>
+                <span className="ml-2 px-2 py-0.5 bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 rounded-full text-xs">
+                  Completed
+                </span>
+              </div>
+              {data.transactionId && (
+                <div className="col-span-2">
+                  <span className="text-gray-500 dark:text-gray-400">Transaction ID:</span>
+                  <span className="ml-2 font-mono text-xs text-gray-600 dark:text-gray-400">
+                    {data.transactionId}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'withdrawal':
+        return (
+          <div className="mt-3 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">💸</span>
+              <span className="font-semibold text-blue-800 dark:text-blue-200">Withdrawal Details</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Amount:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                  {data.amount} {data.crypto}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Status:</span>
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                  data.status === 'completed' 
+                    ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200'
+                    : data.status === 'pending'
+                    ? 'bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200'
+                }`}>
+                  {data.status || 'Processing'}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'trade':
+        return (
+          <div className="mt-3 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">📈</span>
+              <span className="font-semibold text-purple-800 dark:text-purple-200">Trade Details</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Type:</span>
+                <span className={`ml-2 font-medium ${
+                  data.type === 'buy' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                }`}>
+                  {data.type?.toUpperCase()}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Amount:</span>
+                <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                  {data.amount} {data.crypto}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'kyc':
+        return (
+          <div className="mt-3 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">✅</span>
+              <span className="font-semibold text-yellow-800 dark:text-yellow-200">KYC Status Update</span>
+            </div>
+            <div className="text-sm">
+              <span className="text-gray-500 dark:text-gray-400">Status:</span>
+              <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                data.status === 'approved' || data.status === 'verified'
+                  ? 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200'
+                  : data.status === 'rejected'
+                  ? 'bg-red-100 dark:bg-red-800 text-red-800 dark:text-red-200'
+                  : 'bg-yellow-100 dark:bg-yellow-800 text-yellow-800 dark:text-yellow-200'
+              }`}>
+                {data.status}
+              </span>
+            </div>
+          </div>
+        );
+
+      case 'email_verified':
+        return (
+          <div className="mt-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">✉️</span>
+              <span className="font-semibold text-indigo-800 dark:text-indigo-200">Email Verification</span>
+            </div>
+            <div className="text-sm">
+              <p className="text-gray-600 dark:text-gray-400">
+                User <span className="font-medium text-gray-900 dark:text-white">{data.username}</span> ({data.email}) has verified their email.
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                Verified at: {new Date(data.verifiedAt).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        );
+
+      default:
+        // For unknown types, show a cleaner generic view
+        return (
+          <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Additional Information:</p>
+            <div className="space-y-1">
+              {Object.entries(data).map(([key, value]) => (
+                <div key={key} className="flex text-sm">
+                  <span className="text-gray-500 dark:text-gray-400 capitalize w-32 flex-shrink-0">
+                    {key.replace(/([A-Z])/g, ' $1').trim()}:
+                  </span>
+                  <span className="text-gray-700 dark:text-gray-300 font-mono text-xs">
+                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
     }
   };
 
@@ -164,11 +321,7 @@ const Notifications = () => {
                           {notification.message}
                         </p>
                         {notification.data && expandedId === notification._id && (
-                          <div className="mt-3 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-                            <pre className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-                              {JSON.stringify(notification.data, null, 2)}
-                            </pre>
-                          </div>
+                          formatNotificationData(notification.type, notification.data)
                         )}
                       </div>
                       
