@@ -1234,7 +1234,7 @@ router.get('/referral', protect, async (req, res) => {
       success: true,
       referral: {
         code: user.referralCode,
-        link: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/register?ref=${user.referralCode}`,
+        link: `${process.env.FRONTEND_URL || 'https://bitsolidus.io'}/register?ref=${user.referralCode}`,
         totalReferrals: referralCount,
         referralEarnings: user.referralEarnings || 0,
         referredUsers: referredUsers.map(u => ({
