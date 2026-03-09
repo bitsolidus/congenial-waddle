@@ -32,11 +32,49 @@ export const login = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axios.post('/api/auth/login', credentials);
+      
+      // Check if OTP is required
+      if (response.data.requiresOtp) {
+        return {
+          requiresOtp: true,
+          tempUserId: response.data.tempUserId,
+          email: response.data.email,
+          message: response.data.message
+        };
+      }
+      
+      // Direct login (no OTP required - shouldn't happen with our implementation)
       localStorage.setItem('token', response.data.token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
+    }
+  }
+);
+
+export const verifyOtp = createAsyncThunk(
+  'auth/verifyOtp',
+  async ({ userId, otp }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/api/auth/verify-otp', { userId, otp });
+      localStorage.setItem('token', response.data.token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'OTP verification failed');
+    }
+  }
+);
+
+export const resendOtp = createAsyncThunk(
+  'auth/resendOtp',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/api/auth/resend-otp', { userId });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to resend OTP');
     }
   }
 );
@@ -100,6 +138,10 @@ const initialState = {
   isLoading: !!token, // Set loading to true if token exists (need to verify it)
   error: null,
   registrationSuccess: false,
+  // OTP state
+  requiresOtp: false,
+  tempUserId: null,
+  maskedEmail: null,
 };
 
 const authSlice = createSlice({
@@ -133,11 +175,51 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
+        // Check if OTP is required
+        if (action.payload.requiresOtp) {
+          state.requiresOtp = true;
+          state.tempUserId = action.payload.tempUserId;
+          state.maskedEmail = action.payload.email;
+          state.isAuthenticated = false;
+          state.user = null;
+        } else {
+          state.user = action.payload.user;
+          state.isAuthenticated = true;
+          state.requiresOtp = false;
+          state.tempUserId = null;
+          state.maskedEmail = null;
+        }
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
+        state.error = action.payload;
+      })
+      // Verify OTP
+      .addCase(verifyOtp.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(verifyOtp.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+        state.requiresOtp = false;
+        state.tempUserId = null;
+        state.maskedEmail = null;
+      })
+      .addCase(verifyOtp.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      // Resend OTP
+      .addCase(resendOtp.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(resendOtp.fulfilled, (state) => {
+        // Just clear any errors, the OTP was sent
+        state.error = null;
+      })
+      .addCase(resendOtp.rejected, (state, action) => {
         state.error = action.payload;
       })
       // Register

@@ -96,6 +96,13 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  // Login OTP Verification
+  loginOtp: {
+    code: { type: String, default: null },
+    expiresAt: { type: Date, default: null },
+    attempts: { type: Number, default: 0 },
+    lockedUntil: { type: Date, default: null }
+  },
   // Personal Information (can be filled from profile or KYC)
   firstName: { type: String, default: null },
   lastName: { type: String, default: null },

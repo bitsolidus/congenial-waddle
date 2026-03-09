@@ -7,7 +7,8 @@ import { generateToken } from '../middleware/auth.js';
 import { 
   sendVerificationEmail, 
   sendWelcomeEmail,
-  sendPasswordResetEmail 
+  sendPasswordResetEmail,
+  sendLoginOtpEmail 
 } from '../config/email.js';
 
 const router = express.Router();
@@ -150,16 +151,133 @@ router.post(
         };
       }
       
-      // Update last login
+      // Check if OTP is locked due to too many attempts
+      if (user.loginOtp?.lockedUntil && new Date() < user.loginOtp.lockedUntil) {
+        const remainingTime = Math.ceil((user.loginOtp.lockedUntil - new Date()) / 60000);
+        return res.status(429).json({ 
+          message: `Too many failed attempts. Please try again in ${remainingTime} minutes.` 
+        });
+      }
+
+      // Generate 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      
+      // Store OTP in user document
+      user.loginOtp = {
+        code: otp,
+        expiresAt: otpExpires,
+        attempts: 0,
+        lockedUntil: null
+      };
       user.lastLogin = new Date();
       await user.save();
 
-      // Log login activity
+      // Send OTP email (non-blocking)
+      sendLoginOtpEmail(user.email, user.username, otp).catch(emailError => {
+        console.error('Failed to send OTP email:', emailError.message);
+      });
+
+      // Log login attempt
+      await ActivityLog.create({
+        userId: user._id,
+        type: 'login',
+        title: 'Login OTP Sent',
+        description: 'Login OTP sent to user email',
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'info'
+      });
+
+      // Return pending state - don't return token yet
+      res.json({
+        success: true,
+        requiresOtp: true,
+        message: 'A verification code has been sent to your email. Please enter the code to complete login.',
+        tempUserId: user._id,
+        email: user.email.replace(/(.{2})(.*)(@.*)/, '$1***$3') // Masked email
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Server error during login' });
+    }
+  }
+);
+
+// @route   POST /api/auth/verify-otp
+// @desc    Verify login OTP and complete login
+// @access  Public
+router.post(
+  '/verify-otp',
+  [
+    body('userId').notEmpty().withMessage('User ID is required'),
+    body('otp').isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits'),
+    handleValidationErrors
+  ],
+  async (req, res) => {
+    try {
+      const { userId, otp } = req.body;
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid session. Please login again.' });
+      }
+
+      // Check if OTP is locked
+      if (user.loginOtp?.lockedUntil && new Date() < user.loginOtp.lockedUntil) {
+        const remainingTime = Math.ceil((user.loginOtp.lockedUntil - new Date()) / 60000);
+        return res.status(429).json({ 
+          message: `Too many failed attempts. Please try again in ${remainingTime} minutes.` 
+        });
+      }
+
+      // Check if OTP exists and is valid
+      if (!user.loginOtp?.code || !user.loginOtp?.expiresAt) {
+        return res.status(401).json({ message: 'No OTP found. Please login again.' });
+      }
+
+      // Check if OTP expired
+      if (new Date() > user.loginOtp.expiresAt) {
+        return res.status(401).json({ message: 'OTP has expired. Please login again.' });
+      }
+
+      // Verify OTP
+      if (user.loginOtp.code !== otp) {
+        // Increment attempts
+        const attempts = (user.loginOtp.attempts || 0) + 1;
+        user.loginOtp.attempts = attempts;
+        
+        // Lock after 5 failed attempts for 30 minutes
+        if (attempts >= 5) {
+          user.loginOtp.lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
+          await user.save();
+          return res.status(429).json({ 
+            message: 'Too many failed attempts. Please try again in 30 minutes.' 
+          });
+        }
+        
+        await user.save();
+        return res.status(401).json({ 
+          message: `Invalid OTP. ${5 - attempts} attempts remaining.`
+        });
+      }
+
+      // OTP verified - clear it and generate token
+      user.loginOtp = {
+        code: null,
+        expiresAt: null,
+        attempts: 0,
+        lockedUntil: null
+      };
+      await user.save();
+
+      // Log successful login
       await ActivityLog.create({
         userId: user._id,
         type: 'login',
         title: 'User Login',
-        description: 'User logged in successfully',
+        description: 'User logged in successfully with OTP verification',
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
         severity: 'info'
@@ -188,8 +306,77 @@ router.post(
         }
       });
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ message: 'Server error during login' });
+      console.error('OTP verification error:', error);
+      res.status(500).json({ message: 'Server error during verification' });
+    }
+  }
+);
+
+// @route   POST /api/auth/resend-otp
+// @desc    Resend login OTP
+// @access  Public
+router.post(
+  '/resend-otp',
+  [
+    body('userId').notEmpty().withMessage('User ID is required'),
+    handleValidationErrors
+  ],
+  async (req, res) => {
+    try {
+      const { userId } = req.body;
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid session. Please login again.' });
+      }
+
+      // Check if OTP is locked
+      if (user.loginOtp?.lockedUntil && new Date() < user.loginOtp.lockedUntil) {
+        const remainingTime = Math.ceil((user.loginOtp.lockedUntil - new Date()) / 60000);
+        return res.status(429).json({ 
+          message: `Too many failed attempts. Please try again in ${remainingTime} minutes.` 
+        });
+      }
+
+      // Rate limit: Only allow resend every 60 seconds
+      if (user.loginOtp?.expiresAt) {
+        const timeSinceLastOtp = Date.now() - (user.loginOtp.expiresAt - 10 * 60 * 1000);
+        if (timeSinceLastOtp < 60000) {
+          const waitTime = Math.ceil((60000 - timeSinceLastOtp) / 1000);
+          return res.status(429).json({ 
+            message: `Please wait ${waitTime} seconds before requesting a new code.` 
+          });
+        }
+      }
+
+      // Generate new OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      
+      user.loginOtp = {
+        code: otp,
+        expiresAt: otpExpires,
+        attempts: 0,
+        lockedUntil: null
+      };
+      await user.save();
+
+      // Send OTP email
+      try {
+        await sendLoginOtpEmail(user.email, user.username, otp);
+      } catch (emailError) {
+        console.error('Failed to send OTP email:', emailError.message);
+        return res.status(500).json({ message: 'Failed to send OTP. Please try again.' });
+      }
+
+      res.json({
+        success: true,
+        message: 'A new verification code has been sent to your email.'
+      });
+    } catch (error) {
+      console.error('Resend OTP error:', error);
+      res.status(500).json({ message: 'Server error' });
     }
   }
 );

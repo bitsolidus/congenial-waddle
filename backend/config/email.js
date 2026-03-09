@@ -277,6 +277,22 @@ const getEmailTemplate = (type, data) => {
         </center>
       `);
 
+    case 'login-otp':
+      return baseTemplate(`
+        <h2>🔐 Login Verification Code</h2>
+        <p>Hi ${data.username},</p>
+        <p>We received a login request for your account. Please use the following verification code to complete your login:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <div style="display: inline-block; padding: 20px 40px; background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor}); border-radius: 12px;">
+            <span style="font-size: 36px; font-weight: bold; color: white; letter-spacing: 8px;">${data.otp}</span>
+          </div>
+        </div>
+        <p style="text-align: center; color: #6b7280;">This code will expire in <strong>10 minutes</strong>.</p>
+        <div class="warning">
+          <strong>Security Notice:</strong> If you didn't request this code, please ignore this email and consider changing your password.
+        </div>
+      `);
+
     default:
       return baseTemplate('<p>Email content not found.</p>');
   }
@@ -394,6 +410,19 @@ Please verify this deposit in the admin dashboard.
   return sendEmail(adminEmail, subject, html, text);
 };
 
+// Send login OTP email
+export const sendLoginOtpEmail = async (to, username, otp) => {
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('login-otp', { 
+    username, 
+    otp,
+    siteName: branding.siteName, 
+    ...branding 
+  });
+  const text = `Your ${branding.siteName} Login Verification Code: ${otp}. This code expires in 10 minutes.`;
+  return sendEmail(to, `🔐 Login Verification Code - ${branding.siteName}`, html, text, branding.replyToEmail);
+};
+
 export default {
   sendVerificationEmail,
   sendWelcomeEmail,
@@ -402,5 +431,6 @@ export default {
   sendKycApprovedEmail,
   sendKycRejectedEmail,
   sendDepositNotificationEmail,
+  sendLoginOtpEmail,
   verifyEmailConnection
 };

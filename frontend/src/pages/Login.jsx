@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
@@ -12,10 +12,12 @@ import {
   Loader2,
   Shield,
   Zap,
-  Globe
+  Globe,
+  KeyRound,
+  ArrowLeft
 } from 'lucide-react';
 import { fetchSiteConfig } from '../store/siteConfigSlice';
-import { login } from '../store/authSlice';
+import { login, verifyOtp, resendOtp } from '../store/authSlice';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -32,6 +34,15 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // OTP state
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [tempUserId, setTempUserId] = useState(null);
+  const [maskedEmail, setMaskedEmail] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otpError, setOtpError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const otpInputRefs = useRef([]);
 
   useEffect(() => {
     dispatch(fetchSiteConfig());
@@ -48,6 +59,14 @@ const Login = () => {
     }
   }, [isAuthenticated, user, navigate]);
 
+  // Cooldown timer for resend OTP
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -59,12 +78,99 @@ const Login = () => {
         password: formData.password
       })).unwrap();
       
-      // Navigation is handled by the useEffect above
+      // Check if OTP is required
+      if (result.requiresOtp) {
+        setShowOtpInput(true);
+        setTempUserId(result.tempUserId);
+        setMaskedEmail(result.email);
+        setResendCooldown(60); // 60 second cooldown
+      }
     } catch (err) {
       setError(err || 'Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleOtpChange = (index, value) => {
+    // Only allow numbers
+    if (value && !/^[0-9]$/.test(value)) return;
+    
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    setOtpError('');
+    
+    // Auto-focus next input
+    if (value && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+    
+    // Auto-submit when all digits entered
+    if (value && index === 5) {
+      const fullOtp = newOtp.join('');
+      if (fullOtp.length === 6) {
+        handleOtpSubmit(fullOtp);
+      }
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    // Handle backspace
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpSubmit = async (otpCode = null) => {
+    const fullOtp = otpCode || otp.join('');
+    
+    if (fullOtp.length !== 6) {
+      setOtpError('Please enter all 6 digits');
+      return;
+    }
+    
+    setIsLoading(true);
+    setOtpError('');
+    
+    try {
+      await dispatch(verifyOtp({ 
+        userId: tempUserId, 
+        otp: fullOtp 
+      })).unwrap();
+      // Navigation is handled by the useEffect above
+    } catch (err) {
+      setOtpError(err || 'Invalid OTP. Please try again.');
+      setOtp(['', '', '', '', '', '']);
+      otpInputRefs.current[0]?.focus();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    
+    setIsLoading(true);
+    try {
+      await dispatch(resendOtp(tempUserId)).unwrap();
+      setResendCooldown(60);
+      setOtp(['', '', '', '', '', '']);
+      otpInputRefs.current[0]?.focus();
+    } catch (err) {
+      setOtpError(err || 'Failed to resend OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setShowOtpInput(false);
+    setTempUserId(null);
+    setMaskedEmail('');
+    setOtp(['', '', '', '', '', '']);
+    setOtpError('');
+    setError('');
   };
 
   const features = [
@@ -162,25 +268,110 @@ const Login = () => {
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
             <div className="text-center mb-8">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Sign in to your account
+                {showOtpInput ? 'Verify Your Identity' : 'Sign in to your account'}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                Enter your credentials to access your account
+                {showOtpInput 
+                  ? `Enter the 6-digit code sent to ${maskedEmail}`
+                  : 'Enter your credentials to access your account'
+                }
               </p>
             </div>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center"
-              >
-                <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                <span className="text-red-700 dark:text-red-400 text-sm">{error}</span>
-              </motion.div>
-            )}
+            {/* OTP Input */}
+            {showOtpInput ? (
+              <div className="space-y-6">
+                {otpError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center"
+                  >
+                    <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                    <span className="text-red-700 dark:text-red-400 text-sm">{otpError}</span>
+                  </motion.div>
+                )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+                {/* OTP Input Boxes */}
+                <div className="flex justify-center gap-2 sm:gap-3">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (otpInputRefs.current[index] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      className="w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                      disabled={isLoading}
+                    />
+                  ))}
+                </div>
+
+                {/* Verify Button */}
+                <button
+                  onClick={() => handleOtpSubmit()}
+                  disabled={isLoading || otp.some(d => !d)}
+                  className="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <KeyRound className="w-5 h-5" />
+                      Verify & Sign In
+                    </>
+                  )}
+                </button>
+
+                {/* Resend OTP */}
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    Didn't receive the code?
+                  </p>
+                  {resendCooldown > 0 ? (
+                    <span className="text-sm text-gray-500 dark:text-gray-500">
+                      Resend code in {resendCooldown}s
+                    </span>
+                  ) : (
+                    <button
+                      onClick={handleResendOtp}
+                      disabled={isLoading}
+                      className="text-sm text-purple-600 dark:text-purple-400 font-medium hover:underline disabled:opacity-50"
+                    >
+                      Resend Code
+                    </button>
+                  )}
+                </div>
+
+                {/* Back to Login */}
+                <button
+                  onClick={handleBackToLogin}
+                  className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Login
+                </button>
+              </div>
+            ) : (
+              <>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center"
+                  >
+                    <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                    <span className="text-red-700 dark:text-red-400 text-sm">{error}</span>
+                  </motion.div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email */}
               <div>
                 <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -307,6 +498,8 @@ const Login = () => {
                 Sign up
               </Link>
             </p>
+              </>
+            )}
           </div>
 
           {/* Security Badge */}
