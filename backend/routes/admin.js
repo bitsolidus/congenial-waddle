@@ -1288,7 +1288,7 @@ router.post('/user/:userId/resend-verification', protect, adminOnly, async (req,
     await user.save();
 
     // Send verification email
-    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}`;
+    const verificationLink = `${process.env.FRONTEND_URL || 'https://bitsolidus.io'}/verify-email?token=${verificationToken}`;
     
     let emailSent = false;
     try {
@@ -1422,7 +1422,7 @@ router.post('/user/:userId/reset-password', protect, adminOnly, async (req, res)
 
     // Send password reset email
     const { sendPasswordResetEmail } = await import('../config/email.js');
-    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_URL || 'https://bitsolidus.io'}/reset-password?token=${resetToken}`;
     
     try {
       await sendPasswordResetEmail(user.email, user.username, resetLink);
