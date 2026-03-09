@@ -1203,4 +1203,80 @@ router.get('/internal-transfer-history', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/user/referral
+// @desc    Get user referral information
+// @access  Private
+router.get('/referral', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    
+    // Generate referral code if not exists (for existing users)
+    if (!user.referralCode) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      user.referralCode = code;
+      await user.save();
+    }
+    
+    // Get referral count
+    const referralCount = await User.countDocuments({ referredBy: user._id });
+    
+    // Get list of referred users (limited info)
+    const referredUsers = await User.find({ referredBy: user._id })
+      .select('username createdAt tier')
+      .sort({ createdAt: -1 })
+      .limit(20);
+    
+    res.json({
+      success: true,
+      referral: {
+        code: user.referralCode,
+        link: `${process.env.FRONTEND_URL || 'https://yourdomain.com'}/register?ref=${user.referralCode}`,
+        totalReferrals: referralCount,
+        referralEarnings: user.referralEarnings || 0,
+        referredUsers: referredUsers.map(u => ({
+          username: u.username,
+          tier: u.tier,
+          joinedAt: u.createdAt
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Get referral error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/user/referral/validate
+// @desc    Validate a referral code
+// @access  Public
+router.post('/referral/validate', async (req, res) => {
+  try {
+    const { code } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({ valid: false, message: 'Referral code is required' });
+    }
+    
+    const referrer = await User.findOne({ referralCode: code.toUpperCase() });
+    
+    if (!referrer) {
+      return res.json({ valid: false, message: 'Invalid referral code' });
+    }
+    
+    res.json({
+      valid: true,
+      referrer: {
+        username: referrer.username
+      }
+    });
+  } catch (error) {
+    console.error('Validate referral error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;

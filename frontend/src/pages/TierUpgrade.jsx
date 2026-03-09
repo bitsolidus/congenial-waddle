@@ -17,7 +17,11 @@ import {
   UserCheck,
   AlertCircle,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Copy,
+  Share2,
+  Gift,
+  Check
 } from 'lucide-react';
 
 const TierUpgrade = () => {
@@ -25,6 +29,8 @@ const TierUpgrade = () => {
   const { user } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
   const [tierSettings, setTierSettings] = useState(null);
+  const [referralData, setReferralData] = useState(null);
+  const [copied, setCopied] = useState(false);
   const [userProgress, setUserProgress] = useState({
     kycCompleted: false,
     tradingVolume: 0,
@@ -120,9 +126,10 @@ const TierUpgrade = () => {
   const fetchTierData = async () => {
     try {
       setLoading(true);
-      const [settingsRes, progressRes] = await Promise.all([
+      const [settingsRes, progressRes, referralRes] = await Promise.all([
         axios.get('/api/admin/settings'),
-        axios.get('/api/user/tier-progress')
+        axios.get('/api/user/tier-progress'),
+        axios.get('/api/user/referral').catch(() => ({ data: { referral: null } }))
       ]);
       
       setTierSettings(settingsRes.data.settings?.tierLimits);
@@ -132,11 +139,18 @@ const TierUpgrade = () => {
         accountAge: user?.createdAt ? Math.floor((Date.now() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)) : 0,
         referrals: 0
       });
+      setReferralData(referralRes.data.referral);
     } catch (error) {
       console.error('Error fetching tier data:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const getCurrentTierIndex = () => {
@@ -414,7 +428,10 @@ const TierUpgrade = () => {
             <ChevronRight className="w-5 h-5 text-gray-400" />
           </Link>
 
-          <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => document.getElementById('referral-section')?.scrollIntoView({ behavior: 'smooth' })}
+            className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-500 transition-colors text-left"
+          >
             <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
               <Users className="w-5 h-5 text-green-600" />
             </div>
@@ -422,9 +439,126 @@ const TierUpgrade = () => {
               <p className="font-medium text-gray-900 dark:text-white">Refer Friends</p>
               <p className="text-xs text-gray-500">Invite & earn rewards</p>
             </div>
-            <span className="text-xs text-gray-400">Coming Soon</span>
+            <span className="text-xs text-green-600 font-medium">{referralData?.totalReferrals || 0} joined</span>
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Referral Section */}
+      <motion.div
+        id="referral-section"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="mt-8 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 text-white"
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
+              <Gift className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold">Refer Friends & Earn Rewards</h3>
+              <p className="text-white/80 text-sm">Share your referral link and get rewards when friends join and trade</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <p className="text-2xl font-bold">{referralData?.totalReferrals || 0}</p>
+              <p className="text-xs text-white/80">Referrals</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">${referralData?.referralEarnings?.toFixed(2) || '0.00'}</p>
+              <p className="text-xs text-white/80">Earnings</p>
+            </div>
           </div>
         </div>
+
+        <div className="mt-6 bg-white/10 rounded-lg p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <label className="text-xs text-white/80 mb-1 block">Your Referral Link</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={referralData?.link || 'Loading...'}
+                  className="flex-1 bg-white/20 border-0 rounded-lg px-4 py-2.5 text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-white/30"
+                />
+                <button
+                  onClick={() => copyToClipboard(referralData?.link)}
+                  className="px-4 py-2.5 bg-white text-green-600 rounded-lg font-medium hover:bg-white/90 transition-colors flex items-center gap-2"
+                >
+                  {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
+            <div className="flex items-end">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: 'Join me on this platform',
+                        text: 'Use my referral link to sign up and get started!',
+                        url: referralData?.link
+                      });
+                    } else {
+                      copyToClipboard(referralData?.link);
+                    }
+                  }}
+                  className="px-4 py-2.5 bg-white/20 text-white rounded-lg font-medium hover:bg-white/30 transition-colors flex items-center gap-2"
+                >
+                  <Share2 className="w-4 h-4" />
+                  Share
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 text-center">
+            <p className="text-xs text-white/70">
+              Your referral code: <span className="font-mono font-bold">{referralData?.code || '---'}</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Referred Users List */}
+        {referralData?.referredUsers?.length > 0 && (
+          <div className="mt-6">
+            <h4 className="font-medium mb-3">Your Referrals</h4>
+            <div className="bg-white/10 rounded-lg divide-y divide-white/10">
+              {referralData.referredUsers.slice(0, 5).map((referredUser, index) => (
+                <div key={index} className="flex items-center justify-between px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{referredUser.username}</p>
+                      <p className="text-xs text-white/70">
+                        {new Date(referredUser.joinedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    referredUser.tier === 'bronze' ? 'bg-orange-500/30' :
+                    referredUser.tier === 'silver' ? 'bg-gray-400/30' :
+                    referredUser.tier === 'gold' ? 'bg-yellow-500/30' :
+                    'bg-purple-500/30'
+                  }`}>
+                    {referredUser.tier?.charAt(0).toUpperCase() + referredUser.tier?.slice(1)}
+                  </span>
+                </div>
+              ))}
+              {referralData.referredUsers.length > 5 && (
+                <div className="px-4 py-2 text-center text-xs text-white/70">
+                  +{referralData.referredUsers.length - 5} more referrals
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </motion.div>
     </div>
   );

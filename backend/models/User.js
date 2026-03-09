@@ -79,6 +79,21 @@ const userSchema = new mongoose.Schema({
     referrals: { type: Number, default: 0 },
     lastEvaluated: { type: Date, default: null }
   },
+  // Referral system
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  referralEarnings: {
+    type: Number,
+    default: 0
+  },
   kycStatus: {
     type: String,
     enum: ['pending', 'verified', 'rejected', 'not_submitted'],
@@ -272,8 +287,23 @@ userSchema.pre('save', async function(next) {
     }
   }
   
+  // Generate referral code for new users
+  if (this.isNew && !this.referralCode) {
+    this.referralCode = generateReferralCode();
+  }
+  
   next();
 });
+
+// Generate unique referral code
+function generateReferralCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
 
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {

@@ -47,7 +47,7 @@ router.post(
   ],
   async (req, res) => {
     try {
-      const { username, email, password, country, currency } = req.body;
+      const { username, email, password, country, currency, referralCode } = req.body;
 
       // Check if user already exists
       const existingUser = await User.findOne({
@@ -82,6 +82,20 @@ router.post(
         emailVerificationToken: verificationToken,
         emailVerificationExpires: verificationExpires
       });
+
+      // Handle referral code
+      if (referralCode) {
+        const referrer = await User.findOne({ referralCode: referralCode.toUpperCase() });
+        if (referrer && referrer._id.toString() !== user._id.toString()) {
+          user.referredBy = referrer._id;
+          await user.save();
+          
+          // Update referrer's referral count
+          await User.findByIdAndUpdate(referrer._id, {
+            $inc: { 'tierUpgradeProgress.referrals': 1 }
+          });
+        }
+      }
 
       // Send verification email (non-blocking)
       const verificationLink = `${process.env.FRONTEND_URL || 'https://bitsolidus.io'}/verify-email?token=${verificationToken}`;

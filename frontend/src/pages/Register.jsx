@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { register, clearError } from '../store/authSlice';
-import { Mail, Lock, User, Eye, EyeOff, Loader2, Check, X, Globe } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, Loader2, Check, X, Globe, Gift } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getPasswordStrength, getPasswordStrengthLabel, getPasswordStrengthColor } from '../utils/helpers';
 import { getCurrencyByCountry } from '../utils/currency';
+import axios from 'axios';
 
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isLoading, error, registrationSuccess } = useSelector((state) => state.auth);
+  
+  const referralCode = searchParams.get('ref');
   
   const [formData, setFormData] = useState({
     username: '',
@@ -19,10 +23,33 @@ const Register = () => {
     confirmPassword: '',
     country: '',
     agreeTerms: false,
+    referralCode: referralCode || '',
   });
   const [selectedCurrency, setSelectedCurrency] = useState({ code: 'USD', symbol: '$', name: 'US Dollar' });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [referrerInfo, setReferrerInfo] = useState(null);
+  const [validatingReferral, setValidatingReferral] = useState(false);
+
+  // Validate referral code on load
+  useEffect(() => {
+    if (referralCode) {
+      validateReferralCode(referralCode);
+    }
+  }, [referralCode]);
+
+  const validateReferralCode = async (code) => {
+    setValidatingReferral(true);
+    try {
+      const response = await axios.post('/api/user/referral/validate', { code });
+      if (response.data.valid) {
+        setReferrerInfo(response.data.referrer);
+      }
+    } catch (err) {
+      console.error('Invalid referral code');
+    }
+    setValidatingReferral(false);
+  };
 
   useEffect(() => {
     if (registrationSuccess) {
@@ -74,6 +101,7 @@ const Register = () => {
       password: formData.password,
       country: formData.country,
       currency: selectedCurrency.code,
+      referralCode: formData.referralCode || referralCode || null,
     }));
   };
 
@@ -112,6 +140,28 @@ const Register = () => {
           >
             {error}
           </motion.div>
+        )}
+
+        {/* Referral Info Banner */}
+        {referrerInfo && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 px-4 py-3 rounded-lg flex items-center gap-3"
+          >
+            <Gift className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <div>
+              <p className="font-medium">You've been referred!</p>
+              <p className="text-sm">Invited by <span className="font-semibold">@{referrerInfo.username}</span></p>
+            </div>
+          </motion.div>
+        )}
+
+        {validatingReferral && (
+          <div className="bg-gray-50 dark:bg-gray-800 px-4 py-3 rounded-lg flex items-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+            <p className="text-sm text-gray-600 dark:text-gray-400">Validating referral code...</p>
+          </div>
         )}
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
