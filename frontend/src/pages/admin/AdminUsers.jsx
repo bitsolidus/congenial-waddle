@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, MoreVertical, Ban, CheckCircle, Edit2, ExternalLink, Wallet, X, User, Mail, Phone, MapPin, Calendar, DollarSign, Shield, Eye } from 'lucide-react';
+import { Search, Filter, MoreVertical, Ban, CheckCircle, Edit2, ExternalLink, Wallet, X, User, Mail, Phone, MapPin, Calendar, DollarSign, Shield, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import { convertFromUSD, formatCurrencyWithSymbol } from '../../utils/currency';
 import axios from 'axios';
@@ -13,21 +13,54 @@ const AdminUsers = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [viewingUser, setViewingUser] = useState(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [limit] = useState(20);
+  const [statusFilter, setStatusFilter] = useState('');
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async (page = 1, search = '', status = '') => {
     try {
-      const response = await axios.get('/api/admin/users');
+      setIsLoading(true);
+      const params = new URLSearchParams();
+      params.append('page', page);
+      params.append('limit', limit);
+      if (search) params.append('search', search);
+      if (status) params.append('status', status);
+      
+      const response = await axios.get(`/api/admin/users?${params.toString()}`);
       console.log('Users fetched:', response.data);
       setUsers(response.data.users || []);
+      setTotalPages(response.data.pagination?.pages || 1);
+      setTotalUsers(response.data.pagination?.total || 0);
+      setCurrentPage(page);
     } catch (err) {
       console.error('Failed to fetch users:', err.response?.data || err.message);
     } finally {
       setIsLoading(false);
     }
+  }, [limit]);
+
+  useEffect(() => {
+    fetchUsers(1, searchTerm, statusFilter);
+  }, [fetchUsers]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchUsers(1, searchTerm, statusFilter);
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      fetchUsers(newPage, searchTerm, statusFilter);
+    }
+  };
+
+  const handleStatusFilter = (status) => {
+    setStatusFilter(status);
+    fetchUsers(1, searchTerm, status);
   };
 
   const handleFreezeUser = async (userId) => {
@@ -44,28 +77,40 @@ const AdminUsers = () => {
     setShowDetailsModal(true);
   };
 
-  const filteredUsers = users.filter(user => 
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
         
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            id="admin-user-search"
-            name="userSearch"
-            type="text"
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-field pl-10 w-full md:w-80"
-          />
+        {/* Search and Filters */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              id="admin-user-search"
+              name="userSearch"
+              type="text"
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="input-field pl-10 w-full md:w-80"
+            />
+          </form>
+          
+          {/* Status Filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => handleStatusFilter(e.target.value)}
+            className="input-field w-full sm:w-auto"
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Frozen</option>
+          </select>
+          
+          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+            Total: {totalUsers} users
+          </div>
         </div>
       </div>
 
@@ -94,8 +139,8 @@ const AdminUsers = () => {
                 <tr>
                   <td colSpan="8" className="py-8 text-center text-gray-500">Loading...</td>
                 </tr>
-              ) : filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
+              ) : users.length > 0 ? (
+                users.map((user) => (
                   <tr key={user._id} className="border-b border-gray-100 dark:border-crypto-border/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <td className="py-4">
                       <Link to={`/admin/users/${user._id}`} className="flex items-center space-x-3">
@@ -202,6 +247,59 @@ const AdminUsers = () => {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-crypto-border">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Page {currentPage} of {totalPages}
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              
+              {/* Page Numbers */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                      currentPage === pageNum
+                        ? 'bg-purple-600 text-white'
+                        : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </motion.div>
 
       {/* User Details Modal */}
