@@ -2681,4 +2681,99 @@ router.get('/chat/sessions', protect, adminOnly, async (req, res) => {
   }
 });
 
+// @route   GET /api/admin/notifications
+// @desc    Get admin notifications (system-wide notifications)
+// @access  Admin
+router.get('/notifications', protect, adminOnly, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const unreadOnly = req.query.unread === 'true';
+    
+    // Get system notifications (userId is null) and notifications for all admins
+    const query = { 
+      $or: [
+        { userId: null }, // System notifications
+        { type: { $in: ['email_verified', 'kyc_submitted', 'deposit_confirmation', 'withdrawal_request'] } }
+      ]
+    };
+    
+    if (unreadOnly) query.isRead = false;
+    
+    const notifications = await Notification.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    
+    const total = await Notification.countDocuments(query);
+    const unreadCount = await Notification.countDocuments({ ...query, isRead: false });
+    
+    res.json({
+      success: true,
+      notifications,
+      unreadCount,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get admin notifications error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT /api/admin/notifications/:id/read
+// @desc    Mark admin notification as read
+// @access  Admin
+router.put('/notifications/:id/read', protect, adminOnly, async (req, res) => {
+  try {
+    const notification = await Notification.findByIdAndUpdate(
+      req.params.id,
+      { isRead: true },
+      { new: true }
+    );
+    
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found' });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Notification marked as read',
+      notification
+    });
+  } catch (error) {
+    console.error('Mark notification read error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT /api/admin/notifications/read-all
+// @desc    Mark all admin notifications as read
+// @access  Admin
+router.put('/notifications/read-all', protect, adminOnly, async (req, res) => {
+  try {
+    const query = { 
+      $or: [
+        { userId: null },
+        { type: { $in: ['email_verified', 'kyc_submitted', 'deposit_confirmation', 'withdrawal_request'] } }
+      ],
+      isRead: false
+    };
+    
+    await Notification.updateMany(query, { isRead: true });
+    
+    res.json({
+      success: true,
+      message: 'All notifications marked as read'
+    });
+  } catch (error) {
+    console.error('Mark all notifications read error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
