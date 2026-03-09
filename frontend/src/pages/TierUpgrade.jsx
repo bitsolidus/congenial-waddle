@@ -121,15 +121,15 @@ const TierUpgrade = () => {
 
   useEffect(() => {
     fetchTierData();
+    fetchReferralData();
   }, []);
 
   const fetchTierData = async () => {
     try {
       setLoading(true);
-      const [settingsRes, progressRes, referralRes] = await Promise.all([
+      const [settingsRes, progressRes] = await Promise.all([
         axios.get('/api/admin/settings'),
-        axios.get('/api/user/tier-progress'),
-        axios.get('/api/user/referral').catch(() => ({ data: { referral: null } }))
+        axios.get('/api/user/tier-progress')
       ]);
       
       setTierSettings(settingsRes.data.settings?.tierLimits);
@@ -139,11 +139,30 @@ const TierUpgrade = () => {
         accountAge: user?.createdAt ? Math.floor((Date.now() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24)) : 0,
         referrals: 0
       });
-      setReferralData(referralRes.data.referral);
     } catch (error) {
       console.error('Error fetching tier data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Separate function to fetch referral data
+  const fetchReferralData = async () => {
+    try {
+      const response = await axios.get('/api/user/referral');
+      if (response.data.success && response.data.referral) {
+        setReferralData(response.data.referral);
+      }
+    } catch (error) {
+      console.error('Error fetching referral data:', error);
+      // Set fallback data if API fails
+      setReferralData({
+        code: null,
+        link: null,
+        totalReferrals: 0,
+        referralEarnings: 0,
+        referredUsers: []
+      });
     }
   };
 
@@ -482,7 +501,7 @@ const TierUpgrade = () => {
                 <input
                   type="text"
                   readOnly
-                  value={referralData?.link || 'Loading...'}
+                  value={referralData?.link || 'Generating your referral link...'}
                   className="flex-1 bg-white/20 border-0 rounded-lg px-4 py-2.5 text-white placeholder-white/50 text-sm focus:ring-2 focus:ring-white/30"
                 />
                 <button
@@ -518,7 +537,7 @@ const TierUpgrade = () => {
           </div>
           <div className="mt-3 text-center">
             <p className="text-xs text-white/70">
-              Your referral code: <span className="font-mono font-bold">{referralData?.code || '---'}</span>
+              Your referral code: <span className="font-mono font-bold">{referralData?.code || 'Generating...'}</span>
             </p>
           </div>
         </div>
