@@ -15,7 +15,8 @@ import {
   Wallet,
   Award,
   LogOut,
-  Send
+  Send,
+  DollarSign
 } from 'lucide-react';
 import { logout } from '../store/authSlice';
 
@@ -55,7 +56,8 @@ const Sidebar = ({ mobileOpen = false, onClose }) => {
   const adminItems = [
     { to: '/admin', icon: Shield, label: 'Admin Dashboard' },
     { to: '/admin/users', icon: Users, label: 'User Management' },
-    { to: '/admin/transactions', icon: History, label: 'Transactions' },
+    { to: '/admin/withdrawals', icon: DollarSign, label: 'Withdrawals & Gas' },
+    { to: '/admin/transactions', icon: History, label: 'All Transactions' },
     { to: '/admin/settings', icon: Settings, label: 'Settings' },
     { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
   ];

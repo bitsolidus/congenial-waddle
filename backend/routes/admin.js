@@ -2811,4 +2811,356 @@ router.put('/notifications/read-all', protect, adminOnly, async (req, res) => {
   }
 });
 
+// ============================================
+// GAS PURCHASE MANAGEMENT
+// ============================================
+
+// @route   GET /api/admin/gas-purchases
+// @desc    Get all gas purchase transactions
+// @access  Admin
+router.get('/gas-purchases', protect, adminOnly, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const status = req.query.status;
+    const search = req.query.search || '';
+    
+    let query = { type: 'gas_purchase' };
+    
+    if (status) {
+      query.status = status;
+    }
+    
+    // Search by user
+    let userIds = [];
+    if (search) {
+      const users = await User.find({
+        $or: [
+          { username: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ]
+      }).select('_id');
+      userIds = users.map(u => u._id);
+      query.userId = { $in: userIds };
+    }
+    
+    const transactions = await Transaction.find(query)
+      .populate('userId', 'username email')
+      .populate('approvedBy', 'username')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    
+    const total = await Transaction.countDocuments(query);
+    
+    res.json({
+      success: true,
+      transactions,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get gas purchases error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT /api/admin/gas-purchases/:id/approve
+// @desc    Approve a gas purchase
+// @access  Admin
+router.put('/gas-purchases/:id/approve', protect, adminOnly, async (req, res) => {
+  try {
+    const { adminNotes } = req.body;
+    
+    const transaction = await Transaction.findOne({
+      _id: req.params.id,
+      type: 'gas_purchase'
+    });
+    
+    if (!transaction) {
+      return res.status(404).json({ message: 'Gas purchase not found' });
+    }
+    
+    if (transaction.status !== 'pending') {
+      return res.status(400).json({ message: 'Transaction is not pending' });
+    }
+    
+    // Update transaction
+    transaction.status = 'completed';
+    transaction.approvedBy = req.user._id;
+    transaction.approvedAt = new Date();
+    transaction.adminNotes = adminNotes || null;
+    transaction.completedAt = new Date();
+    await transaction.save();
+    
+    // Update user's gas balance
+    const user = await User.findById(transaction.userId);
+    if (user) {
+      user.gasBalance = (user.gasBalance || 0) + transaction.amount;
+      await user.save();
+    }
+    
+    // Create notification for user
+    await Notification.create({
+      userId: transaction.userId,
+      type: 'transaction',
+      title: 'Gas Purchase Approved',
+      message: `Your gas purchase of $${transaction.amount} has been approved and added to your gas balance.`,
+      data: {
+        transactionId: transaction._id,
+        amount: transaction.amount,
+        status: 'completed'
+      }
+    });
+    
+    res.json({
+      success: true,
+      message: 'Gas purchase approved successfully',
+      transaction
+    });
+  } catch (error) {
+    console.error('Approve gas purchase error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT /api/admin/gas-purchases/:id/reject
+// @desc    Reject a gas purchase
+// @access  Admin
+router.put('/gas-purchases/:id/reject', protect, adminOnly, async (req, res) => {
+  try {
+    const { reason, adminNotes } = req.body;
+    
+    const transaction = await Transaction.findOne({
+      _id: req.params.id,
+      type: 'gas_purchase'
+    });
+    
+    if (!transaction) {
+      return res.status(404).json({ message: 'Gas purchase not found' });
+    }
+    
+    if (transaction.status !== 'pending') {
+      return res.status(400).json({ message: 'Transaction is not pending' });
+    }
+    
+    // Update transaction
+    transaction.status = 'rejected';
+    transaction.approvedBy = req.user._id;
+    transaction.approvedAt = new Date();
+    transaction.rejectedReason = reason;
+    transaction.adminNotes = adminNotes || null;
+    await transaction.save();
+    
+    // Create notification for user
+    await Notification.create({
+      userId: transaction.userId,
+      type: 'transaction',
+      title: 'Gas Purchase Rejected',
+      message: `Your gas purchase of $${transaction.amount} has been rejected.${reason ? ` Reason: ${reason}` : ''}`,
+      data: {
+        transactionId: transaction._id,
+        amount: transaction.amount,
+        status: 'rejected',
+        reason
+      }
+    });
+    
+    res.json({
+      success: true,
+      message: 'Gas purchase rejected',
+      transaction
+    });
+  } catch (error) {
+    console.error('Reject gas purchase error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================
+// WITHDRAWAL MANAGEMENT
+// ============================================
+
+// @route   GET /api/admin/withdrawals
+// @desc    Get all withdrawal transactions
+// @access  Admin
+router.get('/withdrawals', protect, adminOnly, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const status = req.query.status;
+    const search = req.query.search || '';
+    
+    let query = { type: 'withdrawal' };
+    
+    if (status) {
+      query.status = status;
+    }
+    
+    // Search by user
+    let userIds = [];
+    if (search) {
+      const users = await User.find({
+        $or: [
+          { username: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
+        ]
+      }).select('_id');
+      userIds = users.map(u => u._id);
+      query.userId = { $in: userIds };
+    }
+    
+    const transactions = await Transaction.find(query)
+      .populate('userId', 'username email')
+      .populate('approvedBy', 'username')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    
+    const total = await Transaction.countDocuments(query);
+    
+    res.json({
+      success: true,
+      transactions,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get withdrawals error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT /api/admin/withdrawals/:id/approve
+// @desc    Approve a withdrawal
+// @access  Admin
+router.put('/withdrawals/:id/approve', protect, adminOnly, async (req, res) => {
+  try {
+    const { adminNotes, transactionHash } = req.body;
+    
+    const transaction = await Transaction.findOne({
+      _id: req.params.id,
+      type: 'withdrawal'
+    });
+    
+    if (!transaction) {
+      return res.status(404).json({ message: 'Withdrawal not found' });
+    }
+    
+    if (!['pending', 'processing'].includes(transaction.status)) {
+      return res.status(400).json({ message: 'Withdrawal cannot be approved' });
+    }
+    
+    // Update transaction
+    transaction.status = 'completed';
+    transaction.approvedBy = req.user._id;
+    transaction.approvedAt = new Date();
+    transaction.adminNotes = adminNotes || null;
+    transaction.transactionHash = transactionHash || null;
+    transaction.completedAt = new Date();
+    await transaction.save();
+    
+    // Create notification for user
+    await Notification.create({
+      userId: transaction.userId,
+      type: 'withdrawal',
+      title: 'Withdrawal Approved',
+      message: `Your withdrawal of ${transaction.amount} ${transaction.currency} has been approved and processed.`,
+      data: {
+        transactionId: transaction._id,
+        amount: transaction.amount,
+        currency: transaction.currency,
+        status: 'completed',
+        transactionHash
+      }
+    });
+    
+    res.json({
+      success: true,
+      message: 'Withdrawal approved successfully',
+      transaction
+    });
+  } catch (error) {
+    console.error('Approve withdrawal error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT /api/admin/withdrawals/:id/reject
+// @desc    Reject a withdrawal
+// @access  Admin
+router.put('/withdrawals/:id/reject', protect, adminOnly, async (req, res) => {
+  try {
+    const { reason, adminNotes } = req.body;
+    
+    const transaction = await Transaction.findOne({
+      _id: req.params.id,
+      type: 'withdrawal'
+    });
+    
+    if (!transaction) {
+      return res.status(404).json({ message: 'Withdrawal not found' });
+    }
+    
+    if (!['pending', 'processing'].includes(transaction.status)) {
+      return res.status(400).json({ message: 'Withdrawal cannot be rejected' });
+    }
+    
+    // Refund the amount to user
+    const user = await User.findById(transaction.userId);
+    if (user) {
+      if (!user.balance) user.balance = {};
+      user.balance[transaction.currency] = (user.balance[transaction.currency] || 0) + transaction.amount;
+      user.totalWithdrawn = (user.totalWithdrawn || 0) - transaction.amount;
+      
+      // Refund gas fee if applicable
+      if (transaction.gasFee > 0) {
+        user.gasBalance = (user.gasBalance || 0) + transaction.gasFee;
+      }
+      
+      await user.save();
+    }
+    
+    // Update transaction
+    transaction.status = 'rejected';
+    transaction.approvedBy = req.user._id;
+    transaction.approvedAt = new Date();
+    transaction.rejectedReason = reason;
+    transaction.adminNotes = adminNotes || null;
+    await transaction.save();
+    
+    // Create notification for user
+    await Notification.create({
+      userId: transaction.userId,
+      type: 'withdrawal',
+      title: 'Withdrawal Rejected',
+      message: `Your withdrawal of ${transaction.amount} ${transaction.currency} has been rejected.${reason ? ` Reason: ${reason}` : ''} The amount has been refunded to your balance.`,
+      data: {
+        transactionId: transaction._id,
+        amount: transaction.amount,
+        currency: transaction.currency,
+        status: 'rejected',
+        reason
+      }
+    });
+    
+    res.json({
+      success: true,
+      message: 'Withdrawal rejected and refunded',
+      transaction
+    });
+  } catch (error) {
+    console.error('Reject withdrawal error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
