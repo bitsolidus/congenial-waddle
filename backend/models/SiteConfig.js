@@ -63,7 +63,7 @@ const siteConfigSchema = new mongoose.Schema({
   
   // Contact Information
   contact: {
-    email: { type: String, default: 'support@cryptoplatform.com' },
+    email: { type: String, default: 'support@bitsolidus.tech' },
     phone: { type: String, default: null },
     address: { type: String, default: null }
   },

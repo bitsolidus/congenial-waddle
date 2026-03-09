@@ -13,20 +13,20 @@ const seedDatabase = async () => {
     console.log('Connected to MongoDB');
 
     // Check if admin user exists
-    const adminExists = await User.findOne({ email: 'admin@cryptoplatform.com' });
+    const adminExists = await User.findOne({ email: 'admin@bitsolidus.tech' });
     
     if (!adminExists) {
       // Create admin user
       await User.create({
         username: 'admin',
-        email: 'admin@cryptoplatform.com',
+        email: 'admin@bitsolidus.tech',
         password: 'admin123',
         isAdmin: true,
         emailVerified: true,
         balance: 100000,
         tier: 'vip'
       });
-      console.log('Admin user created: admin@cryptoplatform.com / admin123');
+      console.log('Admin user created: admin@bitsolidus.tech / admin123');
     } else {
       console.log('Admin user already exists');
     }

@@ -51,7 +51,7 @@ const sendEmail = async (to, subject, html, text) => {
 
 // Email Templates
 const getEmailTemplate = (type, data) => {
-  const { siteName = 'BitSolidus', siteUrl = 'http://localhost:5173' } = data;
+  const { siteName = 'BitSolidus', siteUrl = 'https://bitsolidus.io' } = data;
   
   const baseTemplate = (content) => `
     <!DOCTYPE html>
@@ -214,7 +214,7 @@ export const sendVerificationEmail = async (to, username, verificationLink, site
   return sendEmail(to, `Verify Your Email - ${siteName}`, html, text);
 };
 
-export const sendWelcomeEmail = async (to, username, siteName = 'BitSolidus', siteUrl = 'http://localhost:5173') => {
+export const sendWelcomeEmail = async (to, username, siteName = 'BitSolidus', siteUrl = 'https://bitsolidus.io') => {
   const html = getEmailTemplate('welcome', { username, siteName, siteUrl });
   const text = `Welcome to ${siteName}, ${username}! Your email has been verified successfully. Visit us at ${siteUrl}`;
   return sendEmail(to, `Welcome to ${siteName}!`, html, text);
@@ -232,13 +232,13 @@ export const sendKycSubmittedEmail = async (to, username, siteName = 'BitSolidus
   return sendEmail(to, `KYC Submission Received - ${siteName}`, html, text);
 };
 
-export const sendKycApprovedEmail = async (to, username, siteName = 'BitSolidus', siteUrl = 'http://localhost:5173') => {
+export const sendKycApprovedEmail = async (to, username, siteName = 'BitSolidus', siteUrl = 'https://bitsolidus.io') => {
   const html = getEmailTemplate('kyc-approved', { username, siteName, siteUrl });
   const text = `KYC Verification Approved! Hi ${username}, Your identity has been verified successfully!`;
   return sendEmail(to, `KYC Approved - ${siteName}`, html, text);
 };
 
-export const sendKycRejectedEmail = async (to, username, rejectionReason, siteName = 'BitSolidus', siteUrl = 'http://localhost:5173') => {
+export const sendKycRejectedEmail = async (to, username, rejectionReason, siteName = 'BitSolidus', siteUrl = 'https://bitsolidus.io') => {
   const html = getEmailTemplate('kyc-rejected', { username, rejectionReason, siteName, siteUrl });
   const text = `KYC Verification Update. Hi ${username}, Your KYC could not be approved.${rejectionReason ? ` Reason: ${rejectionReason}` : ''}`;
   return sendEmail(to, `KYC Update - ${siteName}`, html, text);
@@ -280,7 +280,7 @@ export const sendDepositNotificationEmail = async ({ user, deposit }) => {
         </div>
         
         <div style="text-align: center; margin-top: 30px;">
-          <a href="${process.env.ADMIN_URL || 'http://localhost:5173/admin'}" 
+          <a href="${process.env.ADMIN_URL || 'https://bitsolidus.io/admin'}"
              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
             Go to Admin Dashboard
           </a>
