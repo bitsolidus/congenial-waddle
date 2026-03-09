@@ -79,6 +79,20 @@ export const resendOtp = createAsyncThunk(
   }
 );
 
+export const adminLogin = createAsyncThunk(
+  'auth/adminLogin',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/api/auth/admin-login', credentials);
+      localStorage.setItem('token', response.data.token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Admin login failed');
+    }
+  }
+);
+
 export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
@@ -220,6 +234,23 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(resendOtp.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+      // Admin Login (no OTP required)
+      .addCase(adminLogin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(adminLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+        state.requiresOtp = false;
+        state.tempUserId = null;
+        state.maskedEmail = null;
+      })
+      .addCase(adminLogin.rejected, (state, action) => {
+        state.isLoading = false;
         state.error = action.payload;
       })
       // Register

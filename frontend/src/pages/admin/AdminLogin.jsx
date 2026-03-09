@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { Shield, Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
-import { login, clearError } from '../../store/authSlice';
+import { adminLogin, clearError } from '../../store/authSlice';
 import { fetchSiteConfig } from '../../store/siteConfigSlice';
 
 const AdminLogin = () => {
@@ -53,7 +53,7 @@ const AdminLogin = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
-    dispatch(login({
+    dispatch(adminLogin({
       email: formData.email,
       password: formData.password,
       rememberMe: formData.rememberMe,
@@ -114,6 +114,7 @@ const AdminLogin = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
+                  autoComplete="email"
                   className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 sm:text-sm transition-colors"
                   placeholder="admin@example.com"
                 />
@@ -135,6 +136,7 @@ const AdminLogin = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
+                  autoComplete="current-password"
                   className="appearance-none relative block w-full pl-10 pr-10 py-3 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 sm:text-sm transition-colors"
                   placeholder="••••••••"
                 />
