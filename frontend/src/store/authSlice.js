@@ -207,6 +207,9 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+        // Ensure user is not authenticated on login failure
+        state.isAuthenticated = false;
+        state.user = null;
       })
       // Verify OTP
       .addCase(verifyOtp.pending, (state) => {

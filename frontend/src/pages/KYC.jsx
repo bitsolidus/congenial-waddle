@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, 
   CheckCircle, 
@@ -12,7 +12,11 @@ import {
   ChevronRight,
   ChevronLeft,
   Camera,
-  X
+  X,
+  Loader2,
+  FileCheck,
+  Image as ImageIcon,
+  Percent
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
@@ -25,6 +29,26 @@ const KYC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  // Upload progress state
+  const [uploadProgress, setUploadProgress] = useState({
+    idFrontImage: 0,
+    idBackImage: 0,
+    selfieImage: 0,
+    proofOfAddressImage: 0,
+  });
+  const [uploadingFiles, setUploadingFiles] = useState({
+    idFrontImage: false,
+    idBackImage: false,
+    selfieImage: false,
+    proofOfAddressImage: false,
+  });
+  const [fileSizes, setFileSizes] = useState({
+    idFrontImage: null,
+    idBackImage: null,
+    selfieImage: null,
+    proofOfAddressImage: null,
+  });
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -87,6 +111,25 @@ const KYC = () => {
   const handleFileChange = (e, fieldName) => {
     const file = e.target.files[0];
     if (file) {
+      // Set file size
+      setFileSizes(prev => ({ ...prev, [fieldName]: file.size }));
+      
+      // Start upload simulation
+      setUploadingFiles(prev => ({ ...prev, [fieldName]: true }));
+      setUploadProgress(prev => ({ ...prev, [fieldName]: 0 }));
+      
+      // Simulate upload progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 15 + 5; // Random increment between 5-20%
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          setUploadingFiles(prev => ({ ...prev, [fieldName]: false }));
+        }
+        setUploadProgress(prev => ({ ...prev, [fieldName]: Math.min(progress, 100) }));
+      }, 200);
+      
       setFormData(prev => ({ ...prev, [fieldName]: file }));
       const url = URL.createObjectURL(file);
       setPreviewUrls(prev => ({ ...prev, [fieldName]: url }));
@@ -99,6 +142,10 @@ const KYC = () => {
       URL.revokeObjectURL(previewUrls[fieldName]);
       setPreviewUrls(prev => ({ ...prev, [fieldName]: null }));
     }
+    // Clear upload progress
+    setUploadProgress(prev => ({ ...prev, [fieldName]: 0 }));
+    setUploadingFiles(prev => ({ ...prev, [fieldName]: false }));
+    setFileSizes(prev => ({ ...prev, [fieldName]: null }));
   };
 
   const handleSubmit = async () => {
@@ -581,11 +628,45 @@ const KYC = () => {
                           >
                             <X className="h-4 w-4" />
                           </button>
+                          
+                          {/* Upload Progress Overlay */}
+                          <AnimatePresence>
+                            {uploadingFiles.idFrontImage && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/70 flex items-center justify-center"
+                              >
+                                <div className="w-3/4">
+                                  <div className="flex items-center justify-between text-white text-xs mb-1">
+                                    <span className="flex items-center gap-1">
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      Uploading...
+                                    </span>
+                                    <span>{Math.round(uploadProgress.idFrontImage)}%</span>
+                                  </div>
+                                  <div className="w-full bg-gray-700 rounded-full h-2">
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${uploadProgress.idFrontImage}%` }}
+                                      className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                                    />
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       ) : (
-                        <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors">
+                        <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors relative">
                           <Upload className="h-8 w-8 text-gray-400 mb-2" />
                           <span className="text-sm text-gray-500 dark:text-gray-400">Upload ID Front</span>
+                          {fileSizes.idFrontImage && (
+                            <span className="text-xs text-gray-400 mt-1">
+                              {(fileSizes.idFrontImage / 1024 / 1024).toFixed(2)} MB
+                            </span>
+                          )}
                           <input
                             type="file"
                             accept="image/*"
@@ -616,11 +697,45 @@ const KYC = () => {
                           >
                             <X className="h-4 w-4" />
                           </button>
+                          
+                          {/* Upload Progress Overlay */}
+                          <AnimatePresence>
+                            {uploadingFiles.idBackImage && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/70 flex items-center justify-center"
+                              >
+                                <div className="w-3/4">
+                                  <div className="flex items-center justify-between text-white text-xs mb-1">
+                                    <span className="flex items-center gap-1">
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      Uploading...
+                                    </span>
+                                    <span>{Math.round(uploadProgress.idBackImage)}%</span>
+                                  </div>
+                                  <div className="w-full bg-gray-700 rounded-full h-2">
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${uploadProgress.idBackImage}%` }}
+                                      className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                                    />
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       ) : (
-                        <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors">
+                        <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors relative">
                           <Upload className="h-8 w-8 text-gray-400 mb-2" />
                           <span className="text-sm text-gray-500 dark:text-gray-400">Upload ID Back</span>
+                          {fileSizes.idBackImage && (
+                            <span className="text-xs text-gray-400 mt-1">
+                              {(fileSizes.idBackImage / 1024 / 1024).toFixed(2)} MB
+                            </span>
+                          )}
                           <input
                             type="file"
                             accept="image/*"
@@ -651,11 +766,45 @@ const KYC = () => {
                           >
                             <X className="h-4 w-4" />
                           </button>
+                          
+                          {/* Upload Progress Overlay */}
+                          <AnimatePresence>
+                            {uploadingFiles.selfieImage && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/70 flex items-center justify-center"
+                              >
+                                <div className="w-3/4">
+                                  <div className="flex items-center justify-between text-white text-xs mb-1">
+                                    <span className="flex items-center gap-1">
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      Uploading...
+                                    </span>
+                                    <span>{Math.round(uploadProgress.selfieImage)}%</span>
+                                  </div>
+                                  <div className="w-full bg-gray-700 rounded-full h-2">
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${uploadProgress.selfieImage}%` }}
+                                      className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                                    />
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       ) : (
                         <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors">
                           <Camera className="h-8 w-8 text-gray-400 mb-2" />
                           <span className="text-sm text-gray-500 dark:text-gray-400">Upload Selfie</span>
+                          {fileSizes.selfieImage && (
+                            <span className="text-xs text-gray-400 mt-1">
+                              {(fileSizes.selfieImage / 1024 / 1024).toFixed(2)} MB
+                            </span>
+                          )}
                           <input
                             type="file"
                             accept="image/*"
@@ -686,11 +835,45 @@ const KYC = () => {
                           >
                             <X className="h-4 w-4" />
                           </button>
+                          
+                          {/* Upload Progress Overlay */}
+                          <AnimatePresence>
+                            {uploadingFiles.proofOfAddressImage && (
+                              <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/70 flex items-center justify-center"
+                              >
+                                <div className="w-3/4">
+                                  <div className="flex items-center justify-between text-white text-xs mb-1">
+                                    <span className="flex items-center gap-1">
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      Uploading...
+                                    </span>
+                                    <span>{Math.round(uploadProgress.proofOfAddressImage)}%</span>
+                                  </div>
+                                  <div className="w-full bg-gray-700 rounded-full h-2">
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${uploadProgress.proofOfAddressImage}%` }}
+                                      className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full"
+                                    />
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       ) : (
                         <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors">
                           <FileText className="h-8 w-8 text-gray-400 mb-2" />
                           <span className="text-sm text-gray-500 dark:text-gray-400">Upload Proof of Address</span>
+                          {fileSizes.proofOfAddressImage && (
+                            <span className="text-xs text-gray-400 mt-1">
+                              {(fileSizes.proofOfAddressImage / 1024 / 1024).toFixed(2)} MB
+                            </span>
+                          )}
                           <input
                             type="file"
                             accept="image/*"

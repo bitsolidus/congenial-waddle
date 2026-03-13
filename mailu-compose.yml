@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  postfix:
+    image: juanluisbaptiste/postfix:latest
+    container_name: postfix
+    restart: unless-stopped
+    ports:
+      - "25:25"
+      - "587:587"
+    environment:
+      - SMTP_SERVER=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USERNAME=your-email@gmail.com
+      - SMTP_PASSWORD=your-app-password
+      - SERVER_HOSTNAME=mail.bitsolidus.io
+    volumes:
+      - postfix-data:/var/spool/postfix
+
+volumes:
+  postfix-data:

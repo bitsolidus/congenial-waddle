@@ -1128,6 +1128,41 @@ router.post('/internal-transfer', protect, [
       read: false
     });
     
+    // Import email functions
+    const { default: emailService } = await import('../config/email.js');
+    
+    // Send email to sender (confirmation)
+    try {
+      await emailService.sendTransferSentEmail(
+        sender.email,
+        sender.username,
+        {
+          amount,
+          cryptocurrency,
+          recipientUsername: recipient.username
+        }
+      );
+      console.log(`Transfer sent email confirmation sent to ${sender.email}`);
+    } catch (emailError) {
+      console.error('Failed to send transfer sent email to sender:', emailError);
+    }
+    
+    // Send email to recipient (notification)
+    try {
+      await emailService.sendTransferReceivedEmail(
+        recipient.email,
+        recipient.username,
+        {
+          amount,
+          cryptocurrency,
+          senderUsername: sender.username
+        }
+      );
+      console.log(`Transfer received email notification sent to ${recipient.email}`);
+    } catch (emailError) {
+      console.error('Failed to send transfer received email to recipient:', emailError);
+    }
+    
     // Log transfer activity for sender
     await ActivityLog.create({
       userId: sender._id,

@@ -59,6 +59,17 @@ const Login = () => {
     }
   }, [isAuthenticated, user, navigate]);
 
+  // Clear errors when user modifies form fields
+  useEffect(() => {
+    if (error || authError) {
+      const timer = setTimeout(() => {
+        setError('');
+        dispatch(clearError());
+      }, 10000); // Auto-clear after 10 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [formData.email, formData.password, error, authError, dispatch]);
+
   // Cooldown timer for resend OTP
   useEffect(() => {
     if (resendCooldown > 0) {
@@ -69,6 +80,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent any bubbling
     setError('');
     setIsLoading(true);
 
@@ -82,11 +94,12 @@ const Login = () => {
       if (result.requiresOtp) {
         setShowOtpInput(true);
         setTempUserId(result.tempUserId);
-        setMaskedEmail(result.email);
+        setMaskedEmail(result.maskedEmail || result.email);
         setResendCooldown(60); // 60 second cooldown
       }
     } catch (err) {
-      setError(err || 'Invalid email or password. Please try again.');
+      console.error('Login error:', err);
+      setError(err?.message || err || 'Invalid email or password. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -360,14 +373,14 @@ const Login = () => {
               </div>
             ) : (
               <>
-                {error && (
+                {(error || authError) && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center"
                   >
                     <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
-                    <span className="text-red-700 dark:text-red-400 text-sm">{error}</span>
+                    <span className="text-red-700 dark:text-red-400 text-sm">{error || authError}</span>
                   </motion.div>
                 )}
 

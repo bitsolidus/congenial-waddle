@@ -82,6 +82,13 @@ const Profile = () => {
   const [selectedAvatar, setSelectedAvatar] = useState(user?.avatar || 'default');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
+  // Update selectedAvatar when user data from Redux changes
+  useEffect(() => {
+    if (user?.avatar !== undefined) {
+      setSelectedAvatar(user.avatar || 'default');
+    }
+  }, [user?.avatar]);
+
   const handleSave = async () => {
     await dispatch(updateProfile({ ...formData, avatar: selectedAvatar }));
     setIsEditing(false);
@@ -145,7 +152,7 @@ const Profile = () => {
       >
         <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
           <div className="relative">
-            {selectedAvatar && selectedAvatar.startsWith('/uploads/') ? (
+            {selectedAvatar && typeof selectedAvatar === 'string' && selectedAvatar.startsWith('/uploads/') ? (
               <img 
                 src={getAvatarUrl(selectedAvatar)} 
                 alt="Avatar" 

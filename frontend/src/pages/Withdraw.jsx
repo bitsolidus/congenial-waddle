@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,13 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
-  Wallet
+  Wallet,
+  Clock,
+  History,
+  Bookmark,
+  Trash2,
+  ChevronDown,
+  Calculator
 } from 'lucide-react';
 import { fetchBalance } from '../store/walletSlice';
 import { formatCurrency, formatNumber, truncateAddress } from '../utils/helpers';
@@ -44,6 +50,14 @@ const Withdraw = () => {
   });
   const [dailyWithdrawn, setDailyWithdrawn] = useState(0);
   
+  // Recent addresses state
+  const [recentAddresses, setRecentAddresses] = useState([]);
+  const [showRecentAddresses, setShowRecentAddresses] = useState(false);
+  
+  // Fee estimation state
+  const [feeEstimate, setFeeEstimate] = useState(null);
+  const [isEstimating, setIsEstimating] = useState(false);
+  
   const [formData, setFormData] = useState({
     amount: '',
     currency: 'BTC',
@@ -76,6 +90,7 @@ const Withdraw = () => {
       dispatch(fetchBalance());
       fetchGasBalance();
       fetchTierLimits();
+      loadRecentAddresses();
     }
   }, [dispatch, isAuthenticated]);
 
@@ -83,8 +98,99 @@ const Withdraw = () => {
     if (formData.amount && formData.network) {
       calculateGas();
       calculateRequiredGasFee();
+      estimateTransactionFee();
     }
   }, [formData.amount, formData.network, gasFeeSettings]);
+
+  // Load recent withdrawal addresses from localStorage
+  const loadRecentAddresses = () => {
+    try {
+      const saved = localStorage.getItem('recentWithdrawalAddresses');
+      if (saved) {
+        const addresses = JSON.parse(saved);
+        // Filter addresses by current network
+        const filtered = addresses.filter(addr => addr.network === formData.network);
+        setRecentAddresses(filtered.slice(0, 5)); // Keep only last 5
+      }
+    } catch (err) {
+      console.error('Failed to load recent addresses:', err);
+    }
+  };
+
+  // Save address to recent addresses
+  const saveRecentAddress = useCallback((address, network, label = '') => {
+    try {
+      const saved = localStorage.getItem('recentWithdrawalAddresses');
+      let addresses = saved ? JSON.parse(saved) : [];
+      
+      // Remove duplicate if exists
+      addresses = addresses.filter(addr => addr.address !== address);
+      
+      // Add new address at the beginning
+      addresses.unshift({
+        address,
+        network,
+        label: label || `Withdrawal ${new Date().toLocaleDateString()}`,
+        timestamp: Date.now()
+      });
+      
+      // Keep only last 10 addresses
+      addresses = addresses.slice(0, 10);
+      
+      localStorage.setItem('recentWithdrawalAddresses', JSON.stringify(addresses));
+      loadRecentAddresses();
+    } catch (err) {
+      console.error('Failed to save recent address:', err);
+    }
+  }, [formData.network]);
+
+  // Remove address from recent
+  const removeRecentAddress = (addressToRemove) => {
+    try {
+      const saved = localStorage.getItem('recentWithdrawalAddresses');
+      if (saved) {
+        let addresses = JSON.parse(saved);
+        addresses = addresses.filter(addr => addr.address !== addressToRemove);
+        localStorage.setItem('recentWithdrawalAddresses', JSON.stringify(addresses));
+        loadRecentAddresses();
+      }
+    } catch (err) {
+      console.error('Failed to remove recent address:', err);
+    }
+  };
+
+  // Select recent address
+  const selectRecentAddress = (address) => {
+    setFormData({ ...formData, toAddress: address });
+    validateWalletAddress(address, formData.network);
+    setShowRecentAddresses(false);
+  };
+
+  // Estimate transaction fee from API
+  const estimateTransactionFee = useCallback(async () => {
+    if (!formData.amount || !formData.network) {
+      setFeeEstimate(null);
+      return;
+    }
+    
+    setIsEstimating(true);
+    try {
+      const response = await axios.get('/api/withdrawal/estimate-fee', {
+        params: {
+          amount: formData.amount,
+          currency: formData.fromCrypto,
+          network: formData.network
+        }
+      });
+      
+      setFeeEstimate(response.data.estimate);
+    } catch (err) {
+      console.error('Failed to estimate fee:', err);
+      setFeeEstimate(null);
+    } finally {
+      setIsEstimating(false);
+    }
+  }, [formData.amount, formData.fromCrypto, formData.network]);
 
   const fetchGasBalance = async () => {
     try {
@@ -223,6 +329,10 @@ const Withdraw = () => {
       
       const response = await axios.post('/api/withdrawal/request', formData);
       setWithdrawalResult(response.data.transaction);
+      
+      // Save the address to recent addresses
+      saveRecentAddress(formData.toAddress, formData.network);
+      
       setStep(3);
       dispatch(fetchBalance());
     } catch (err) {
@@ -525,6 +635,58 @@ const Withdraw = () => {
           </div>
         )}
 
+        {/* Transaction Fee Estimation */}
+        {formData.amount && (
+          <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Calculator className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                Transaction Fee Estimate
+              </span>
+              {isEstimating && (
+                <Loader2 className="w-4 h-4 text-blue-600 dark:text-blue-400 animate-spin" />
+              )}
+            </div>
+            
+            {feeEstimate ? (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Network Fee:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {feeEstimate.networkFee} {feeEstimate.currency}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Platform Fee:</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {feeEstimate.platformFee} {feeEstimate.currency}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm pt-2 border-t border-blue-200 dark:border-blue-800">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Total Fee:</span>
+                  <span className="font-bold text-blue-700 dark:text-blue-300">
+                    {feeEstimate.totalFee} {feeEstimate.currency}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">You Receive:</span>
+                  <span className="font-bold text-green-600 dark:text-green-400">
+                    {feeEstimate.receiveAmount} {feeEstimate.currency}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  <Clock className="w-3 h-3 inline mr-1" />
+                  Estimated confirmation: {feeEstimate.estimatedTime || '10-30 minutes'}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {isEstimating ? 'Calculating fees...' : 'Enter amount to see fee estimate'}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Network Selection - Only ETH and BTC */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -559,10 +721,69 @@ const Withdraw = () => {
         </div>
 
         {/* Destination Address */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Destination Address ({formData.network === 'ethereum' ? 'ERC-20' : 'BTC'})
-          </label>
+        <div className="mb-4 relative">
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Destination Address ({formData.network === 'ethereum' ? 'ERC-20' : 'BTC'})
+            </label>
+            {recentAddresses.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowRecentAddresses(!showRecentAddresses)}
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1"
+              >
+                <History className="w-4 h-4" />
+                Recent
+                <ChevronDown className={`w-4 h-4 transition-transform ${showRecentAddresses ? 'rotate-180' : ''}`} />
+              </button>
+            )}
+          </div>
+          
+          {/* Recent Addresses Dropdown */}
+          <AnimatePresence>
+            {showRecentAddresses && recentAddresses.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg mb-2"
+                style={{ bottom: '100%' }}
+              >
+                <div className="p-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1">Recent Addresses</p>
+                  {recentAddresses.map((addr, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg cursor-pointer group"
+                    >
+                      <div 
+                        className="flex-1 min-w-0"
+                        onClick={() => selectRecentAddress(addr.address)}
+                      >
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {addr.label}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {truncateAddress(addr.address)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeRecentAddress(addr.address);
+                        }}
+                        className="p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
           <input
             type="text"
             value={formData.toAddress}

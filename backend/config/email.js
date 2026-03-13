@@ -64,7 +64,7 @@ const getEmailBranding = async () => {
     return {
       siteName: config.siteName || 'BitSolidus',
       siteUrl: process.env.FRONTEND_URL || 'https://bitsolidus.io',
-      emailLogo: config.emailBranding?.logo || config.logo || null,
+      emailLogo: config.emailBranding?.logo || config.logo || 'https://bitsolidus.tech/uploads/footerLogo-1772406666300-176806695.png',
       primaryColor: config.emailBranding?.primaryColor || '#7c3aed',
       secondaryColor: config.emailBranding?.secondaryColor || '#4f46e5',
       supportEmail: config.emailBranding?.supportEmail || config.contact?.email || 'support@bitsolidus.tech',
@@ -79,7 +79,7 @@ const getEmailBranding = async () => {
     return {
       siteName: 'BitSolidus',
       siteUrl: 'https://bitsolidus.io',
-      emailLogo: null,
+      emailLogo: 'https://bitsolidus.tech/uploads/footerLogo-1772406666300-176806695.png',
       primaryColor: '#7c3aed',
       secondaryColor: '#4f46e5',
       supportEmail: 'support@bitsolidus.tech',
@@ -293,6 +293,99 @@ const getEmailTemplate = (type, data) => {
         </div>
       `);
 
+    case 'deposit-confirmed':
+      return baseTemplate(`
+        <h2>✅ Deposit Confirmed!</h2>
+        <p>Hi ${data.username},</p>
+        <div class="success">
+          <strong>✓ Your deposit has been confirmed and credited to your account!</strong>
+        </div>
+        <p>Great news! Your deposit confirmation has been approved by our team.</p>
+        <h3>Deposit Details:</h3>
+        <div class="info-box">
+          <p><strong>Amount:</strong> ${data.amount} ${data.cryptocurrency}</p>
+          <p><strong>Cryptocurrency:</strong> ${data.cryptocurrency}</p>
+          <p><strong>Transaction ID:</strong> <code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${data.transactionId}</code></p>
+          <p><strong>Status:</strong> ✅ Completed</p>
+        </div>
+        <p>The funds have been added to your account balance and are now available for trading or withdrawal.</p>
+        <center>
+          <a href="${siteUrl}/dashboard" class="button">View My Balance</a>
+        </center>
+        <p>Thank you for using ${siteName}!</p>
+      `);
+
+    case 'deposit-rejected':
+      return baseTemplate(`
+        <h2>⚠️ Deposit Confirmation Update</h2>
+        <p>Hi ${data.username},</p>
+        <div class="error">
+          <strong>✗ Your deposit confirmation could not be approved</strong>
+        </div>
+        <p>We've reviewed your deposit submission but were unable to process it at this time.</p>
+        ${data.reason ? `<p><strong>Reason:</strong> ${data.reason}</p>` : ''}
+        <h3>Deposit Details:</h3>
+        <div class="info-box">
+          <p><strong>Amount:</strong> ${data.amount} ${data.cryptocurrency}</p>
+          <p><strong>Cryptocurrency:</strong> ${data.cryptocurrency}</p>
+          <p><strong>Transaction ID:</strong> <code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">${data.transactionId}</code></p>
+        </div>
+        <h3>What you can do:</h3>
+        <ul>
+          <li>Review the transaction details and ensure all information is correct</li>
+          <li>Contact our support team if you believe this is an error</li>
+          <li>Submit a new deposit confirmation if needed</li>
+        </ul>
+        <center>
+          <a href="${siteUrl}/support" class="button">Contact Support</a>
+        </center>
+        <p>We apologize for any inconvenience and are here to help resolve this matter.</p>
+      `);
+
+    case 'transfer-sent':
+      return baseTemplate(`
+        <h2>✅ Transfer Sent Successfully!</h2>
+        <p>Hi ${data.username},</p>
+        <div class="success">
+          <strong>✓ Your transfer has been completed successfully!</strong>
+        </div>
+        <p>Your peer-to-peer transfer has been processed and the funds have been sent.</p>
+        <h3>Transfer Details:</h3>
+        <div class="info-box">
+          <p><strong>Amount Sent:</strong> ${data.amount} ${data.cryptocurrency}</p>
+          <p><strong>Recipient:</strong> ${data.recipientUsername}</p>
+          <p><strong>Cryptocurrency:</strong> ${data.cryptocurrency}</p>
+          <p><strong>Status:</strong> ✅ Completed</p>
+        </div>
+        <p>The funds have been deducted from your balance and credited to the recipient's account immediately.</p>
+        <center>
+          <a href="${siteUrl}/transactions" class="button">View Transaction History</a>
+        </center>
+        <p>Thank you for using ${siteName}!</p>
+      `);
+
+    case 'transfer-received':
+      return baseTemplate(`
+        <h2>💰 You Received a Transfer!</h2>
+        <p>Hi ${data.username},</p>
+        <div class="success">
+          <strong>✓ New funds have been added to your account!</strong>
+        </div>
+        <p>You've received a peer-to-peer transfer from another user.</p>
+        <h3>Transfer Details:</h3>
+        <div class="info-box">
+          <p><strong>Amount Received:</strong> ${data.amount} ${data.cryptocurrency}</p>
+          <p><strong>Sent By:</strong> ${data.senderUsername}</p>
+          <p><strong>Cryptocurrency:</strong> ${data.cryptocurrency}</p>
+          <p><strong>Status:</strong> ✅ Completed</p>
+        </div>
+        <p>The funds have been added to your account balance and are now available for trading or withdrawal.</p>
+        <center>
+          <a href="${siteUrl}/dashboard" class="button">View My Balance</a>
+        </center>
+        <p>Thank you for using ${siteName}!</p>
+      `);
+
     default:
       return baseTemplate('<p>Email content not found.</p>');
   }
@@ -423,6 +516,71 @@ export const sendLoginOtpEmail = async (to, username, otp) => {
   return sendEmail(to, `🔐 Login Verification Code - ${branding.siteName}`, html, text, branding.replyToEmail);
 };
 
+// Send deposit confirmed email to user
+export const sendDepositConfirmedEmail = async (to, username, deposit) => {
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('deposit-confirmed', { 
+    username, 
+    amount: deposit.amount,
+    cryptocurrency: deposit.cryptocurrency,
+    transactionId: deposit.transactionId,
+    siteName: branding.siteName,
+    siteUrl: branding.siteUrl,
+    ...branding 
+  });
+  const text = `Deposit Confirmed! Hi ${username}, Your deposit of ${deposit.amount} ${deposit.cryptocurrency} (TxID: ${deposit.transactionId}) has been confirmed and credited to your account.`;
+  return sendEmail(to, `✅ Deposit Confirmed - ${deposit.amount} ${deposit.cryptocurrency}`, html, text, branding.replyToEmail);
+};
+
+// Send deposit rejected email to user
+export const sendDepositRejectedEmail = async (to, username, deposit, reason = '') => {
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('deposit-rejected', { 
+    username, 
+    amount: deposit.amount,
+    cryptocurrency: deposit.cryptocurrency,
+    transactionId: deposit.transactionId,
+    reason,
+    siteName: branding.siteName,
+    siteUrl: branding.siteUrl,
+    ...branding 
+  });
+  const text = `Deposit Update. Hi ${username}, Your deposit confirmation could not be approved.${reason ? ` Reason: ${reason}` : ''} Amount: ${deposit.amount} ${deposit.cryptocurrency} (TxID: ${deposit.transactionId}). Please contact support.`;
+  return sendEmail(to, `⚠️ Deposit Confirmation Update`, html, text, branding.replyToEmail);
+};
+
+// Send transfer sent confirmation email to sender
+export const sendTransferSentEmail = async (to, username, transfer) => {
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('transfer-sent', { 
+    username, 
+    amount: transfer.amount,
+    cryptocurrency: transfer.cryptocurrency,
+    recipientUsername: transfer.recipientUsername,
+    siteName: branding.siteName,
+    siteUrl: branding.siteUrl,
+    ...branding 
+  });
+  const text = `Transfer Sent! Hi ${username}, You successfully sent ${transfer.amount} ${transfer.cryptocurrency} to ${transfer.recipientUsername}. The transfer has been completed.`;
+  return sendEmail(to, `✅ Transfer Sent - ${transfer.amount} ${transfer.cryptocurrency}`, html, text, branding.replyToEmail);
+};
+
+// Send transfer received notification email to recipient
+export const sendTransferReceivedEmail = async (to, username, transfer) => {
+  const branding = await getEmailBranding();
+  const html = getEmailTemplate('transfer-received', { 
+    username, 
+    amount: transfer.amount,
+    cryptocurrency: transfer.cryptocurrency,
+    senderUsername: transfer.senderUsername,
+    siteName: branding.siteName,
+    siteUrl: branding.siteUrl,
+    ...branding 
+  });
+  const text = `You Received a Transfer! Hi ${username}, You received ${transfer.amount} ${transfer.cryptocurrency} from ${transfer.senderUsername}. The funds have been added to your account.`;
+  return sendEmail(to, `💰 Transfer Received - ${transfer.amount} ${transfer.cryptocurrency}`, html, text, branding.replyToEmail);
+};
+
 export default {
   sendVerificationEmail,
   sendWelcomeEmail,
@@ -432,5 +590,9 @@ export default {
   sendKycRejectedEmail,
   sendDepositNotificationEmail,
   sendLoginOtpEmail,
+  sendDepositConfirmedEmail,
+  sendDepositRejectedEmail,
+  sendTransferSentEmail,
+  sendTransferReceivedEmail,
   verifyEmailConnection
 };

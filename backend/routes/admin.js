@@ -2395,6 +2395,15 @@ router.put('/deposit-confirmations/:id', protect, adminOnly, [
     confirmation.confirmedAt = new Date();
     await confirmation.save();
 
+    // Get user details
+    const user = await User.findById(confirmation.userId._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Import email function
+    const { default: emailService } = await import('../config/email.js');
+
     // If confirmed, create transaction and update user balance
     if (status === 'confirmed') {
       // Create transaction record
@@ -2412,12 +2421,9 @@ router.put('/deposit-confirmations/:id', protect, adminOnly, [
       await transaction.save();
 
       // Update user balance
-      const user = await User.findById(confirmation.userId._id);
-      if (user) {
-        if (!user.balance) user.balance = {};
-        user.balance[confirmation.cryptocurrency] = (user.balance[confirmation.cryptocurrency] || 0) + confirmation.amount;
-        await user.save();
-      }
+      if (!user.balance) user.balance = {};
+      user.balance[confirmation.cryptocurrency] = (user.balance[confirmation.cryptocurrency] || 0) + confirmation.amount;
+      await user.save();
 
       // Create user notification
       const userNotification = new Notification({
@@ -2432,6 +2438,22 @@ router.put('/deposit-confirmations/:id', protect, adminOnly, [
         }
       });
       await userNotification.save();
+
+      // Send email notification to user
+      try {
+        await emailService.sendDepositConfirmedEmail(
+          user.email,
+          user.username,
+          {
+            amount: confirmation.amount,
+            cryptocurrency: confirmation.cryptocurrency,
+            transactionId: confirmation.transactionId
+          }
+        );
+        console.log(`Deposit confirmation email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('Failed to send deposit confirmation email:', emailError);
+      }
     } else {
       // Create rejection notification
       const userNotification = new Notification({
@@ -2446,6 +2468,23 @@ router.put('/deposit-confirmations/:id', protect, adminOnly, [
         }
       });
       await userNotification.save();
+
+      // Send rejection email to user
+      try {
+        await emailService.sendDepositRejectedEmail(
+          user.email,
+          user.username,
+          {
+            amount: confirmation.amount,
+            cryptocurrency: confirmation.cryptocurrency,
+            transactionId: confirmation.transactionId
+          },
+          adminNotes || ''
+        );
+        console.log(`Deposit rejection email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('Failed to send deposit rejection email:', emailError);
+      }
     }
 
     res.json({

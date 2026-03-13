@@ -45,6 +45,73 @@ router.get('/calculate-gas', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/withdrawal/estimate-fee
+// @desc    Estimate transaction fee before withdrawal
+// @access  Private
+router.get('/estimate-fee', protect, async (req, res) => {
+  try {
+    const { amount, currency, network } = req.query;
+    
+    if (!amount || !currency || !network) {
+      return res.status(400).json({ message: 'Amount, currency, and network are required' });
+    }
+    
+    const parsedAmount = parseFloat(amount);
+    
+    // Get network gas prices
+    const gasPrices = await getNetworkGasPrices();
+    const networkGasPrice = gasPrices[network] || { baseFee: 0.001, priorityFee: 0.0005 };
+    
+    // Calculate network fee based on transaction complexity
+    let networkFee = 0;
+    let estimatedTime = '10-30 minutes';
+    
+    switch(network) {
+      case 'bitcoin':
+        // BTC fees based on transaction size (simplified)
+        networkFee = Math.max(0.0001, parsedAmount * 0.0005); // 0.05% min 0.0001 BTC
+        estimatedTime = networkGasPrice.baseFee < 0.0005 ? '10-20 minutes' : '30-60 minutes';
+        break;
+      case 'ethereum':
+        // ETH gas fees
+        networkFee = Math.max(0.001, parsedAmount * 0.002); // 0.2% min 0.001 ETH
+        estimatedTime = networkGasPrice.baseFee < 20 ? '2-5 minutes' : '10-30 minutes';
+        break;
+      default:
+        networkFee = Math.max(0.001, parsedAmount * 0.001);
+    }
+    
+    // Platform fee (0.5%)
+    const platformFeeRate = 0.005;
+    const platformFee = parsedAmount * platformFeeRate;
+    
+    // Total fee
+    const totalFee = networkFee + platformFee;
+    const receiveAmount = parsedAmount - totalFee;
+    
+    res.json({
+      success: true,
+      estimate: {
+        amount: parsedAmount,
+        currency: currency.toUpperCase(),
+        network,
+        networkFee: networkFee.toFixed(6),
+        platformFee: platformFee.toFixed(6),
+        totalFee: totalFee.toFixed(6),
+        receiveAmount: receiveAmount.toFixed(6),
+        estimatedTime,
+        feeBreakdown: {
+          network: `${(networkFee / parsedAmount * 100).toFixed(3)}%`,
+          platform: `${(platformFeeRate * 100).toFixed(1)}%`
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Estimate fee error:', error);
+    res.status(500).json({ message: error.message || 'Server error' });
+  }
+});
+
 // @route   GET /api/withdrawal/gas-prices
 // @desc    Get current gas prices for all networks
 // @access  Private

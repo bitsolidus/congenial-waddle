@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Menu, X, Bell, User, Moon, Sun } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import Sidebar from './Sidebar';
+import InactivityTimer from './InactivityTimer';
 import { fetchNotifications, markNotificationRead, markAllNotificationsRead } from '../store/notificationSlice';
 import { toggleTheme } from '../store/themeSlice';
 
@@ -185,6 +186,8 @@ const Layout = () => {
         </main>
       </div>
 
+      {/* Inactivity Timer - Auto logout warning */}
+      <InactivityTimer />
     </div>
   );
 };

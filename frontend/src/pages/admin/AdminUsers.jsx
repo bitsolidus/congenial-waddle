@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, MoreVertical, Ban, CheckCircle, Edit2, ExternalLink, Wallet, X, User, Mail, Phone, MapPin, Calendar, DollarSign, Shield, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
-import { formatCurrency, formatDate } from '../../utils/helpers';
+import { formatCurrency, formatDate, getApiUrl } from '../../utils/helpers';
 import { convertFromUSD, formatCurrencyWithSymbol } from '../../utils/currency';
 import axios from 'axios';
 
@@ -524,6 +524,67 @@ const AdminUsers = () => {
                         </p>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* KYC Documents (if KYC submitted) */}
+                {viewingUser.kycData && (viewingUser.kycData.idFrontImage || viewingUser.kycData.idBackImage || viewingUser.kycData.selfieImage || viewingUser.kycData.proofOfAddressImage) && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Submitted Documents
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {viewingUser.kycData.idFrontImage && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">ID Front</p>
+                          <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all" onClick={() => window.open(getApiUrl(viewingUser.kycData.idFrontImage), '_blank')}>
+                            <img 
+                              src={getApiUrl(viewingUser.kycData.idFrontImage)} 
+                              alt="ID Front"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {viewingUser.kycData.idBackImage && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">ID Back</p>
+                          <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all" onClick={() => window.open(getApiUrl(viewingUser.kycData.idBackImage), '_blank')}>
+                            <img 
+                              src={getApiUrl(viewingUser.kycData.idBackImage)} 
+                              alt="ID Back"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {viewingUser.kycData.selfieImage && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Selfie</p>
+                          <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all" onClick={() => window.open(getApiUrl(viewingUser.kycData.selfieImage), '_blank')}>
+                            <img 
+                              src={getApiUrl(viewingUser.kycData.selfieImage)} 
+                              alt="Selfie"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {viewingUser.kycData.proofOfAddressImage && (
+                        <div className="space-y-2">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Proof of Address</p>
+                          <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all" onClick={() => window.open(getApiUrl(viewingUser.kycData.proofOfAddressImage), '_blank')}>
+                            <img 
+                              src={getApiUrl(viewingUser.kycData.proofOfAddressImage)} 
+                              alt="Proof of Address"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">Click on any document to view full size</p>
                   </div>
                 )}
               </div>
