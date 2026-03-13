@@ -268,7 +268,7 @@ const Receive = () => {
             )}
 
             <form onSubmit={handleSend} className="space-y-4">
-              {/* Recipient Wallet */}
+              {/* Recipient Wallet Address */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Recipient's Wallet Address
@@ -278,10 +278,10 @@ const Receive = () => {
                   value={sendForm.toWallet}
                   onChange={(e) => setSendForm({ ...sendForm, toWallet: e.target.value })}
                   className="input-field w-full"
-                  placeholder="Enter BITSXXXXXXX address"
+                  placeholder="Enter wallet address (e.g., 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa)"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">Must be a valid BitSolidus wallet address (starts with BITS)</p>
+                <p className="text-xs text-gray-500 mt-1">Enter a valid cryptocurrency wallet address</p>
               </div>
 
               {/* Cryptocurrency Selection */}

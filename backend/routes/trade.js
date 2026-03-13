@@ -295,6 +295,39 @@ router.get('/orders', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/trade/recent/:pair
+// @desc    Get recent trades for a trading pair
+// @access  Public
+router.get('/recent/:pair', async (req, res) => {
+  try {
+    const { pair } = req.params;
+    
+    // For demo purposes, return mock data
+    // In production, this would fetch from actual trade history
+    const mockTrades = [];
+    const basePrice = pair.includes('BTC') ? 67000 : pair.includes('ETH') ? 3500 : 1;
+    
+    for (let i = 0; i < 20; i++) {
+      const price = basePrice * (1 + (Math.random() - 0.5) * 0.02);
+      mockTrades.push({
+        _id: `mock-${i}`,
+        price: price.toFixed(2),
+        amount: (Math.random() * 0.1).toFixed(4),
+        timestamp: Date.now() - (i * 60000),
+        side: Math.random() > 0.5 ? 'buy' : 'sell'
+      });
+    }
+    
+    res.json({
+      success: true,
+      trades: mockTrades
+    });
+  } catch (error) {
+    console.error('Get recent trades error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   DELETE /api/trade/order/:id
 // @desc    Cancel an order
 // @access  Private

@@ -304,7 +304,21 @@ const Transactions = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                        {formatCurrency(tx.amount)}
+                        {(() => {
+                          const crypto = tx.cryptoCurrency || tx.crypto || 'USDT';
+                          // Format amount based on currency type
+                          if (crypto === 'USDT' || crypto === 'USD') {
+                            return formatCurrency(tx.amount);
+                          } else if (crypto === 'BTC') {
+                            return `${tx.amount.toFixed(8)} ${crypto}`;
+                          } else if (crypto === 'ETH') {
+                            return `${tx.amount.toFixed(6)} ${crypto}`;
+                          } else if (crypto === 'BNB') {
+                            return `${tx.amount.toFixed(6)} ${crypto}`;
+                          } else {
+                            return `${tx.amount.toFixed(4)} ${crypto}`;
+                          }
+                        })()}
                       </td>
                       <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
                         {tx.cryptoCurrency || tx.crypto || 'USDT'}
