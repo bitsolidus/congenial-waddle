@@ -3336,36 +3336,53 @@ router.get('/analytics', protect, adminOnly, async (req, res) => {
   try {
     const timeframe = req.query.timeframe || '7d';
     
-    // Calculate date range
+    // Calculate date ranges
     const now = new Date();
-    let startDate = new Date();
+    let currentStartDate = new Date();
+    let previousStartDate = new Date();
     
+    // Set current period start date based on timeframe
     if (timeframe === '7d') {
-      startDate.setDate(now.getDate() - 7);
+      currentStartDate.setDate(now.getDate() - 7);
+      previousStartDate.setDate(now.getDate() - 14); // Previous 7 days
     } else if (timeframe === '30d') {
-      startDate.setDate(now.getDate() - 30);
+      currentStartDate.setDate(now.getDate() - 30);
+      previousStartDate.setDate(now.getDate() - 60); // Previous 30 days
     } else if (timeframe === '90d') {
-      startDate.setDate(now.getDate() - 90);
+      currentStartDate.setDate(now.getDate() - 90);
+      previousStartDate.setDate(now.getDate() - 180); // Previous 90 days
     } else if (timeframe === '1y') {
-      startDate.setFullYear(now.getFullYear() - 1);
+      currentStartDate.setFullYear(now.getFullYear() - 1);
+      previousStartDate.setFullYear(now.getFullYear() - 2); // Previous year
     } else {
-      startDate.setDate(now.getDate() - 7); // Default to 7 days
+      currentStartDate.setDate(now.getDate() - 7);
+      previousStartDate.setDate(now.getDate() - 14);
     }
     
-    // Get total users
+    const currentEndDate = now;
+    const previousEndDate = currentStartDate;
+    
+    console.log(`Analytics Query:`);
+    console.log(`  Timeframe: ${timeframe}`);
+    console.log(`  Current Period: ${previousStartDate.toISOString().split('T')[0]} to ${currentEndDate.toISOString().split('T')[0]}`);
+    console.log(`  Previous Period: ${previousStartDate.toISOString().split('T')[0]} to ${previousEndDate.toISOString().split('T')[0]}`);
+    
+    // ==================== CURRENT PERIOD DATA ====================
+    
+    // Get total users (all time)
     const totalUsers = await User.countDocuments();
     
-    // Get active users (users with transactions in timeframe)
+    // Get active users (users with transactions in current timeframe)
     const activeUsersQuery = await Transaction.distinct('userId', {
-      createdAt: { $gte: startDate }
+      createdAt: { $gte: currentStartDate, $lte: currentEndDate }
     });
     const activeUsers = activeUsersQuery.length;
     
-    // Get total revenue (sum of all completed trades and withdrawals)
-    const revenueData = await Transaction.aggregate([
+    // Get total revenue (sum of all completed trades and withdrawals) - CURRENT
+    const currentRevenueData = await Transaction.aggregate([
       { 
         $match: { 
-          createdAt: { $gte: startDate },
+          createdAt: { $gte: currentStartDate, $lte: currentEndDate },
           type: { $in: ['trade', 'withdrawal'] },
           status: 'completed'
         } 
@@ -3377,13 +3394,13 @@ router.get('/analytics', protect, adminOnly, async (req, res) => {
         } 
       }
     ]);
-    const totalRevenue = revenueData[0]?.total || 0;
+    const currentRevenue = currentRevenueData[0]?.total || 0;
     
-    // Get trading volume
-    const volumeData = await Transaction.aggregate([
+    // Get trading volume - CURRENT
+    const currentVolumeData = await Transaction.aggregate([
       { 
         $match: { 
-          createdAt: { $gte: startDate },
+          createdAt: { $gte: currentStartDate, $lte: currentEndDate },
           type: 'trade',
           status: 'completed'
         } 
@@ -3395,13 +3412,13 @@ router.get('/analytics', protect, adminOnly, async (req, res) => {
         } 
       }
     ]);
-    const tradingVolume = volumeData[0]?.total || 0;
+    const currentTradingVolume = currentVolumeData[0]?.total || 0;
     
-    // Get average transaction size
-    const avgTransactionData = await Transaction.aggregate([
+    // Get average transaction size - CURRENT
+    const currentAvgTransactionData = await Transaction.aggregate([
       { 
         $match: { 
-          createdAt: { $gte: startDate },
+          createdAt: { $gte: currentStartDate, $lte: currentEndDate },
           status: 'completed'
         } 
       },
@@ -3413,29 +3430,126 @@ router.get('/analytics', protect, adminOnly, async (req, res) => {
         } 
       }
     ]);
-    const avgTransaction = avgTransactionData[0]?.count 
-      ? avgTransactionData[0].total / avgTransactionData[0].count 
+    const currentAvgTransaction = currentAvgTransactionData[0]?.count 
+      ? currentAvgTransactionData[0].total / currentAvgTransactionData[0].count 
       : 0;
     
-    // Mock change percentages (would need historical data for real calculations)
-    const revenueChange = '+12.5%';
-    const userChange = '+8.3%';
-    const volumeChange = '+15.2%';
-    const avgChange = '+5.7%';
+    // ==================== PREVIOUS PERIOD DATA ====================
+    
+    // Get total revenue - PREVIOUS
+    const previousRevenueData = await Transaction.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: previousStartDate, $lte: previousEndDate },
+          type: { $in: ['trade', 'withdrawal'] },
+          status: 'completed'
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          total: { $sum: '$amount' } 
+        } 
+      }
+    ]);
+    const previousRevenue = previousRevenueData[0]?.total || 0;
+    
+    // Get active users - PREVIOUS
+    const previousActiveUsersQuery = await Transaction.distinct('userId', {
+      createdAt: { $gte: previousStartDate, $lte: previousEndDate }
+    });
+    const previousActiveUsers = previousActiveUsersQuery.length;
+    
+    // Get trading volume - PREVIOUS
+    const previousVolumeData = await Transaction.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: previousStartDate, $lte: previousEndDate },
+          type: 'trade',
+          status: 'completed'
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          total: { $sum: '$amount' } 
+        } 
+      }
+    ]);
+    const previousTradingVolume = previousVolumeData[0]?.total || 0;
+    
+    // Get average transaction size - PREVIOUS
+    const previousAvgTransactionData = await Transaction.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: previousStartDate, $lte: previousEndDate },
+          status: 'completed'
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          total: { $sum: '$amount' },
+          count: { $sum: 1 } 
+        } 
+      }
+    ]);
+    const previousAvgTransaction = previousAvgTransactionData[0]?.count 
+      ? previousAvgTransactionData[0].total / previousAvgTransactionData[0].count 
+      : 0;
+    
+    // ==================== CALCULATE GROWTH PERCENTAGES ====================
+    
+    // Helper function to calculate percentage change
+    const calculateGrowth = (current, previous) => {
+      if (previous === 0) {
+        // If previous was 0, any positive current value is 100% growth
+        return current > 0 ? 100 : 0;
+      }
+      return ((current - previous) / previous) * 100;
+    };
+    
+    const revenueGrowth = calculateGrowth(currentRevenue, previousRevenue);
+    const userGrowth = calculateGrowth(activeUsers, previousActiveUsers);
+    const volumeGrowth = calculateGrowth(currentTradingVolume, previousTradingVolume);
+    const avgGrowth = calculateGrowth(currentAvgTransaction, previousAvgTransaction);
+    
+    // Format growth percentages
+    const formatGrowth = (value) => {
+      const formatted = value.toFixed(2);
+      return `${formatted >= 0 ? '+' : ''}${formatted}%`;
+    };
+    
+    console.log('\nGrowth Calculations:');
+    console.log(`  Revenue: ${currentRevenue.toFixed(2)} vs ${previousRevenue.toFixed(2)} = ${formatGrowth(revenueGrowth)}`);
+    console.log(`  Users: ${activeUsers} vs ${previousActiveUsers} = ${formatGrowth(userGrowth)}`);
+    console.log(`  Volume: ${currentTradingVolume.toFixed(2)} vs ${previousTradingVolume.toFixed(2)} = ${formatGrowth(volumeGrowth)}`);
+    console.log(`  Avg Transaction: ${currentAvgTransaction.toFixed(2)} vs ${previousAvgTransaction.toFixed(2)} = ${formatGrowth(avgGrowth)}`);
     
     res.json({
       success: true,
       analytics: {
-        totalRevenue,
-        revenueChange,
+        totalRevenue: currentRevenue,
+        revenueChange: formatGrowth(revenueGrowth),
         activeUsers,
-        userChange,
-        tradingVolume,
-        volumeChange,
-        avgTransaction,
-        avgChange,
+        userChange: formatGrowth(userGrowth),
+        tradingVolume: currentTradingVolume,
+        volumeChange: formatGrowth(volumeGrowth),
+        avgTransaction: currentAvgTransaction,
+        avgChange: formatGrowth(avgGrowth),
         totalUsers,
-        timeframe
+        timeframe,
+        // Additional metadata for debugging
+        periods: {
+          current: {
+            start: currentStartDate,
+            end: currentEndDate
+          },
+          previous: {
+            start: previousStartDate,
+            end: previousEndDate
+          }
+        }
       }
     });
   } catch (error) {
