@@ -1,12 +1,41 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, X } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const StickyCTA = () => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
+  // Don't show on dashboard or auth pages
+  const shouldHideOnCurrentPage = 
+    location.pathname.startsWith('/dashboard') ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname === '/login' ||
+    location.pathname === '/register' ||
+    location.pathname === '/portfolio' ||
+    location.pathname === '/trade' ||
+    location.pathname === '/transactions' ||
+    location.pathname === '/profile' ||
+    location.pathname === '/kyc' ||
+    location.pathname === '/notifications' ||
+    location.pathname === '/deposit' ||
+    location.pathname === '/withdraw' ||
+    location.pathname === '/receive' ||
+    location.pathname === '/buy-gas' ||
+    location.pathname === '/tier-upgrade';
+
   useEffect(() => {
+    // Don't show if dismissed or on hidden pages
+    if (isDismissed || shouldHideOnCurrentPage) {
+      setIsVisible(false);
+      return;
+    }
+
     const handleScroll = () => {
       // Show CTA after scrolling 50% of the page
       const scrollPosition = window.scrollY;
@@ -15,7 +44,7 @@ const StickyCTA = () => {
       
       const scrolled = (scrollPosition / (documentHeight - windowHeight)) * 100;
       
-      if (scrolled > 50 && !isDismissed) {
+      if (scrolled > 50) {
         setIsVisible(true);
       } else {
         setIsVisible(false);
@@ -24,7 +53,7 @@ const StickyCTA = () => {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isDismissed]);
+  }, [isDismissed, shouldHideOnCurrentPage]);
 
   const handleDismiss = () => {
     setIsDismissed(true);
@@ -32,10 +61,16 @@ const StickyCTA = () => {
   };
 
   const handleClick = () => {
-    window.location.href = '/register';
+    if (isAuthenticated) {
+      // Redirect logged-in users to trading page
+      navigate('/trade');
+    } else {
+      // Redirect non-authenticated users to register
+      navigate('/register');
+    }
   };
 
-  if (isDismissed) return null;
+  if (isDismissed || shouldHideOnCurrentPage) return null;
 
   return (
     <AnimatePresence>
@@ -56,16 +91,19 @@ const StickyCTA = () => {
             
             <div className="text-white text-center">
               <h3 className="font-bold text-lg mb-1">
-                Ready to Start Trading?
+                {isAuthenticated ? 'Ready to Trade?' : 'Ready to Start Trading?'}
               </h3>
               <p className="text-sm text-purple-100 mb-3">
-                Join thousands of traders on BitSolidus
+                {isAuthenticated 
+                  ? 'Access your trading dashboard'
+                  : 'Join thousands of traders on BitSolidus'
+                }
               </p>
               <button
                 onClick={handleClick}
                 className="w-full bg-white text-purple-600 font-semibold py-3 px-6 rounded-xl hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
               >
-                Get Started Free
+                {isAuthenticated ? 'Go to Trading' : 'Get Started Free'}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
