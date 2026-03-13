@@ -21,7 +21,7 @@
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-helmet-async": "^2.0.5",
+    "react-helmet-async": "^2.0.4-beta",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.13.1",
     "react-toastify": "^11.0.5",
