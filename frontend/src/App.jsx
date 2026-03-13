@@ -5,6 +5,10 @@ import { store } from './store';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchProfile, initializeAuth } from './store/authSlice';
 import { setTheme } from './store/themeSlice';
+import { fetchSiteConfig } from './store/siteConfigSlice';
+
+// Components
+import Favicon from './components/Favicon';
 
 // Pages
 import Home from './pages/Home';
@@ -126,6 +130,18 @@ const ThemeInitializer = () => {
   return null;
 };
 
+// Initialize site config
+const SiteConfigInitializer = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Fetch site configuration on app load
+    dispatch(fetchSiteConfig());
+  }, [dispatch]);
+
+  return null;
+};
+
 // Auth initializer
 const AuthInitializer = ({ children }) => {
   const dispatch = useDispatch();
@@ -167,7 +183,9 @@ function App() {
   return (
     <Provider store={store}>
       <Router>
+        <SiteConfigInitializer />
         <ThemeInitializer />
+        <Favicon />
         <Toast />
         <ScrollProgress />
         <StickyCTA />
