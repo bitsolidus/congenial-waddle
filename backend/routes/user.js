@@ -1025,20 +1025,39 @@ router.get('/internal-wallet', protect, async (req, res) => {
     
     // If user doesn't have an internal wallet, generate one
     if (!user.internalWallet) {
-      // Generate a unique internal wallet address (format: BITSXXXXXXX)
-      const prefix = 'BITS';
-      const randomPart = Math.random().toString(36).substring(2, 9).toUpperCase();
-      const internalWallet = `${prefix}${randomPart}`;
-      
-      // Check if this wallet already exists
-      const existingWallet = await User.findOne({ internalWallet });
-      if (existingWallet) {
-        // If exists, generate a new one recursively
-        return res.redirect('/api/user/internal-wallet');
+      try {
+        // Generate a unique internal wallet address (format: BITSXXXXXXX)
+        const prefix = 'BITS';
+        let internalWallet;
+        let exists = true;
+        let attempts = 0;
+        
+        while (exists && attempts < 10) {
+          const randomPart = Math.random().toString(36).substring(2, 9).toUpperCase();
+          internalWallet = `${prefix}${randomPart}`;
+          
+          const existingUser = await User.findOne({ internalWallet });
+          if (!existingUser) {
+            exists = false;
+          } else {
+            attempts++;
+          }
+        }
+        
+        if (!internalWallet || attempts >= 10) {
+          throw new Error('Failed to generate unique wallet address');
+        }
+        
+        user.internalWallet = internalWallet;
+        await user.save();
+        
+        console.log(`Generated wallet ${internalWallet} for user ${user.username}`);
+      } catch (walletError) {
+        console.error('Failed to generate wallet:', walletError.message);
+        return res.status(500).json({ 
+          message: 'Failed to generate wallet. Please contact support.' 
+        });
       }
-      
-      user.internalWallet = internalWallet;
-      await user.save();
     }
     
     res.json({

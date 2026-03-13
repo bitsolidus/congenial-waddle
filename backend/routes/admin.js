@@ -3202,4 +3202,107 @@ router.put('/withdrawals/:id/reject', protect, adminOnly, async (req, res) => {
   }
 });
 
+// @route   POST /api/admin/generate-missing-wallets
+// @desc    Generate internal wallets for all users who don't have one
+// @access  Private (Admin only)
+router.post('/generate-missing-wallets', protect, async (req, res) => {
+  try {
+    // Check if user is admin
+    const user = await User.findById(req.user._id);
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+
+    console.log('🚀 Starting wallet generation for users without wallets...');
+
+    // Find all users without internalWallet
+    const usersWithoutWallet = await User.find({ 
+      $or: [
+        { internalWallet: null },
+        { internalWallet: { $exists: false } },
+        { internalWallet: '' }
+      ]
+    }).select('_id username email');
+
+    console.log(`Found ${usersWithoutWallet.length} users without wallets`);
+
+    if (usersWithoutWallet.length === 0) {
+      return res.json({
+        success: true,
+        message: 'All users already have internal wallets',
+        generated: 0,
+        total: usersWithoutWallet.length
+      });
+    }
+
+    // Generate wallets
+    let generatedCount = 0;
+    let errorCount = 0;
+    const results = [];
+
+    for (const userData of usersWithoutWallet) {
+      try {
+        const prefix = 'BITS';
+        let internalWallet;
+        let exists = true;
+        let attempts = 0;
+        
+        while (exists && attempts < 10) {
+          const randomPart = Math.random().toString(36).substring(2, 9).toUpperCase();
+          internalWallet = `${prefix}${randomPart}`;
+          
+          const existingUser = await User.findOne({ internalWallet });
+          if (!existingUser) {
+            exists = false;
+          } else {
+            attempts++;
+          }
+        }
+        
+        if (!internalWallet || attempts >= 10) {
+          throw new Error('Failed to generate unique wallet');
+        }
+
+        userData.internalWallet = internalWallet;
+        await userData.save();
+        
+        generatedCount++;
+        results.push({
+          username: userData.username,
+          wallet: internalWallet,
+          status: 'success'
+        });
+
+        console.log(`✓ Generated ${internalWallet} for ${userData.username}`);
+      } catch (error) {
+        errorCount++;
+        results.push({
+          username: userData.username,
+          wallet: null,
+          status: 'error',
+          error: error.message
+        });
+        console.error(`✗ Error for ${userData.username}:`, error.message);
+      }
+    }
+
+    console.log(`\n✅ Completed! Generated ${generatedCount} wallets, ${errorCount} errors`);
+
+    res.json({
+      success: true,
+      message: `Generated ${generatedCount} internal wallets`,
+      generated: generatedCount,
+      failed: errorCount,
+      total: usersWithoutWallet.length,
+      results: results.slice(0, 50) // Return first 50 results
+    });
+  } catch (error) {
+    console.error('Generate wallets error:', error);
+    res.status(500).json({ 
+      message: 'Server error occurred',
+      error: error.message 
+    });
+  }
+});
+
 export default router;
