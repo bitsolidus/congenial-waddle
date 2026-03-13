@@ -16,11 +16,18 @@ if (token) {
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Only logout on 401 for non-admin routes
+    // Admin routes may return 403 which shouldn't trigger logout
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
-      window.location.href = '/login';
+      // Check if this is an admin route
+      const isAdminRoute = error.config?.url?.includes('/admin/');
+      
+      if (!isAdminRoute) {
+        // Token expired or invalid
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
