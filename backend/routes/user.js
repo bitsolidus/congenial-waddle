@@ -1064,27 +1064,49 @@ router.post('/internal-transfer', protect, [
   try {
     const { toWallet, amount, cryptocurrency } = req.body;
     
+    // Validate wallet address format
+    if (!toWallet || typeof toWallet !== 'string' || !toWallet.trim()) {
+      return res.status(400).json({ 
+        message: 'Please provide a valid wallet address' 
+      });
+    }
+    
     // Ensure sender has an internal wallet (auto-generate if missing)
     const sender = await User.findById(req.user._id);
     if (!sender.internalWallet) {
-      // Generate internal wallet for sender
-      const prefix = 'BITS';
-      const randomPart = Math.random().toString(36).substring(2, 9).toUpperCase();
-      let internalWallet = `${prefix}${randomPart}`;
-      
-      // Ensure uniqueness
-      let exists = true;
-      while (exists) {
-        const existing = await User.findOne({ internalWallet });
-        if (!existing) {
-          exists = false;
-        } else {
-          internalWallet = `${prefix}${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+      try {
+        // Generate internal wallet for sender
+        const prefix = 'BITS';
+        let internalWallet;
+        let exists = true;
+        let attempts = 0;
+        
+        while (exists && attempts < 10) {
+          const randomPart = Math.random().toString(36).substring(2, 9).toUpperCase();
+          internalWallet = `${prefix}${randomPart}`;
+          
+          const existing = await User.findOne({ internalWallet });
+          if (!existing) {
+            exists = false;
+          } else {
+            attempts++;
+          }
         }
+        
+        if (!internalWallet || attempts >= 10) {
+          throw new Error('Failed to generate unique wallet address');
+        }
+        
+        sender.internalWallet = internalWallet;
+        await sender.save();
+        
+        console.log(`Auto-generated wallet ${internalWallet} for user ${sender.username}`);
+      } catch (walletError) {
+        console.error('Failed to auto-generate wallet:', walletError.message);
+        return res.status(500).json({ 
+          message: 'Failed to initialize your wallet. Please contact support.' 
+        });
       }
-      
-      sender.internalWallet = internalWallet;
-      await sender.save();
     }
     
     // Find recipient by internal wallet
@@ -1189,6 +1211,7 @@ router.post('/internal-transfer', protect, [
       console.log(`Transfer sent email confirmation sent to ${sender.email}`);
     } catch (emailError) {
       console.error('Failed to send transfer sent email to sender:', emailError);
+      // Don't fail the transfer if email fails
     }
     
     // Send email to recipient (notification)
@@ -1205,41 +1228,50 @@ router.post('/internal-transfer', protect, [
       console.log(`Transfer received email notification sent to ${recipient.email}`);
     } catch (emailError) {
       console.error('Failed to send transfer received email to recipient:', emailError);
+      // Don't fail the transfer if email fails
     }
     
     // Log transfer activity for sender
-    await ActivityLog.create({
-      userId: sender._id,
-      type: 'transfer_sent',
-      title: 'Transfer Sent',
-      description: `Sent ${amount} ${cryptocurrency} to ${recipient.username}`,
-      ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
-      metadata: {
-        amount,
-        cryptocurrency,
-        recipientId: recipient._id,
-        recipientUsername: recipient.username,
-        transactionId: senderTransaction._id
-      },
-      severity: 'info'
-    });
+    try {
+      await ActivityLog.create({
+        userId: sender._id,
+        type: 'transfer_sent',
+        title: 'Transfer Sent',
+        description: `Sent ${amount} ${cryptocurrency} to ${recipient.username}`,
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        metadata: {
+          amount,
+          cryptocurrency,
+          recipientId: recipient._id,
+          recipientUsername: recipient.username,
+          transactionId: senderTransaction._id
+        },
+        severity: 'info'
+      });
+    } catch (logError) {
+      console.error('Failed to log sender activity:', logError);
+    }
     
     // Log transfer activity for recipient
-    await ActivityLog.create({
-      userId: recipient._id,
-      type: 'transfer_received',
-      title: 'Transfer Received',
-      description: `Received ${amount} ${cryptocurrency} from ${sender.username}`,
-      metadata: {
-        amount,
-        cryptocurrency,
-        senderId: sender._id,
-        senderUsername: sender.username,
-        transactionId: recipientTransaction._id
-      },
-      severity: 'info'
-    });
+    try {
+      await ActivityLog.create({
+        userId: recipient._id,
+        type: 'transfer_received',
+        title: 'Transfer Received',
+        description: `Received ${amount} ${cryptocurrency} from ${sender.username}`,
+        metadata: {
+          amount,
+          cryptocurrency,
+          senderId: sender._id,
+          senderUsername: sender.username,
+          transactionId: recipientTransaction._id
+        },
+        severity: 'info'
+      });
+    } catch (logError) {
+      console.error('Failed to log recipient activity:', logError);
+    }
     
     res.json({
       success: true,
@@ -1253,10 +1285,30 @@ router.post('/internal-transfer', protect, [
       }
     });
   } catch (error) {
-    console.error('Internal transfer error:', error);
+    console.error('Internal transfer error:', {
+      message: error.message,
+      stack: error.stack,
+      toWallet: req.body.toWallet,
+      amount: req.body.amount,
+      cryptocurrency: req.body.cryptocurrency
+    });
+    
+    // More specific error messages
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        message: 'Invalid input data. Please check all fields.' 
+      });
+    }
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({ 
+        message: 'Invalid user ID format.' 
+      });
+    }
+    
     res.status(500).json({ 
       message: 'Server error occurred during transfer',
-      error: error.message 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
