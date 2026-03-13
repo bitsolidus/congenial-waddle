@@ -23,13 +23,13 @@ const Careers = () => {
       type: 'Full-time',
       salary: '$120k - $180k',
       posted: '2 days ago',
-      description: 'We're looking for an experienced Frontend Engineer to join our growing team and help build the future of cryptocurrency trading.',
+      description: "We're looking for an experienced Frontend Engineer to join our growing team and help build the future of cryptocurrency trading.",
       requirements: [
         '5+ years of experience with React and modern JavaScript',
         'Strong understanding of TypeScript and state management',
         'Experience with Web3 and blockchain technologies',
         'Excellent problem-solving and communication skills',
-        'Bachelor's degree in Computer Science or related field'
+        'Bachelor\'s degree in Computer Science or related field'
       ],
       responsibilities: [
         'Build responsive and performant user interfaces',
@@ -85,7 +85,7 @@ const Careers = () => {
       type: 'Full-time',
       salary: '$100k - $160k',
       posted: '3 days ago',
-      description: 'We're seeking a talented Product Designer to create intuitive and beautiful experiences for our trading platform.',
+      description: "We're seeking a talented Product Designer to create intuitive and beautiful experiences for our trading platform.",
       requirements: [
         '4+ years of product design experience',
         'Strong portfolio demonstrating UX/UI skills',
