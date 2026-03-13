@@ -1064,23 +1064,57 @@ router.post('/internal-transfer', protect, [
   try {
     const { toWallet, amount, cryptocurrency } = req.body;
     
+    // Ensure sender has an internal wallet (auto-generate if missing)
+    const sender = await User.findById(req.user._id);
+    if (!sender.internalWallet) {
+      // Generate internal wallet for sender
+      const prefix = 'BITS';
+      const randomPart = Math.random().toString(36).substring(2, 9).toUpperCase();
+      let internalWallet = `${prefix}${randomPart}`;
+      
+      // Ensure uniqueness
+      let exists = true;
+      while (exists) {
+        const existing = await User.findOne({ internalWallet });
+        if (!existing) {
+          exists = false;
+        } else {
+          internalWallet = `${prefix}${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+        }
+      }
+      
+      sender.internalWallet = internalWallet;
+      await sender.save();
+    }
+    
     // Find recipient by internal wallet
-    const recipient = await User.findOne({ internalWallet: toWallet });
+    const recipient = await User.findOne({ internalWallet: toWallet.trim() });
     if (!recipient) {
-      return res.status(404).json({ message: 'Recipient wallet address not found. Make sure the address is a valid BitSolidus internal wallet.' });
+      return res.status(404).json({ 
+        message: 'Recipient wallet address not found. Please verify the address is a valid BitSolidus internal wallet (format: BITSXXXXXXX).' 
+      });
     }
     
     // Cannot send to self
-    if (recipient._id.toString() === req.user._id.toString()) {
-      return res.status(400).json({ message: 'Cannot transfer to your own wallet' });
+    if (recipient._id.toString() === sender._id.toString()) {
+      return res.status(400).json({ 
+        message: 'You cannot send funds to your own wallet address. Please enter a different user\'s wallet address.' 
+      });
     }
-    
-    const sender = await User.findById(req.user._id);
     
     // Check sender's balance
     const senderBalance = sender.balance[cryptocurrency] || 0;
     if (senderBalance < amount) {
-      return res.status(400).json({ message: `Insufficient ${cryptocurrency} balance` });
+      return res.status(400).json({ 
+        message: `Insufficient ${cryptocurrency} balance. Your balance: ${senderBalance.toFixed(6)} ${cryptocurrency}` 
+      });
+    }
+    
+    // Validate minimum amount
+    if (amount < 0.01) {
+      return res.status(400).json({ 
+        message: 'Minimum transfer amount is 0.01' 
+      });
     }
     
     // Perform transfer
@@ -1090,26 +1124,36 @@ router.post('/internal-transfer', protect, [
     await sender.save();
     await recipient.save();
     
-    // Create transaction records
-    const senderTransaction = await Transaction.create({
-      userId: sender._id,
-      type: 'transfer_sent',
-      cryptocurrency,
+    // Create transaction records with detailed metadata
+    const senderTransaction = new Transaction({
+      user: sender._id,
+      type: 'internal_transfer_sent',
       amount,
+      cryptocurrency,
       status: 'completed',
-      toAddress: toWallet,
-      description: `Internal transfer to ${recipient.username}`
+      description: `Transfer to ${recipient.username}`,
+      metadata: {
+        recipientUsername: recipient.username,
+        recipientWallet: recipient.internalWallet,
+        senderWallet: sender.internalWallet
+      }
     });
+    await senderTransaction.save();
     
-    const recipientTransaction = await Transaction.create({
-      userId: recipient._id,
-      type: 'transfer_received',
-      cryptocurrency,
+    const recipientTransaction = new Transaction({
+      user: recipient._id,
+      type: 'internal_transfer_received',
       amount,
+      cryptocurrency,
       status: 'completed',
-      fromAddress: sender.internalWallet,
-      description: `Internal transfer from ${sender.username}`
+      description: `Transfer from ${sender.username}`,
+      metadata: {
+        senderUsername: sender.username,
+        senderWallet: sender.internalWallet,
+        recipientWallet: recipient.internalWallet
+      }
     });
+    await recipientTransaction.save();
     
     // Create notifications
     await Notification.create({
@@ -1199,12 +1243,21 @@ router.post('/internal-transfer', protect, [
     
     res.json({
       success: true,
-      message: `Successfully transferred ${amount} ${cryptocurrency} to ${recipient.username}`,
-      transaction: senderTransaction
+      message: `Successfully transferred ${amount} ${cryptocurrency} to ${recipient.username} (${recipient.internalWallet})`,
+      transaction: {
+        amount,
+        cryptocurrency,
+        recipient: recipient.username,
+        recipientWallet: recipient.internalWallet,
+        newBalance: sender.balance[cryptocurrency]
+      }
     });
   } catch (error) {
     console.error('Internal transfer error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ 
+      message: 'Server error occurred during transfer',
+      error: error.message 
+    });
   }
 });
 
