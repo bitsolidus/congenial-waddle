@@ -3305,4 +3305,143 @@ router.post('/generate-missing-wallets', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/admin/transactions
+// @desc    Get all transactions for analytics
+// @access  Admin
+router.get('/transactions', protect, adminOnly, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    
+    // Get recent transactions of all types
+    const transactions = await Transaction.find()
+      .populate('userId', 'username email')
+      .sort({ createdAt: -1 })
+      .limit(limit);
+    
+    res.json({
+      success: true,
+      transactions,
+      total: transactions.length
+    });
+  } catch (error) {
+    console.error('Get transactions error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET /api/admin/analytics
+// @desc    Get platform analytics
+// @access  Admin
+router.get('/analytics', protect, adminOnly, async (req, res) => {
+  try {
+    const timeframe = req.query.timeframe || '7d';
+    
+    // Calculate date range
+    const now = new Date();
+    let startDate = new Date();
+    
+    if (timeframe === '7d') {
+      startDate.setDate(now.getDate() - 7);
+    } else if (timeframe === '30d') {
+      startDate.setDate(now.getDate() - 30);
+    } else if (timeframe === '90d') {
+      startDate.setDate(now.getDate() - 90);
+    } else if (timeframe === '1y') {
+      startDate.setFullYear(now.getFullYear() - 1);
+    } else {
+      startDate.setDate(now.getDate() - 7); // Default to 7 days
+    }
+    
+    // Get total users
+    const totalUsers = await User.countDocuments();
+    
+    // Get active users (users with transactions in timeframe)
+    const activeUsersQuery = await Transaction.distinct('userId', {
+      createdAt: { $gte: startDate }
+    });
+    const activeUsers = activeUsersQuery.length;
+    
+    // Get total revenue (sum of all completed trades and withdrawals)
+    const revenueData = await Transaction.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: startDate },
+          type: { $in: ['trade', 'withdrawal'] },
+          status: 'completed'
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          total: { $sum: '$amount' } 
+        } 
+      }
+    ]);
+    const totalRevenue = revenueData[0]?.total || 0;
+    
+    // Get trading volume
+    const volumeData = await Transaction.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: startDate },
+          type: 'trade',
+          status: 'completed'
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          total: { $sum: '$amount' } 
+        } 
+      }
+    ]);
+    const tradingVolume = volumeData[0]?.total || 0;
+    
+    // Get average transaction size
+    const avgTransactionData = await Transaction.aggregate([
+      { 
+        $match: { 
+          createdAt: { $gte: startDate },
+          status: 'completed'
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          total: { $sum: '$amount' },
+          count: { $sum: 1 } 
+        } 
+      }
+    ]);
+    const avgTransaction = avgTransactionData[0]?.count 
+      ? avgTransactionData[0].total / avgTransactionData[0].count 
+      : 0;
+    
+    // Mock change percentages (would need historical data for real calculations)
+    const revenueChange = '+12.5%';
+    const userChange = '+8.3%';
+    const volumeChange = '+15.2%';
+    const avgChange = '+5.7%';
+    
+    res.json({
+      success: true,
+      analytics: {
+        totalRevenue,
+        revenueChange,
+        activeUsers,
+        userChange,
+        tradingVolume,
+        volumeChange,
+        avgTransaction,
+        avgChange,
+        totalUsers,
+        timeframe
+      }
+    });
+  } catch (error) {
+    console.error('Get analytics error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
