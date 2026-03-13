@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
@@ -19,6 +20,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { logout } from '../store/authSlice';
+import { fetchSiteConfig } from '../store/siteConfigSlice';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -28,6 +30,11 @@ const Sidebar = ({ mobileOpen = false, onClose }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { config: siteConfig } = useSelector((state) => state.siteConfig);
+
+  // Fetch site config on mount
+  useEffect(() => {
+    dispatch(fetchSiteConfig());
+  }, [dispatch]);
 
   const handleLogout = () => {
     dispatch(logout());
