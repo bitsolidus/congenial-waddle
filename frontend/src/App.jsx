@@ -33,12 +33,16 @@ import TransactionDetail from './pages/TransactionDetail';
 import BuyGas from './pages/BuyGas';
 import TierUpgrade from './pages/TierUpgrade';
 import Notifications from './pages/Notifications';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
+import Careers from './pages/Careers';
+import Team from './pages/Team';
+import CaseStudies from './pages/CaseStudies';
 
 // Admin Pages
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
-import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminAlerts from './pages/admin/AdminAlerts';
@@ -55,6 +59,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import Toast from './components/Toast';
 import ChatWidget from './components/ChatWidget';
+import CookieConsent from './components/CookieConsent';
+import ScrollProgress from './components/ScrollProgress';
+import PageTransition from './components/PageTransition';
+import StickyCTA from './components/StickyCTA';
 
 // Root Redirect Component - Now Home is the default landing page
 const RootRedirect = () => {
@@ -161,16 +169,23 @@ function App() {
       <Router>
         <ThemeInitializer />
         <Toast />
+        <ScrollProgress />
+        <StickyCTA />
         <AuthInitializer>
         <Routes>
           {/* Public Website Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+          <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+          <Route path="/services" element={<PageTransition><Services /></PageTransition>} />
+          <Route path="/blog" element={<PageTransition><Blog /></PageTransition>} />
+          <Route path="/news" element={<PageTransition><News /></PageTransition>} />
+          <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
+          <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
+          <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
+          <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+          <Route path="/careers" element={<PageTransition><Careers /></PageTransition>} />
+          <Route path="/team" element={<PageTransition><Team /></PageTransition>} />
+          <Route path="/case-studies" element={<PageTransition><CaseStudies /></PageTransition>} />
           
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
@@ -208,7 +223,6 @@ function App() {
               <Route path="/admin/users/:userId" element={<AdminUserDetail />} />
               <Route path="/admin/kyc" element={<AdminKYC />} />
               <Route path="/admin/withdrawals" element={<AdminWithdrawals />} />
-              <Route path="/admin/transactions" element={<AdminTransactions />} />
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="/admin/alerts" element={<AdminAlerts />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
@@ -224,6 +238,9 @@ function App() {
         
         {/* Chat Widget - Available on all pages */}
         <ChatWidget />
+        
+        {/* Cookie Consent Banner */}
+        <CookieConsent />
         </AuthInitializer>
       </Router>
     </Provider>
