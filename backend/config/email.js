@@ -61,10 +61,19 @@ const getEmailBranding = async () => {
   try {
     const { default: SiteConfig } = await import('../models/SiteConfig.js');
     const config = await SiteConfig.getConfig();
+    
+    // Construct full URL for email logo
+    let emailLogoUrl = config.emailBranding?.logo || config.logo;
+    if (emailLogoUrl && !emailLogoUrl.startsWith('http')) {
+      // Prepend backend API URL for email images
+      const backendUrl = process.env.BACKEND_URL || process.env.FRONTEND_URL || 'https://bitsolidus.tech';
+      emailLogoUrl = `${backendUrl}${emailLogoUrl}`;
+    }
+    
     return {
       siteName: config.siteName || 'BitSolidus',
       siteUrl: process.env.FRONTEND_URL || 'https://bitsolidus.io',
-      emailLogo: config.emailBranding?.logo || config.logo || 'https://bitsolidus.tech/uploads/footerLogo-1772406666300-176806695.png',
+      emailLogo: emailLogoUrl || 'https://bitsolidus.tech/uploads/footerLogo-1772406666300-176806695.png',
       primaryColor: config.emailBranding?.primaryColor || '#7c3aed',
       secondaryColor: config.emailBranding?.secondaryColor || '#4f46e5',
       supportEmail: config.emailBranding?.supportEmail || config.contact?.email || 'support@bitsolidus.tech',

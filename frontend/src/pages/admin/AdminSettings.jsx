@@ -135,6 +135,7 @@ const AdminSettings = () => {
   const [footerLogoPreview, setFooterLogoPreview] = useState(null);
   const [faviconPreview, setFaviconPreview] = useState(null);
   const [loadingIconPreview, setLoadingIconPreview] = useState(null);
+  const [emailLogoPreview, setEmailLogoPreview] = useState(null);
 
   // Chat Settings State
   const [chatSettings, setChatSettings] = useState({
@@ -224,6 +225,9 @@ const AdminSettings = () => {
         }
         if (response.data.config.loadingIcon) {
           setLoadingIconPreview(getImageUrl(response.data.config.loadingIcon));
+        }
+        if (response.data.config.emailBranding?.logo) {
+          setEmailLogoPreview(getImageUrl(response.data.config.emailBranding.logo));
         }
       }
     } catch (err) {
@@ -336,6 +340,31 @@ const AdminSettings = () => {
     } catch (err) {
       console.error('Loading icon upload error:', err);
       setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to upload loading icon' });
+    }
+  };
+
+  const handleEmailLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('emailLogo', file);
+
+    try {
+      const response = await axios.post('/api/admin/site-config/upload-email-logo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const fullEmailLogoUrl = getImageUrl(response.data.emailLogoUrl);
+      if (!siteConfig.emailBranding) {
+        setSiteConfig(prev => ({ ...prev, emailBranding: { logo: response.data.emailLogoUrl } }));
+      } else {
+        setSiteConfig(prev => ({ ...prev, emailBranding: { ...prev.emailBranding, logo: response.data.emailLogoUrl } }));
+      }
+      setEmailLogoPreview(fullEmailLogoUrl);
+      setMessage({ type: 'success', text: 'Email logo uploaded successfully!' });
+    } catch (err) {
+      console.error('Email logo upload error:', err);
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to upload email logo' });
     }
   };
 
@@ -641,6 +670,31 @@ const AdminSettings = () => {
                       <input type="file" accept="image/*,.gif" onChange={handleLoadingIconUpload} className="hidden" />
                     </label>
                     <p className="text-xs text-gray-500 mt-2">Recommended: 64x64px, GIF, SVG, or PNG (animated GIF supported)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Email Logo Upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                  Email Notification Logo
+                  <span className="text-xs text-gray-500 font-normal ml-2">(Displayed in all user emails)</span>
+                </label>
+                <div className="flex items-center gap-6">
+                  <div className="w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+                    {emailLogoPreview ? (
+                      <img src={emailLogoPreview} alt="Email Logo" className="w-full h-full object-contain" />
+                    ) : (
+                      <span className="text-gray-400 text-sm">No email logo</span>
+                    )}
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg cursor-pointer hover:bg-purple-700 transition-colors">
+                      <Upload className="h-5 w-5" />
+                      Upload Email Logo
+                      <input type="file" accept="image/*" onChange={handleEmailLogoUpload} className="hidden" />
+                    </label>
+                    <p className="text-xs text-gray-500 mt-2">Recommended: 200x60px, PNG or SVG. This logo appears at the top of all email notifications.</p>
                   </div>
                 </div>
               </div>
