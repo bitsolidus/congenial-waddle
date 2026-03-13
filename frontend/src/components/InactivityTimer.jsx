@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../store/authSlice';
-import { AlertTriangle, LogOut, Continue } from 'lucide-react';
+import { AlertTriangle, LogOut, Play } from 'lucide-react';
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 const WARNING_BEFORE_TIMEOUT = 30 * 1000; // 30 seconds before timeout
@@ -123,7 +123,7 @@ const InactivityTimer = () => {
               onClick={handleContinue}
               className="flex-1 btn-primary py-3 flex items-center justify-center gap-2"
             >
-              <Continue className="w-5 h-5" />
+              <Play className="w-5 h-5" />
               Continue Session
             </button>
             <button
