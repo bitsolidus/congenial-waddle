@@ -31,6 +31,51 @@ const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Get contact info from admin settings with fallbacks
+  const contactEmail = siteConfig?.contact?.email || 'support@bitsolidus.tech';
+  const contactPhone = siteConfig?.contact?.phone || '+1 (234) 567-890';
+  const contactAddress = siteConfig?.contact?.address || '123 Finance Street, Tech City, TC 12345';
+  const supportUrl = siteConfig?.contact?.supportUrl || '/faq';
+  const liveChatUrl = siteConfig?.contact?.liveChatUrl || '/chat';
+
+  const contactInfo = [
+    {
+      icon: Mail,
+      title: 'Email Us',
+      content: contactEmail,
+      description: 'We will respond within 24 hours',
+      color: 'from-purple-500 to-indigo-600'
+    },
+    {
+      icon: Phone,
+      title: 'Call Us',
+      content: contactPhone,
+      description: 'Mon-Fri from 8am to 6pm',
+      color: 'from-green-500 to-emerald-600'
+    },
+    {
+      icon: MapPin,
+      title: 'Visit Us',
+      content: contactAddress,
+      description: 'Come say hello at our office',
+      color: 'from-blue-500 to-cyan-600'
+    },
+    {
+      icon: Clock,
+      title: 'Working Hours',
+      content: '24/7 Support',
+      description: 'Trading platform always open',
+      color: 'from-orange-500 to-red-600'
+    },
+  ];
+
+  const socialLinks = [
+    { icon: Facebook, href: siteConfig?.footer?.socialLinks?.facebook || '#', label: 'Facebook', color: 'hover:bg-blue-600' },
+    { icon: Twitter, href: siteConfig?.footer?.socialLinks?.twitter || '#', label: 'Twitter', color: 'hover:bg-sky-500' },
+    { icon: Linkedin, href: siteConfig?.footer?.socialLinks?.linkedin || '#', label: 'LinkedIn', color: 'hover:bg-blue-700' },
+    { icon: Instagram, href: siteConfig?.footer?.socialLinks?.instagram || '#', label: 'Instagram', color: 'hover:bg-pink-600' },
+  ];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -45,44 +90,6 @@ const Contact = () => {
     // Reset success message after 5 seconds
     setTimeout(() => setIsSubmitted(false), 5000);
   };
-
-  const contactInfo = [
-    {
-      icon: Mail,
-      title: 'Email Us',
-      content: 'support@cryptonova.com',
-      description: 'We will respond within 24 hours',
-      color: 'from-purple-500 to-indigo-600'
-    },
-    {
-      icon: Phone,
-      title: 'Call Us',
-      content: '+1 (234) 567-890',
-      description: 'Mon-Fri from 8am to 6pm',
-      color: 'from-green-500 to-emerald-600'
-    },
-    {
-      icon: MapPin,
-      title: 'Visit Us',
-      content: '123 Finance Street, Tech City',
-      description: 'Come say hello at our office',
-      color: 'from-blue-500 to-cyan-600'
-    },
-    {
-      icon: Clock,
-      title: 'Working Hours',
-      content: '24/7 Support',
-      description: 'Trading platform always open',
-      color: 'from-orange-500 to-red-600'
-    },
-  ];
-
-  const socialLinks = [
-    { icon: Facebook, href: '#', label: 'Facebook', color: 'hover:bg-blue-600' },
-    { icon: Twitter, href: '#', label: 'Twitter', color: 'hover:bg-sky-500' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn', color: 'hover:bg-blue-700' },
-    { icon: Instagram, href: '#', label: 'Instagram', color: 'hover:bg-pink-600' },
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -308,7 +315,7 @@ const Contact = () => {
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Browse our knowledge base for answers
                   </p>
-                  <a href="/faq" className="text-purple-600 dark:text-purple-400 font-medium hover:underline">
+                  <a href={supportUrl} className="text-purple-600 dark:text-purple-400 font-medium hover:underline">
                     Visit FAQ →
                   </a>
                 </div>

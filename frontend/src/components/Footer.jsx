@@ -11,11 +11,13 @@ import {
   MapPin,
   ArrowUp
 } from 'lucide-react';
+import { useContactInfo } from '../hooks/useContactInfo';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Footer = () => {
   const { config: siteConfig } = useSelector((state) => state.siteConfig);
+  const { email, phone, address, socialLinks: adminSocialLinks } = useContactInfo();
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -48,11 +50,11 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { icon: Twitter, href: '#', label: 'Twitter' },
-    { icon: Facebook, href: '#', label: 'Facebook' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn' },
-    { icon: Send, href: '#', label: 'Telegram' },
-    { icon: MessageCircle, href: '#', label: 'Discord' },
+    { icon: Twitter, href: adminSocialLinks?.twitter || '#', label: 'Twitter' },
+    { icon: Facebook, href: adminSocialLinks?.facebook || '#', label: 'Facebook' },
+    { icon: Linkedin, href: adminSocialLinks?.linkedin || '#', label: 'LinkedIn' },
+    { icon: Send, href: adminSocialLinks?.discord || '#', label: 'Telegram' },
+    { icon: MessageCircle, href: adminSocialLinks?.discord || '#', label: 'Discord' },
   ];
 
   return (
@@ -83,17 +85,17 @@ const Footer = () => {
             
             {/* Contact Info */}
             <div className="space-y-3">
-              <a href="mailto:support@cryptonova.com" className="flex items-center space-x-3 text-gray-400 hover:text-white transition-colors">
+              <a href={`mailto:${email}`} className="flex items-center space-x-3 text-gray-400 hover:text-white transition-colors">
                 <Mail className="w-5 h-5" />
-                <span>support@cryptonova.com</span>
+                <span>{email}</span>
               </a>
-              <a href="tel:+1234567890" className="flex items-center space-x-3 text-gray-400 hover:text-white transition-colors">
+              <a href={`tel:${phone}`} className="flex items-center space-x-3 text-gray-400 hover:text-white transition-colors">
                 <Phone className="w-5 h-5" />
-                <span>+1 (234) 567-890</span>
+                <span>{phone}</span>
               </a>
               <div className="flex items-center space-x-3 text-gray-400">
                 <MapPin className="w-5 h-5" />
-                <span>123 Finance Street, Tech City</span>
+                <span>{address}</span>
               </div>
             </div>
           </div>
