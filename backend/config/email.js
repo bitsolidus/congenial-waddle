@@ -159,7 +159,6 @@ const getEmailTemplate = (type, data) => {
       <div class="container">
         <div class="header">
           ${logoHtml}
-          <h1>${siteName}</h1>
         </div>
         <div class="content">
           ${content}
