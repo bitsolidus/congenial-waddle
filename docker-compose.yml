@@ -13,8 +13,6 @@ services:
       - NODE_ENV=production
       - PORT=8080
       - BACKEND_PORT=8080
-      # Add your MongoDB URI here (replace with actual connection string)
-      - MONGODB_URI=mongodb+srv://your-username:your-password@cluster0.xxxxx.mongodb.net/crypto_trading_platform?retryWrites=true&w=majority
     env_file:
       - ./backend/.env
     volumes:
