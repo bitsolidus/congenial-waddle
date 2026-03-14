@@ -51,8 +51,8 @@ COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/http.d/default.conf
 
-# Create uploads directory
-RUN mkdir -p /app/backend/uploads
+# Note: uploads directory will be mounted via Docker volume
+# No need to create it here - backend will create it on startup if needed
 
 # Expose ports
 EXPOSE 8080 5000

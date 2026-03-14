@@ -450,14 +450,21 @@ export const sendKycRejectedEmail = async (to, username, rejectionReason, siteNa
 
 // Send deposit notification to admin
 export const sendDepositNotificationEmail = async ({ user, deposit }) => {
+  const branding = await getEmailBranding();
   const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
-  const { siteName = 'BitSolidus' } = {};
   
   const subject = `🚨 New Deposit Confirmation - ${deposit.amount} ${deposit.cryptocurrency}`;
   
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
+      <!-- Logo Section -->
+      ${branding.emailLogo ? `
+        <div style="text-align: center; padding: 20px; background: #f9fafb;">
+          <img src="${branding.emailLogo}" alt="${branding.siteName}" style="max-height: 60px; max-width: 200px;" />
+        </div>
+      ` : ''}
+      
+      <div style="background: linear-gradient(135deg, ${branding.primaryColor}, ${branding.secondaryColor}); padding: 30px; text-align: center; color: white;">
         <h1 style="margin: 0; font-size: 24px;">New Deposit Confirmation</h1>
         <p style="margin: 10px 0 0 0; opacity: 0.9;">Action Required</p>
       </div>
@@ -485,14 +492,15 @@ export const sendDepositNotificationEmail = async ({ user, deposit }) => {
         
         <div style="text-align: center; margin-top: 30px;">
           <a href="${process.env.ADMIN_URL || 'https://bitsolidus.io/admin'}"
-             style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
+             style="background: linear-gradient(135deg, ${branding.primaryColor}, ${branding.secondaryColor}); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block;">
             Go to Admin Dashboard
           </a>
         </div>
       </div>
       
       <div style="background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 12px;">
-        <p>This is an automated notification from ${siteName}</p>
+        <p>This is an automated notification from ${branding.siteName}</p>
+        ${branding.showSupportLink ? `<p style="margin-top: 10px;"><a href="${branding.supportUrl}" style="color: ${branding.primaryColor};">Contact Support</a> | <a href="${branding.liveChatUrl}" style="color: ${branding.primaryColor};">Live Chat</a></p>` : ''}
       </div>
     </div>
   `;
@@ -507,6 +515,10 @@ Transaction ID: ${deposit.transactionId}
 To Address: ${deposit.toAddress}
 
 Please verify this deposit in the admin dashboard.
+
+-- 
+${branding.siteName}
+${branding.supportUrl}
   `;
   
   return sendEmail(adminEmail, subject, html, text);

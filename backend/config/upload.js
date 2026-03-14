@@ -2,16 +2,28 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import express from 'express';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-// Ensure upload directories exist
-const uploadsBaseDir = 'uploads';
-const kycDir = `${uploadsBaseDir}/kyc`;
+// Get current directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
+// Ensure upload directories exist - Use absolute path relative to backend root
+const uploadsBaseDir = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads');
+const kycDir = path.join(uploadsBaseDir, 'kyc');
+
+console.log('Uploads directory:', uploadsBaseDir);
+console.log('KYC directory:', kycDir);
+
+// Create directories if they don't exist
 if (!fs.existsSync(uploadsBaseDir)) {
-  fs.mkdirSync(uploadsBaseDir);
+  fs.mkdirSync(uploadsBaseDir, { recursive: true });
+  console.log('Created uploads directory:', uploadsBaseDir);
 }
 if (!fs.existsSync(kycDir)) {
   fs.mkdirSync(kycDir, { recursive: true });
+  console.log('Created KYC directory:', kycDir);
 }
 
 // File filter for images
