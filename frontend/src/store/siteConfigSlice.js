@@ -45,7 +45,7 @@ const siteConfigSlice = createSlice({
       },
       contact: {
         email: 'support@bitsolidus.tech',
-        phone: '+1 (234) 567-890',
+        phone: '+971 8 244 0234',
         address: 'Level 12, Al Sila Tower Abu Dhabi Global Market Square Al Maryah Island Abu Dhabi, UAE'
       },
       platform: {

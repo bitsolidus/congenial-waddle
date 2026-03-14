@@ -64,7 +64,7 @@ const siteConfigSchema = new mongoose.Schema({
   // Contact Information
   contact: {
     email: { type: String, default: 'support@bitsolidus.tech' },
-    phone: { type: String, default: '+1 (234) 567-890' },
+    phone: { type: String, default: '+971 8 244 0234' },
     address: { type: String, default: 'Level 12, Al Sila Tower Abu Dhabi Global Market Square Al Maryah Island Abu Dhabi, UAE' },
     supportUrl: { type: String, default: 'https://bitsolidus.io/support' },
     liveChatUrl: { type: String, default: 'https://bitsolidus.io/chat' }
