@@ -12,6 +12,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5000
+      # Add your MongoDB URI here (replace with actual connection string)
+      - MONGODB_URI=mongodb+srv://your-username:your-password@cluster0.xxxxx.mongodb.net/crypto_trading_platform?retryWrites=true&w=majority
     env_file:
       - ./backend/.env
     volumes:
