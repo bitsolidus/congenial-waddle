@@ -242,7 +242,7 @@ const Transactions = () => {
         </div>
       </div>
 
-      {/* Transactions Table */}
+      {/* Transactions List - Mobile Card View, Desktop Table View */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -262,7 +262,8 @@ const Transactions = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700/50">
                   <tr className="text-left text-xs text-gray-500 dark:text-gray-400">
@@ -337,10 +338,61 @@ const Transactions = () => {
               </table>
             </div>
 
+            {/* Mobile Card View */}
+            <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
+              {sortedTransactions.map((tx) => (
+                <div 
+                  key={tx._id} 
+                  onClick={() => navigate(`/transactions/${tx._id}`)}
+                  className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3 flex-1">
+                      {getTransactionIcon(tx.type)}
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium text-gray-900 dark:text-white capitalize">
+                            {tx.type}
+                          </p>
+                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(tx.status)}`}>
+                            {tx.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {tx.description || formatDate(tx.createdAt)}
+                        </p>
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {(() => {
+                              const crypto = tx.cryptoCurrency || tx.crypto || 'USDT';
+                              if (crypto === 'USDT' || crypto === 'USD') {
+                                return formatCurrency(tx.amount);
+                              } else if (crypto === 'BTC') {
+                                return `${tx.amount.toFixed(8)} ${crypto}`;
+                              } else if (crypto === 'ETH') {
+                                return `${tx.amount.toFixed(6)} ${crypto}`;
+                              } else if (crypto === 'BNB') {
+                                return `${tx.amount.toFixed(6)} ${crypto}`;
+                              } else {
+                                return `${tx.amount.toFixed(4)} ${crypto}`;
+                              }
+                            })()}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {tx.cryptoCurrency || tx.crypto || 'USDT'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* Pagination */}
             {transactionsPagination && transactionsPagination.pages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center sm:text-left">
                   Showing {((currentPage - 1) * 20) + 1} - {Math.min(currentPage * 20, transactionsPagination.total)} of {transactionsPagination.total}
                 </p>
                 <div className="flex gap-2">

@@ -253,7 +253,7 @@ const Trade = () => {
       </div>
 
       <div className="flex flex-col lg:flex-row">
-        {/* Left Sidebar - Pair List */}
+        {/* Left Sidebar - Pair List - Hidden on mobile, shown on XL screens */}
         <div className="hidden xl:block w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto" style={{ height: 'calc(100vh - 120px)' }}>
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
@@ -302,6 +302,41 @@ const Trade = () => {
                 );
               })}
             </div>
+          </div>
+        </div>
+
+        {/* Mobile Market Selector - Visible only on mobile */}
+        <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900 dark:text-white">Markets</h3>
+            <button onClick={() => dispatch(fetchCryptoPrices())} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+              <RefreshCw className="w-4 h-4 text-gray-400" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {TRADING_PAIRS.slice(0, 6).map((pair) => {
+              const pairPrice = prices?.[pair.base]?.price || 0;
+              const pairChange = prices?.[pair.base]?.change24h || 0;
+              return (
+                <button
+                  key={pair.symbol}
+                  onClick={() => setSelectedPair(pair)}
+                  className={`p-3 rounded-lg border transition-all ${
+                    selectedPair.symbol === pair.symbol
+                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">{pair.base}</div>
+                  <div className={`text-xs ${pairChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {formatPrice(pairPrice).replace(/[^0-9.,]/g, '')}
+                  </div>
+                  <div className={`text-xs ${pairChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {pairChange >= 0 ? '+' : ''}{pairChange.toFixed(2)}%
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -471,17 +506,18 @@ const Trade = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Order Book and Recent Trades */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Order Book and Recent Trades - Stack on mobile */}
+          <div className="grid grid-cols-1 gap-4">
             {/* Order Book */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Layers className="w-4 h-4" />
-                  Order Book
+                  <span className="hidden sm:inline">Order Book</span>
+                  <span className="sm:hidden">Orders</span>
                 </h3>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 hidden xs:inline">
                     Spread: <span className="text-gray-900 dark:text-white">{orderBook.spread || '0.01%'}</span>
                   </span>
                   <button onClick={fetchOrderBook} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
@@ -490,8 +526,8 @@ const Trade = () => {
                 </div>
               </div>
 
-              {/* Header */}
-              <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 dark:text-gray-400 px-2 mb-2">
+              {/* Header - Hide on very small screens */}
+              <div className="hidden xs:grid grid-cols-3 gap-2 text-xs text-gray-500 dark:text-gray-400 px-2 mb-2">
                 <span>Price ({userCurrency})</span>
                 <span className="text-right">Amount</span>
                 <span className="text-right">Total</span>
@@ -499,7 +535,7 @@ const Trade = () => {
 
               {/* Asks */}
               <div className="space-y-0.5 mb-2 max-h-40 overflow-y-auto">
-                {orderBook.asks?.slice(0, 10).reverse().map((ask, i) => {
+                {orderBook.asks?.slice(0, 6).reverse().map((ask, i) => {
                   const askPrice = parseFloat(ask.price);
                   const askAmount = parseFloat(ask.amount);
                   const askTotal = parseFloat(ask.total);
@@ -530,7 +566,7 @@ const Trade = () => {
 
               {/* Bids */}
               <div className="space-y-0.5 mt-2 max-h-40 overflow-y-auto">
-                {orderBook.bids?.slice(0, 10).map((bid, i) => {
+                {orderBook.bids?.slice(0, 6).map((bid, i) => {
                   const bidPrice = parseFloat(bid.price);
                   const bidAmount = parseFloat(bid.amount);
                   const bidTotal = parseFloat(bid.total);
@@ -554,34 +590,35 @@ const Trade = () => {
             </div>
 
             {/* Recent Trades */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  Recent Trades
+                  <span className="hidden sm:inline">Recent Trades</span>
+                  <span className="sm:hidden">Trades</span>
                 </h3>
                 <button onClick={fetchRecentTrades} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
                   <RefreshCw className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
 
-              {/* Header */}
-              <div className="grid grid-cols-4 gap-2 text-xs text-gray-500 dark:text-gray-400 px-2 mb-2">
+              {/* Header - Simplified for mobile */}
+              <div className="hidden xs:grid grid-cols-4 gap-2 text-xs text-gray-500 dark:text-gray-400 px-2 mb-2">
                 <span>Price</span>
                 <span className="text-right">Amount</span>
                 <span className="text-right">Total</span>
                 <span className="text-right">Time</span>
               </div>
 
-              {/* Trades List */}
-              <div className="space-y-0.5 max-h-80 overflow-y-auto">
-                {recentTrades.map((trade) => (
-                  <div key={trade.id} className="grid grid-cols-4 gap-2 text-xs py-1.5 px-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50">
+              {/* Trades List - Simplified for mobile */}
+              <div className="space-y-0.5 max-h-60 overflow-y-auto">
+                {recentTrades.slice(0, 8).map((trade) => (
+                  <div key={trade.id} className="grid grid-cols-3 xs:grid-cols-4 gap-2 text-xs py-1.5 px-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <span className={trade.type === 'buy' ? 'text-green-500' : 'text-red-500'}>
                       {formatPrice(trade.price).replace(/[^0-9.,]/g, '')}
                     </span>
                     <span className="text-right text-gray-700 dark:text-gray-300">{trade.amount}</span>
-                    <span className="text-right text-gray-500">{formatPrice(trade.total).replace(/[^0-9.,]/g, '')}</span>
+                    <span className="hidden xs:block text-right text-gray-500">{formatPrice(trade.total).replace(/[^0-9.,]/g, '')}</span>
                     <span className="text-right text-gray-500">{trade.time}</span>
                   </div>
                 ))}
