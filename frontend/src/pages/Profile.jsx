@@ -28,6 +28,8 @@ const Profile = () => {
   };
   
   const totalBalance = calculateTotalBalance(user?.balance);
+  const totalDeposited = user?.totalDeposited || 0;
+  const totalWithdrawn = user?.totalWithdrawn || 0;
   
   const [isEditing, setIsEditing] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
@@ -324,8 +326,8 @@ const Profile = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400">Total Deposited</p>
               <p className="text-xl font-bold text-gray-900 dark:text-white">
                 {userCurrency !== 'USD' 
-                  ? formatCurrencyWithSymbol(convertFromUSD(user?.totalDeposited || 0, userCurrency), userCurrency)
-                  : formatCurrency(user?.totalDeposited || 0)}
+                  ? formatCurrencyWithSymbol(convertFromUSD(totalDeposited, userCurrency), userCurrency)
+                  : formatCurrency(totalDeposited)}
               </p>
             </div>
           </div>
@@ -345,8 +347,8 @@ const Profile = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400">Total Withdrawn</p>
               <p className="text-xl font-bold text-gray-900 dark:text-white">
                 {userCurrency !== 'USD' 
-                  ? formatCurrencyWithSymbol(convertFromUSD(user?.totalWithdrawn || 0, userCurrency), userCurrency)
-                  : formatCurrency(user?.totalWithdrawn || 0)}
+                  ? formatCurrencyWithSymbol(convertFromUSD(totalWithdrawn, userCurrency), userCurrency)
+                  : formatCurrency(totalWithdrawn)}
               </p>
             </div>
           </div>
