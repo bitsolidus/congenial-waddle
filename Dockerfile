@@ -55,12 +55,12 @@ COPY nginx.conf /etc/nginx/http.d/default.conf
 # No need to create it here - backend will create it on startup if needed
 
 # Expose ports
-EXPOSE 8080
+EXPOSE 80 443 5000
 
 # Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'nginx' >> /app/start.sh && \
-    echo 'cd /app/backend && BACKEND_PORT=8080 node server.js' >> /app/start.sh && \
+    echo 'cd /app/backend && BACKEND_PORT=5000 node server.js' >> /app/start.sh && \
     chmod +x /app/start.sh
 
 # Start both nginx and backend
