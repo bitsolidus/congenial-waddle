@@ -10,7 +10,7 @@ export const useContactInfo = () => {
   return {
     email: siteConfig?.contact?.email || 'support@bitsolidus.tech',
     phone: siteConfig?.contact?.phone || '+1 (234) 567-890',
-    address: siteConfig?.contact?.address || '123 Finance Street, Tech City, TC 12345',
+    address: siteConfig?.contact?.address || 'Level 12, Al Sila Tower Abu Dhabi Global Market Square Al Maryah Island Abu Dhabi, UAE',
     supportUrl: siteConfig?.contact?.supportUrl || '/faq',
     liveChatUrl: siteConfig?.contact?.liveChatUrl || '/chat',
     socialLinks: {

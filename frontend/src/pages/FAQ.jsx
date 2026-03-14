@@ -323,7 +323,7 @@ const FAQ = () => {
               Contact Support
             </Link>
             <a
-              href="mailto:support@cryptonova.com"
+              href="mailto:support@bitsolidus.tech"
               className="px-8 py-4 bg-transparent text-white border-2 border-white rounded-xl font-semibold hover:bg-white/10 transition-colors"
             >
               Email Us

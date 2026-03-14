@@ -69,7 +69,7 @@ const AdminSettings = () => {
       }
     },
     contact: {
-      email: 'support@cryptoplatform.com',
+      email: 'support@bitsolidus.tech',
       phone: '',
       address: ''
     },

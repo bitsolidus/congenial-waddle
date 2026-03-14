@@ -34,7 +34,7 @@ const Contact = () => {
   // Get contact info from admin settings with fallbacks
   const contactEmail = siteConfig?.contact?.email || 'support@bitsolidus.tech';
   const contactPhone = siteConfig?.contact?.phone || '+1 (234) 567-890';
-  const contactAddress = siteConfig?.contact?.address || '123 Finance Street, Tech City, TC 12345';
+  const contactAddress = siteConfig?.contact?.address || 'Level 12, Al Sila Tower Abu Dhabi Global Market Square Al Maryah Island Abu Dhabi, UAE';
   const supportUrl = siteConfig?.contact?.supportUrl || '/faq';
   const liveChatUrl = siteConfig?.contact?.liveChatUrl || '/chat';
 
@@ -288,7 +288,7 @@ const Contact = () => {
                         <div>
                           <h4 className="font-semibold text-gray-900 dark:text-white">{siteConfig?.siteName || 'BitSolidus'} HQ</h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            123 Finance Street, Tech City, TC 12345
+                            {contactAddress}
                           </p>
                         </div>
                       </div>

@@ -44,9 +44,9 @@ const siteConfigSlice = createSlice({
         }
       },
       contact: {
-        email: 'support@cryptoplatform.com',
-        phone: '',
-        address: ''
+        email: 'support@bitsolidus.tech',
+        phone: '+1 (234) 567-890',
+        address: 'Level 12, Al Sila Tower Abu Dhabi Global Market Square Al Maryah Island Abu Dhabi, UAE'
       },
       platform: {
         maintenanceMode: false,
