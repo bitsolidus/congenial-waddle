@@ -143,9 +143,6 @@ const Dashboard = () => {
   // Calculate total pending actions
   const totalPending = pendingActions.deposits + pendingActions.withdrawals + pendingActions.notifications;
 
-  // Check if KYC is rejected
-  const isKycRejected = user?.kycStatus === 'rejected';
-
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -178,50 +175,6 @@ const Dashboard = () => {
           </span>
         </div>
       </div>
-
-      {/* KYC Rejected Alert - High Priority */}
-      {isKycRejected && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-r from-red-600 to-red-700 rounded-xl p-6 text-white shadow-lg border-2 border-red-400"
-        >
-          <div className="flex items-start gap-4">
-            <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <AlertCircle className="w-8 h-8" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold mb-2">KYC Verification Rejected</h3>
-              <p className="text-white/90 mb-4">
-                Your submitted KYC documents were rejected by our verification team. 
-                {user?.kycData?.rejectionReason && (
-                  <span className="block mt-2 px-4 py-2 bg-white/10 rounded-lg">
-                    <strong>Reason:</strong> {user.kycData.rejectionReason}
-                  </span>
-                )}
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Link
-                  to="/kyc"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-red-700 rounded-lg font-semibold hover:bg-red-50 transition-colors"
-                >
-                  <RefreshCw className="w-5 h-5" />
-                  Resubmit KYC Now
-                </Link>
-                <a
-                  href="mailto:support@bitsolidus.tech"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-red-800/50 text-white rounded-lg font-medium hover:bg-red-800 transition-colors"
-                >
-                  Contact Support
-                </a>
-              </div>
-              <p className="text-sm text-white/70 mt-3">
-                You must complete KYC verification to access withdrawals and full platform features.
-              </p>
-            </div>
-          </div>
-        </motion.div>
-      )}
 
       {/* Pending Actions Banner */}
       {(totalPending > 0 || pendingActions.kyc) && (
