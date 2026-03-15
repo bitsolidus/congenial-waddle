@@ -82,5 +82,11 @@ export const uploadBranding = multer({
 
 // Serve static files middleware
 export const serveUploads = (app) => {
-  app.use('/uploads', express.static('uploads'));
+  // Serve uploads with CORS enabled for frontend domain
+  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
+    setHeaders: (res, path, stat) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+  }));
 };
