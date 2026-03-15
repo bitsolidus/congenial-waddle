@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
   Filter, 
@@ -420,99 +421,51 @@ const AdminKYC = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Submitted Documents</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {selectedSubmission.kycData?.idFrontImage ? (
+                    {selectedSubmission.kycData?.idFrontImage && (
                       <div className="space-y-2">
                         <p className="text-sm text-gray-500 dark:text-gray-400">ID Front</p>
-                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                           <img 
                             src={selectedSubmission.kycData.idFrontImage} 
                             alt="ID Front"
-                            className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => window.open(selectedSubmission.kycData.idFrontImage, '_blank')}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23ccc" width="100" height="100"/><text x="50" y="50" dominant-baseline="middle" text-anchor="middle" fill="%23666">Not Available</text></svg>';
-                            }}
+                            className="w-full h-full object-cover rounded-lg"
                           />
                         </div>
                       </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">ID Front</p>
-                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-400 text-sm">Not Uploaded</span>
-                        </div>
-                      </div>
                     )}
-                    {selectedSubmission.kycData?.idBackImage ? (
+                    {selectedSubmission.kycData?.idBackImage && (
                       <div className="space-y-2">
                         <p className="text-sm text-gray-500 dark:text-gray-400">ID Back</p>
-                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                           <img 
                             src={selectedSubmission.kycData.idBackImage} 
                             alt="ID Back"
-                            className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => window.open(selectedSubmission.kycData.idBackImage, '_blank')}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23ccc" width="100" height="100"/><text x="50" y="50" dominant-baseline="middle" text-anchor="middle" fill="%23666">Not Available</text></svg>';
-                            }}
+                            className="w-full h-full object-cover rounded-lg"
                           />
                         </div>
                       </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">ID Back</p>
-                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-400 text-sm">Not Uploaded</span>
-                        </div>
-                      </div>
                     )}
-                    {selectedSubmission.kycData?.selfieImage ? (
+                    {selectedSubmission.kycData?.selfieImage && (
                       <div className="space-y-2">
                         <p className="text-sm text-gray-500 dark:text-gray-400">Selfie</p>
-                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                           <img 
                             src={selectedSubmission.kycData.selfieImage} 
                             alt="Selfie"
-                            className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => window.open(selectedSubmission.kycData.selfieImage, '_blank')}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23ccc" width="100" height="100"/><text x="50" y="50" dominant-baseline="middle" text-anchor="middle" fill="%23666">Not Available</text></svg>';
-                            }}
+                            className="w-full h-full object-cover rounded-lg"
                           />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Selfie</p>
-                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-400 text-sm">Not Uploaded</span>
                         </div>
                       </div>
                     )}
-                    {selectedSubmission.kycData?.proofOfAddressImage ? (
-                      <div className="space-y-2">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Proof of Address</p>
-                        <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
-                          <img 
-                            src={selectedSubmission.kycData.proofOfAddressImage} 
-                            alt="Proof of Address"
-                            className="w-full h-full object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => window.open(selectedSubmission.kycData.proofOfAddressImage, '_blank')}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23ccc" width="100" height="100"/><text x="50" y="50" dominant-baseline="middle" text-anchor="middle" fill="%23666">Not Available</text></svg>';
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ) : (
+                    {selectedSubmission.kycData?.proofOfAddressImage && (
                       <div className="space-y-2">
                         <p className="text-sm text-gray-500 dark:text-gray-400">Proof of Address</p>
                         <div className="aspect-[3/2] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                          <span className="text-gray-400 text-sm">Not Uploaded</span>
+                          <img 
+                            src={selectedSubmission.kycData.proofOfAddressImage} 
+                            alt="Proof of Address"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
                         </div>
                       </div>
                     )}
