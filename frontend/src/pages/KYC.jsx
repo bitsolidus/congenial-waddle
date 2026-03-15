@@ -140,10 +140,28 @@ const KYC = () => {
   };
 
   const isStep4Valid = () => {
+    // Passport only needs one document (idFrontImage)
+    if (formData.idType === 'passport') {
+      return formData.idFrontImage &&
+             formData.selfieImage &&
+             formData.proofOfAddressImage;
+    }
+    // Other IDs need both front and back
     return formData.idFrontImage &&
            formData.idBackImage &&
            formData.selfieImage &&
            formData.proofOfAddressImage;
+  };
+
+  // Helper function to get ID type label
+  const getIDTypeLabel = (type) => {
+    switch (type) {
+      case 'passport': return 'Passport';
+      case 'drivers_license': return "Driver's License";
+      case 'national_id': return 'National ID Card';
+      case 'residence_permit': return 'Residence Permit';
+      default: return '';
+    }
   };
 
   const canProceedToNextStep = () => {
@@ -548,14 +566,106 @@ const KYC = () => {
               </div>
             )}
 
-            {/* Step 2: Address */}
+            {/* Step 2: Address & Country */}
             {currentStep === 2 && (
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Address Information
+                  Address & Country Information
                 </h3>
                 <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Country *
+                      </label>
+                      <select
+                        name="country"
+                        value={formData.country}
+                        onChange={handleInputChange}
+                        className="input-field w-full"
+                        required
+                      >
+                        <option value="">Select Country</option>
+                        <option value="US">United States</option>
+                        <option value="GB">United Kingdom</option>
+                        <option value="CA">Canada</option>
+                        <option value="AU">Australia</option>
+                        <option value="DE">Germany</option>
+                        <option value="FR">France</option>
+                        <option value="IT">Italy</option>
+                        <option value="ES">Spain</option>
+                        <option value="NL">Netherlands</option>
+                        <option value="SE">Sweden</option>
+                        <option value="NO">Norway</option>
+                        <option value="DK">Denmark</option>
+                        <option value="FI">Finland</option>
+                        <option value="PL">Poland</option>
+                        <option value="BR">Brazil</option>
+                        <option value="MX">Mexico</option>
+                        <option value="AR">Argentina</option>
+                        <option value="CL">Chile</option>
+                        <option value="CO">Colombia</option>
+                        <option value="PE">Peru</option>
+                        <option value="IN">India</option>
+                        <option value="CN">China</option>
+                        <option value="JP">Japan</option>
+                        <option value="KR">South Korea</option>
+                        <option value="SG">Singapore</option>
+                        <option value="MY">Malaysia</option>
+                        <option value="TH">Thailand</option>
+                        <option value="ID">Indonesia</option>
+                        <option value="PH">Philippines</option>
+                        <option value="VN">Vietnam</option>
+                        <option value="AE">United Arab Emirates</option>
+                        <option value="SA">Saudi Arabia</option>
+                        <option value="ZA">South Africa</option>
+                        <option value="NG">Nigeria</option>
+                        <option value="KE">Kenya</option>
+                        <option value="EG">Egypt</option>
+                        <option value="NZ">New Zealand</option>
+                        <option value="RU">Russia</option>
+                        <option value="UA">Ukraine</option>
+                        <option value="TR">Turkey</option>
+                        <option value="IL">Israel</option>
+                        <option value="CH">Switzerland</option>
+                        <option value="AT">Austria</option>
+                        <option value="BE">Belgium</option>
+                        <option value="IE">Ireland</option>
+                        <option value="PT">Portugal</option>
+                        <option value="GR">Greece</option>
+                        <option value="CZ">Czech Republic</option>
+                        <option value="HU">Hungary</option>
+                        <option value="RO">Romania</option>
+                        <option value="BG">Bulgaria</option>
+                        <option value="HR">Croatia</option>
+                        <option value="SI">Slovenia</option>
+                        <option value="SK">Slovakia</option>
+                        <option value="LT">Lithuania</option>
+                        <option value="LV">Latvia</option>
+                        <option value="EE">Estonia</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        ID Type *
+                      </label>
+                      <select
+                        name="idType"
+                        value={formData.idType}
+                        onChange={handleInputChange}
+                        className="input-field w-full"
+                        required
+                      >
+                        <option value="">Select ID Type</option>
+                        <option value="passport">Passport</option>
+                        <option value="drivers_license">Driver's License</option>
+                        <option value="national_id">National ID Card</option>
+                        <option value="residence_permit">Residence Permit</option>
+                      </select>
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Street Address *
@@ -587,15 +697,15 @@ const KYC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Country *
+                        State/Province *
                       </label>
                       <input
                         type="text"
-                        name="country"
-                        value={formData.country}
+                        name="postalCode"
+                        value={formData.postalCode}
                         onChange={handleInputChange}
                         className="input-field w-full"
-                        placeholder="Country"
+                        placeholder="State or Province"
                         required
                       />
                     </div>
@@ -605,8 +715,8 @@ const KYC = () => {
                       </label>
                       <input
                         type="text"
-                        name="postalCode"
-                        value={formData.postalCode}
+                        name="country"
+                        value={formData.country}
                         onChange={handleInputChange}
                         className="input-field w-full"
                         placeholder="Postal Code"
@@ -618,17 +728,17 @@ const KYC = () => {
               </div>
             )}
 
-            {/* Step 3: Contact & ID */}
+            {/* Step 3: Contact & ID Details */}
             {currentStep === 3 && (
               <div className="space-y-6">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Phone className="h-5 w-5" />
-                  Contact & ID Information
+                  Contact & ID Details
                 </h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Phone Number
+                      Phone Number *
                     </label>
                     <input
                       type="tel"
@@ -640,39 +750,61 @@ const KYC = () => {
                       required
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        ID Type *
-                      </label>
-                      <select
-                        name="idType"
-                        value={formData.idType}
-                        onChange={handleInputChange}
-                        className="input-field w-full"
-                        required
-                      >
-                        <option value="">Select ID Type</option>
-                        <option value="passport">Passport</option>
-                        <option value="drivers_license">Driver's License</option>
-                        <option value="national_id">National ID</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        ID Number *
-                      </label>
-                      <input
-                        type="text"
-                        name="idNumber"
-                        value={formData.idNumber}
-                        onChange={handleInputChange}
-                        className="input-field w-full"
-                        placeholder="Enter your ID number"
-                        required
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      ID Number *
+                    </label>
+                    <input
+                      type="text"
+                      name="idNumber"
+                      value={formData.idNumber}
+                      onChange={handleInputChange}
+                      className="input-field w-full"
+                      placeholder={`Enter your ${getIDTypeLabel(formData.idType)} number`}
+                      required
+                    />
                   </div>
+                  {formData.idType && (
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                        Document Requirements for {getIDTypeLabel(formData.idType)}
+                      </h4>
+                      <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
+                        {formData.idType === 'passport' && (
+                          <>
+                            <li>✓ Passport bio page (photo and personal details)</li>
+                            <li>✓ Clear, color image</li>
+                            <li>✓ All four corners visible</li>
+                            <li>✓ No glare or reflections</li>
+                          </>
+                        )}
+                        {formData.idType === 'drivers_license' && (
+                          <>
+                            <li>✓ Front side of driver's license</li>
+                            <li>✓ Back side of driver's license</li>
+                            <li>✓ Both sides must be uploaded</li>
+                            <li>✓ Must be current and valid</li>
+                          </>
+                        )}
+                        {formData.idType === 'national_id' && (
+                          <>
+                            <li>✓ Front side of national ID card</li>
+                            <li>✓ Back side of national ID card</li>
+                            <li>✓ Government-issued ID only</li>
+                            <li>✓ Must be current and valid</li>
+                          </>
+                        )}
+                        {formData.idType === 'residence_permit' && (
+                          <>
+                            <li>✓ Front side of residence permit</li>
+                            <li>✓ Back side of residence permit</li>
+                            <li>✓ Must be issued by government</li>
+                            <li>✓ Must be current and valid</li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -685,10 +817,14 @@ const KYC = () => {
                   Upload Documents
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* ID Front */}
+                  {/* ID Front - Label changes based on ID type */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      ID Front Side *
+                      {formData.idType === 'passport' ? 'Passport Bio Page *' :
+                       formData.idType === 'drivers_license' ? "Driver's License Front *" :
+                       formData.idType === 'national_id' ? 'National ID Front *' :
+                       formData.idType === 'residence_permit' ? 'Residence Permit Front *' :
+                       'ID Front Side *'}
                     </label>
                     <div className="relative">
                       {previewUrls.idFrontImage ? (
@@ -736,8 +872,10 @@ const KYC = () => {
                         </div>
                       ) : (
                         <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors relative">
-                          <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Upload ID Front</span>
+                          {formData.idType === 'passport' ? <Upload className="h-8 w-8 text-gray-400 mb-2" /> : <Upload className="h-8 w-8 text-gray-400 mb-2" />}
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {formData.idType === 'passport' ? 'Upload Passport Page' : 'Upload Front Side'}
+                          </span>
                           {fileSizes.idFrontImage && (
                             <span className="text-xs text-gray-400 mt-1">
                               {(fileSizes.idFrontImage / 1024 / 1024).toFixed(2)} MB
@@ -754,11 +892,15 @@ const KYC = () => {
                     </div>
                   </div>
 
-                  {/* ID Back */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      ID Back Side *
-                    </label>
+                  {/* ID Back - Only shown for non-passport IDs */}
+                  {formData.idType !== 'passport' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {formData.idType === 'drivers_license' ? "Driver's License Back *" :
+                         formData.idType === 'national_id' ? 'National ID Back *' :
+                         formData.idType === 'residence_permit' ? 'Residence Permit Back *' :
+                         'ID Back Side *'}
+                      </label>
                     <div className="relative">
                       {previewUrls.idBackImage ? (
                         <div className="relative aspect-[3/2] rounded-lg overflow-hidden">
@@ -806,7 +948,7 @@ const KYC = () => {
                       ) : (
                         <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors relative">
                           <Upload className="h-8 w-8 text-gray-400 mb-2" />
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Upload ID Back</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Upload Back Side</span>
                           {fileSizes.idBackImage && (
                             <span className="text-xs text-gray-400 mt-1">
                               {(fileSizes.idBackImage / 1024 / 1024).toFixed(2)} MB
@@ -822,11 +964,12 @@ const KYC = () => {
                       )}
                     </div>
                   </div>
+                  )}
 
                   {/* Selfie */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Selfie with ID *
+                      Selfie with ID Document *
                     </label>
                     <div className="relative">
                       {previewUrls.selfieImage ? (
@@ -873,9 +1016,9 @@ const KYC = () => {
                           </AnimatePresence>
                         </div>
                       ) : (
-                        <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors">
+                        <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors relative">
                           <Camera className="h-8 w-8 text-gray-400 mb-2" />
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Upload Selfie</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Upload Selfie Holding ID</span>
                           {fileSizes.selfieImage && (
                             <span className="text-xs text-gray-400 mt-1">
                               {(fileSizes.selfieImage / 1024 / 1024).toFixed(2)} MB
