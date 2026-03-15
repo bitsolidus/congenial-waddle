@@ -148,6 +148,29 @@ router.post(
         return res.status(401).json({ message: 'Your account has been deactivated. Please contact support.' });
       }
 
+      // Check if email is verified
+      if (!user.isEmailVerified) {
+        // Resend verification email if not verified
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        
+        user.emailVerificationToken = verificationToken;
+        user.emailVerificationExpires = verificationExpires;
+        await user.save();
+
+        const frontendUrl = process.env.FRONTEND_URL || 'https://bitsolidus.io';
+        const verificationLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
+        
+        sendVerificationEmail(user.email, user.username, verificationLink).catch(emailError => {
+          console.error('Failed to send verification email:', emailError.message);
+        });
+
+        return res.status(403).json({ 
+          message: 'Please verify your email before logging in. A new verification email has been sent to your inbox.',
+          requiresEmailVerification: true
+        });
+      }
+
       // Check password
       const isMatch = await user.comparePassword(password);
 

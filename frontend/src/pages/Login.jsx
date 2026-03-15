@@ -42,6 +42,7 @@ const Login = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpError, setOtpError] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
   const otpInputRefs = useRef([]);
 
   useEffect(() => {
@@ -90,8 +91,14 @@ const Login = () => {
         password: formData.password
       })).unwrap();
       
+      // Check if email verification is required
+      if (result.requiresEmailVerification) {
+        setShowEmailVerification(true);
+        setMaskedEmail(result.email || formData.email);
+        setError('');
+      }
       // Check if OTP is required
-      if (result.requiresOtp) {
+      else if (result.requiresOtp) {
         setShowOtpInput(true);
         setTempUserId(result.tempUserId);
         setMaskedEmail(result.maskedEmail || result.email);
@@ -381,6 +388,31 @@ const Login = () => {
                   >
                     <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
                     <span className="text-red-700 dark:text-red-400 text-sm">{error || authError}</span>
+                  </motion.div>
+                )}
+
+                {/* Email Verification Required Message */}
+                {showEmailVerification && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl"
+                  >
+                    <div className="flex items-start">
+                      <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                          Verify Your Email
+                        </h4>
+                        <p className="text-sm text-blue-700 dark:text-blue-400 mb-3">
+                          A verification email has been sent to <span className="font-mono font-semibold">{maskedEmail}</span>
+                        </p>
+                        <p className="text-sm text-blue-600 dark:text-blue-500">
+                          Please check your inbox and click the verification link before logging in. 
+                          Check your spam folder if you don't see it within a few minutes.
+                        </p>
+                      </div>
+                    </div>
                   </motion.div>
                 )}
 
