@@ -29,6 +29,7 @@ const KYC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [hasSubmittedBefore, setHasSubmittedBefore] = useState(false);
 
   // Upload progress state
   const [uploadProgress, setUploadProgress] = useState({
@@ -79,6 +80,13 @@ const KYC = () => {
   // Load data from user profile or existing KYC data
   useEffect(() => {
     if (user) {
+      // Check if user has submitted KYC before and it was rejected
+      if (user.kycStatus === 'rejected') {
+        setHasSubmittedBefore(true);
+      } else if (user.kycStatus === 'pending' || user.kycStatus === 'verified') {
+        setHasSubmittedBefore(true);
+      }
+
       const profileData = {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
@@ -106,6 +114,46 @@ const KYC = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Validation functions
+  const isStep1Valid = () => {
+    return formData.firstName.trim() &&
+           formData.lastName.trim() &&
+           formData.gender &&
+           formData.dateOfBirth &&
+           formData.nationality.trim() &&
+           formData.phoneNumber.trim();
+  };
+
+  const isStep2Valid = () => {
+    return formData.address.trim() &&
+           formData.city.trim() &&
+           formData.country.trim() &&
+           formData.postalCode.trim();
+  };
+
+  const isStep3Valid = () => {
+    return formData.phoneNumber.trim() &&
+           formData.idType &&
+           formData.idNumber.trim();
+  };
+
+  const isStep4Valid = () => {
+    return formData.idFrontImage &&
+           formData.idBackImage &&
+           formData.selfieImage &&
+           formData.proofOfAddressImage;
+  };
+
+  const canProceedToNextStep = () => {
+    switch (currentStep) {
+      case 1: return isStep1Valid();
+      case 2: return isStep2Valid();
+      case 3: return isStep3Valid();
+      case 4: return isStep4Valid();
+      default: return false;
+    }
   };
 
   const handleFileChange = (e, fieldName) => {
@@ -173,6 +221,7 @@ const KYC = () => {
       });
 
       setSubmitSuccess(true);
+      setHasSubmittedBefore(true);
       dispatch(fetchProfile());
     } catch (err) {
       setSubmitError(err.response?.data?.message || 'Failed to submit KYC. Please try again.');
@@ -288,7 +337,24 @@ const KYC = () => {
         </div>
       </div>
 
-      {user?.kycStatus === 'verified' ? (
+      {/* Show message if already submitted and pending/verified (not rejected) */}
+      {hasSubmittedBefore && user?.kycStatus !== 'rejected' && user?.kycStatus !== 'verified' && (
+        <div className="card text-center py-12">
+          <AlertCircle className="h-16 w-16 text-yellow-600 dark:text-yellow-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            KYC Under Review
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Your KYC submission is currently being reviewed by our team. You cannot submit a new application until the current one has been processed.
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            If you believe this is an error or need urgent assistance, please contact our support team.
+          </p>
+        </div>
+      )}
+
+      {/* Show verified user information */}
+      {user?.kycStatus === 'verified' && (
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Your Verified Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -334,7 +400,9 @@ const KYC = () => {
             </div>
           </div>
         </div>
-      ) : (
+      )}
+
+      {(!hasSubmittedBefore || user?.kycStatus === 'rejected') && (
         <>
           {/* Progress Steps */}
           <div className="mb-8">
@@ -490,7 +558,7 @@ const KYC = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Street Address
+                      Street Address *
                     </label>
                     <input
                       type="text"
@@ -499,12 +567,13 @@ const KYC = () => {
                       onChange={handleInputChange}
                       className="input-field w-full"
                       placeholder="Enter your street address"
+                      required
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        City
+                        City *
                       </label>
                       <input
                         type="text"
@@ -513,11 +582,12 @@ const KYC = () => {
                         onChange={handleInputChange}
                         className="input-field w-full"
                         placeholder="City"
+                        required
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Country
+                        Country *
                       </label>
                       <input
                         type="text"
@@ -526,11 +596,12 @@ const KYC = () => {
                         onChange={handleInputChange}
                         className="input-field w-full"
                         placeholder="Country"
+                        required
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Postal Code
+                        Postal Code *
                       </label>
                       <input
                         type="text"
@@ -539,6 +610,7 @@ const KYC = () => {
                         onChange={handleInputChange}
                         className="input-field w-full"
                         placeholder="Postal Code"
+                        required
                       />
                     </div>
                   </div>
@@ -565,19 +637,22 @@ const KYC = () => {
                       onChange={handleInputChange}
                       className="input-field w-full"
                       placeholder="+1 234 567 8900"
+                      required
                     />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        ID Type
+                        ID Type *
                       </label>
                       <select
                         name="idType"
                         value={formData.idType}
                         onChange={handleInputChange}
                         className="input-field w-full"
+                        required
                       >
+                        <option value="">Select ID Type</option>
                         <option value="passport">Passport</option>
                         <option value="drivers_license">Driver's License</option>
                         <option value="national_id">National ID</option>
@@ -585,7 +660,7 @@ const KYC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        ID Number
+                        ID Number *
                       </label>
                       <input
                         type="text"
@@ -594,6 +669,7 @@ const KYC = () => {
                         onChange={handleInputChange}
                         className="input-field w-full"
                         placeholder="Enter your ID number"
+                        required
                       />
                     </div>
                   </div>
@@ -612,7 +688,7 @@ const KYC = () => {
                   {/* ID Front */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      ID Front Side
+                      ID Front Side *
                     </label>
                     <div className="relative">
                       {previewUrls.idFrontImage ? (
@@ -681,7 +757,7 @@ const KYC = () => {
                   {/* ID Back */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      ID Back Side
+                      ID Back Side *
                     </label>
                     <div className="relative">
                       {previewUrls.idBackImage ? (
@@ -750,7 +826,7 @@ const KYC = () => {
                   {/* Selfie */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Selfie with ID
+                      Selfie with ID *
                     </label>
                     <div className="relative">
                       {previewUrls.selfieImage ? (
@@ -819,7 +895,7 @@ const KYC = () => {
                   {/* Proof of Address */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Proof of Address
+                      Proof of Address *
                     </label>
                     <div className="relative">
                       {previewUrls.proofOfAddressImage ? (
@@ -905,7 +981,8 @@ const KYC = () => {
               {currentStep < 4 ? (
                 <button
                   onClick={nextStep}
-                  className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  disabled={!canProceedToNextStep()}
+                  className="flex items-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                   <ChevronRight className="h-5 w-5" />
@@ -913,8 +990,8 @@ const KYC = () => {
               ) : (
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 transition-colors"
+                  disabled={isSubmitting || !canProceedToNextStep()}
+                  className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed transition-colors"
                 >
                   {isSubmitting ? (
                     <>
