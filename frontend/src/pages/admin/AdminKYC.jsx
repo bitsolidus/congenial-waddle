@@ -29,6 +29,7 @@ const AdminKYC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchKYCSubmissions();
@@ -37,11 +38,16 @@ const AdminKYC = () => {
   const fetchKYCSubmissions = async () => {
     try {
       setIsLoading(true);
+      setError('');
       const endpoint = filter === 'pending' ? '/api/admin/kyc/pending' : '/api/admin/kyc/all';
+      console.log('Fetching KYC from:', endpoint);
       const response = await axios.get(`${endpoint}?status=${filter}`);
+      console.log('KYC Response:', response.data);
       setKycSubmissions(response.data.users || []);
     } catch (err) {
       console.error('Failed to fetch KYC submissions:', err);
+      console.error('Error details:', err.response?.data);
+      setError(err.response?.data?.message || err.message || 'Failed to load KYC submissions. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -171,6 +177,24 @@ const AdminKYC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="card overflow-hidden"
       >
+        {error && (
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-red-800 dark:text-red-400">Error Loading KYC</h3>
+                <p className="text-sm text-red-700 dark:text-red-500 mt-1">{error}</p>
+                <button
+                  onClick={fetchKYCSubmissions}
+                  className="mt-2 text-sm text-red-600 hover:text-red-500 underline"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
