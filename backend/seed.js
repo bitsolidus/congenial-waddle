@@ -22,13 +22,27 @@ const seedDatabase = async () => {
         email: 'admin@bitsolidus.tech',
         password: 'admin123',
         isAdmin: true,
-        emailVerified: true,
+        isEmailVerified: true,  // Use correct field name
+        emailVerificationToken: undefined,  // Clear verification token
+        emailVerificationExpires: undefined,
         balance: 100000,
         tier: 'vip'
       });
-      console.log('Admin user created: admin@bitsolidus.tech / admin123');
+      console.log('✅ Admin user created: admin@bitsolidus.tech / admin123');
     } else {
-      console.log('Admin user already exists');
+      console.log('ℹ️ Admin user already exists');
+      // Update existing admin to ensure email is verified
+      await User.findOneAndUpdate(
+        { email: 'admin@bitsolidus.tech' },
+        { 
+          $set: { 
+            isEmailVerified: true,
+            emailVerificationToken: undefined,
+            emailVerificationExpires: undefined
+          }
+        }
+      );
+      console.log('✅ Admin email verification status updated');
     }
 
     // Check if settings exist
