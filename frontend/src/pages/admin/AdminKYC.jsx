@@ -39,43 +39,15 @@ const AdminKYC = () => {
     try {
       setIsLoading(true);
       setError('');
-      
       const endpoint = filter === 'pending' ? '/api/admin/kyc/pending' : '/api/admin/kyc/all';
-      const fullUrl = `${endpoint}?status=${filter}`;
-      
-      console.log('🔍 Fetching KYC from:', fullUrl);
-      console.log('📡 API Base URL:', axios.defaults.baseURL);
-      
-      const response = await axios.get(fullUrl);
-      
-      console.log('✅ KYC Response received:', response.data);
-      console.log('📊 Count:', response.data.count);
-      console.log('👥 Users:', response.data.users);
-      
+      console.log('Fetching KYC from:', endpoint);
+      const response = await axios.get(`${endpoint}?status=${filter}`);
+      console.log('KYC Response:', response.data);
       setKycSubmissions(response.data.users || []);
     } catch (err) {
-      console.error('❌ Failed to fetch KYC submissions:', err);
-      console.error('📋 Error response:', err.response?.data);
-      console.error('📋 Error status:', err.response?.status);
-      console.error('📋 Error headers:', err.response?.headers);
-      
-      let errorMessage = 'Failed to load KYC submissions.';
-      
-      if (err.response?.status === 401) {
-        errorMessage = 'Authentication failed. Please login again.';
-      } else if (err.response?.status === 403) {
-        errorMessage = 'Access denied. Admin privileges required.';
-      } else if (err.response?.status === 404) {
-        errorMessage = 'API endpoint not found. Backend may be down.';
-      } else if (err.response?.status === 500) {
-        errorMessage = 'Server error. Check backend logs.';
-      } else if (err.code === 'ERR_NETWORK') {
-        errorMessage = 'Network error. Cannot connect to backend API.';
-      } else {
-        errorMessage = err.response?.data?.message || err.message || 'Unknown error occurred.';
-      }
-      
-      setError(errorMessage);
+      console.error('Failed to fetch KYC submissions:', err);
+      console.error('Error details:', err.response?.data);
+      setError(err.response?.data?.message || err.message || 'Failed to load KYC submissions. Please try again.');
     } finally {
       setIsLoading(false);
     }

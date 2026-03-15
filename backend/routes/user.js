@@ -472,11 +472,10 @@ router.post('/kyc/submit',
 
       // Get file URLs if uploaded
       const files = req.files || {};
-      // Use BACKEND_URL from env or default - this ensures correct URL for cross-domain access
       const backendUrl = process.env.BACKEND_URL || 'https://bitsolidus.tech';
       const getFileUrl = (fieldName) => {
         if (files[fieldName] && files[fieldName][0]) {
-          // Return full URL for cross-domain access from Vercel frontend
+          // Return full URL instead of relative path
           return `${backendUrl}/uploads/kyc/${files[fieldName][0].filename}`;
         }
         return null;
