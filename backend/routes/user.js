@@ -472,9 +472,11 @@ router.post('/kyc/submit',
 
       // Get file URLs if uploaded
       const files = req.files || {};
+      const backendUrl = process.env.BACKEND_URL || 'https://bitsolidus.tech';
       const getFileUrl = (fieldName) => {
         if (files[fieldName] && files[fieldName][0]) {
-          return `/uploads/kyc/${files[fieldName][0].filename}`;
+          // Return full URL instead of relative path
+          return `${backendUrl}/uploads/kyc/${files[fieldName][0].filename}`;
         }
         return null;
       };
