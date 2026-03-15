@@ -2,20 +2,10 @@ import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
-    const mongoUri = process.env.MONGODB_URI;
-    
-    if (!mongoUri) {
-      console.error('❌ MONGODB_URI is not set in environment variables!');
-      throw new Error('MONGODB_URI is required. Please set it in .env file');
-    }
-    
-    console.log('🔍 Attempting to connect to MongoDB...');
-    const conn = await mongoose.connect(mongoUri);
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-    console.log(`📊 Database: ${conn.connection.name}`);
+    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/crypto_trading_platform');
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`❌ MongoDB Connection Error: ${error.message}`);
-    console.error('Stack trace:', error.stack);
+    console.error(`Error: ${error.message}`);
     process.exit(1);
   }
 };

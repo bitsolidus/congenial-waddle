@@ -123,7 +123,7 @@ router.post(
 );
 
 // @route   POST /api/auth/login
-// @desc    Login user with email and password (OTP required)
+// @desc    Login user
 // @access  Public
 router.post(
   '/login',
@@ -134,30 +134,22 @@ router.post(
   ],
   async (req, res) => {
     try {
-      console.log('🔐 Login attempt for:', req.body.email);
-      
       const { email, password, rememberMe } = req.body;
 
       // Find user by email
       const user = await User.findOne({ email }).select('+password');
 
       if (!user) {
-        console.log('❌ User not found:', email);
         return res.status(401).json({ message: 'Incorrect email or password. Please try again.' });
       }
 
-      console.log('✅ User found:', user.username, '| Email verified:', user.isEmailVerified, '| Active:', user.isActive);
-
       // Check if account is active
       if (!user.isActive) {
-        console.log('❌ Account deactivated:', email);
         return res.status(401).json({ message: 'Your account has been deactivated. Please contact support.' });
       }
 
       // Check if email is verified
       if (!user.isEmailVerified) {
-        console.log('⚠️ Email not verified:', email, '- Resending verification email');
-        
         // Resend verification email if not verified
         const verificationToken = crypto.randomBytes(32).toString('hex');
         const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -183,11 +175,8 @@ router.post(
       const isMatch = await user.comparePassword(password);
 
       if (!isMatch) {
-        console.log('❌ Password mismatch for:', email);
         return res.status(401).json({ message: 'Incorrect email or password. Please try again.' });
       }
-
-      console.log('✅ Password matched for:', email);
 
       // Ensure settings object exists
       if (!user.settings) {
@@ -202,7 +191,6 @@ router.post(
       // Check if OTP is locked due to too many attempts
       if (user.loginOtp?.lockedUntil && new Date() < user.loginOtp.lockedUntil) {
         const remainingTime = Math.ceil((user.loginOtp.lockedUntil - new Date()) / 60000);
-        console.log('🔒 OTP locked for:', email, 'Remaining minutes:', remainingTime);
         return res.status(429).json({ 
           message: `Too many failed attempts. Please try again in ${remainingTime} minutes.` 
         });
@@ -222,8 +210,6 @@ router.post(
       user.lastLogin = new Date();
       await user.save();
 
-      console.log('✅ OTP generated and saved for:', email);
-
       // Send OTP email (non-blocking)
       sendLoginOtpEmail(user.email, user.username, otp).catch(emailError => {
         console.error('Failed to send OTP email:', emailError.message);
@@ -240,8 +226,6 @@ router.post(
         severity: 'info'
       });
 
-      console.log('✅ Login successful (OTP sent) for:', email);
-
       // Return pending state - don't return token yet
       res.json({
         success: true,
@@ -251,12 +235,8 @@ router.post(
         email: user.email.replace(/(.{2})(.*)(@.*)/, '$1***$3') // Masked email
       });
     } catch (error) {
-      console.error('❌ Login error:', error);
-      console.error('Error stack:', error.stack);
-      res.status(500).json({ 
-        message: 'Server error during login. Database connection may be down.',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Server error during login' });
     }
   }
 );
