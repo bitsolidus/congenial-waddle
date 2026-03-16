@@ -252,9 +252,7 @@ const AdminSettings = () => {
       await axios.put('/api/admin/site-config', siteConfig);
       setMessage({ type: 'success', text: 'Settings saved successfully!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to save settings' });
-    } finally {
+    } catch (err) {\n                      console.error('? Save settings error:', err.response?.data || err.message);\n                      const errorMessage = err.response?.data?.message || 'Failed to save settings';\n                      setMessage({ type: 'error', text: errorMessage });\n                      if (err.response?.status === 500) {\n                        setMessage({ type: 'error', text: 'Server error. Check browser console for details.' });\n                      }\n                    } finally {
       setIsLoading(false);
     }
   };
@@ -1210,11 +1208,8 @@ const AdminSettings = () => {
                   onClick={async () => {
                     setIsLoading(true);
                     try {
-                      await axios.put('/api/admin/settings', adminSettings);
-                      setMessage({ type: 'success', text: 'Settings saved successfully!' });
-                    } catch (err) {
-                      setMessage({ type: 'error', text: 'Failed to save settings' });
-                    } finally {
+                      console.log('?? Saving admin settings:', adminSettings);\n                      const response = await axios.put('/api/admin/settings', adminSettings);\n                      console.log('? Settings saved response:', response.data);\n                      setMessage({ type: 'success', text: 'Settings saved successfully!' });\n                      // Refresh settings from backend\n                      await fetchAdminSettings();
+                    } catch (err) {\n                      console.error('? Save settings error:', err.response?.data || err.message);\n                      const errorMessage = err.response?.data?.message || 'Failed to save settings';\n                      setMessage({ type: 'error', text: errorMessage });\n                      if (err.response?.status === 500) {\n                        setMessage({ type: 'error', text: 'Server error. Check browser console for details.' });\n                      }\n                    } finally {
                       setIsLoading(false);
                       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
                     }
@@ -1238,14 +1233,7 @@ const AdminSettings = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Global Withdrawal Percentage (%)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={adminSettings.withdrawalPercentage}
+                      <label htmlFor="withdrawalPercentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Global Withdrawal Percentage (%)</label><input id="withdrawalPercentage" name="withdrawalPercentage" type="number" min="0" max="100" value={adminSettings.withdrawalPercentage}
                         onChange={(e) => setAdminSettings(prev => ({ ...prev, withdrawalPercentage: parseFloat(e.target.value) || 0 }))}
                         className="input-field w-full"
                       />
@@ -1255,13 +1243,7 @@ const AdminSettings = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Withdrawal Cooldown (hours)
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={adminSettings.withdrawalCooldown}
+                      <label htmlFor="withdrawalCooldown" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Withdrawal Cooldown (hours)</label><input id="withdrawalCooldown" name="withdrawalCooldown" type="number" min="0" value={adminSettings.withdrawalCooldown}
                         onChange={(e) => setAdminSettings(prev => ({ ...prev, withdrawalCooldown: parseInt(e.target.value) || 0 }))}
                         className="input-field w-full"
                       />
