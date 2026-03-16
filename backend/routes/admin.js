@@ -372,6 +372,9 @@ router.put('/settings', protect, adminOnly, async (req, res) => {
       fixedGasPrice,
       gasLimit,
       withdrawalGasFee,
+
+      tierLimits,
+
       networks,
       maintenanceMode,
       maintenanceMessage
@@ -2258,6 +2261,9 @@ router.put('/settings', protect, adminOnly, async (req, res) => {
       fixedGasPrice,
       gasLimit,
       withdrawalGasFee,
+
+      tierLimits,
+
       networks,
       maintenanceMode,
       maintenanceMessage
@@ -2282,6 +2288,7 @@ router.put('/settings', protect, adminOnly, async (req, res) => {
     if (fixedGasPrice !== undefined) settings.fixedGasPrice = fixedGasPrice;
     if (gasLimit !== undefined) settings.gasLimit = gasLimit;
     if (withdrawalGasFee !== undefined) settings.withdrawalGasFee = withdrawalGasFee;
+    if (tierLimits !== undefined) settings.tierLimits = tierLimits;
     if (networks !== undefined) settings.networks = networks;
     if (maintenanceMode !== undefined) settings.maintenanceMode = maintenanceMode;
     if (maintenanceMessage !== undefined) settings.maintenanceMessage = maintenanceMessage;
@@ -2305,6 +2312,7 @@ router.put('/settings', protect, adminOnly, async (req, res) => {
         fixedGasPrice: settings.fixedGasPrice,
         gasLimit: settings.gasLimit,
         withdrawalGasFee: settings.withdrawalGasFee,
+        tierLimits: settings.tierLimits,
         networks: settings.networks,
         maintenanceMode: settings.maintenanceMode,
         maintenanceMessage: settings.maintenanceMessage
