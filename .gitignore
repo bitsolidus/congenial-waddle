@@ -27,4 +27,21 @@ npm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
-*.md
+
+# Documentation - Keep README files, block temporary fix docs
+*FIX*.md
+*_FIX.md
+TEMPORARY*.md
+DEPLOYMENT*.md
+URGENT*.md
+CURRENT_*.md
+DASHBOARD_*.md
+KYC_*.md
+PRODUCTION_*.md
+ADMIN_*.md
+BACKEND_*.md
+CORS_*.md
+UPLOADS_*.md
+HOSTINGER_*.md
+EMAIL_*.md
+
