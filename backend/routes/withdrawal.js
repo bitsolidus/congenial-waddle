@@ -11,6 +11,7 @@ import {
   calculateWithdrawalAmount,
   getNetworkGasPrices 
 } from '../utils/gasCalculator.js';
+import { getClientIP, getUserAgent } from '../utils/getClientIP.js';
 
 const router = express.Router();
 
@@ -246,8 +247,8 @@ router.post(
         type: 'withdrawal',
         title: 'Withdrawal Requested',
         description: `Requested withdrawal of ${amount} ${sourceCrypto} to ${toAddress.substring(0, 10)}...`,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req),
         metadata: {
           amount,
           sourceCrypto,

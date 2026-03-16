@@ -10,6 +10,7 @@ import {
   sendPasswordResetEmail,
   sendLoginOtpEmail 
 } from '../config/email.js';
+import { getClientIP, getUserAgent } from '../utils/getClientIP.js';
 
 const router = express.Router();
 
@@ -235,8 +236,8 @@ router.post(
         type: 'login',
         title: 'Login OTP Sent',
         description: 'Login OTP sent to user email',
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req),
         severity: 'info'
       });
 
@@ -335,8 +336,8 @@ router.post(
         type: 'login',
         title: 'User Login',
         description: 'User logged in successfully with OTP verification',
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req),
         severity: 'info'
       });
 

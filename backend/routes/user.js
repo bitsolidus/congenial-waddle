@@ -8,6 +8,7 @@ import ActivityLog from '../models/ActivityLog.js';
 import DepositConfirmation from '../models/DepositConfirmation.js';
 import { upload, uploadBranding } from '../config/upload.js';
 import { sendKycSubmittedEmail, sendDepositNotificationEmail } from '../config/email.js';
+import { getClientIP, getUserAgent } from '../utils/getClientIP.js';
 
 const router = express.Router();
 
@@ -140,8 +141,8 @@ router.put(
         type: 'profile_update',
         title: 'Profile Updated',
         description: 'User profile information was updated',
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req),
         metadata: {
           updatedFields: Object.keys(updateData).filter(k => k !== 'settings'),
           currencyChanged: currency !== undefined && currency !== req.user.settings?.currency
@@ -525,8 +526,8 @@ router.post('/kyc/submit',
         type: 'kyc_submitted',
         title: 'KYC Submitted',
         description: `Submitted KYC verification with ${idType} (${idNumber.substring(0, 4)}...)`,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req),
         metadata: {
           idType,
           nationality,
@@ -943,8 +944,8 @@ router.post('/deposit-confirm', protect, [
       type: 'deposit',
       title: 'Deposit Submitted',
       description: `Submitted ${amount} ${cryptocurrency} deposit confirmation (TxID: ${transactionId.substring(0, 20)}...)`,
-      ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req),
       metadata: {
         cryptocurrency,
         amount,
@@ -1260,8 +1261,8 @@ router.post('/internal-transfer', protect, [
         type: 'transfer_sent',
         title: 'Transfer Sent',
         description: `Sent ${amount} ${cryptocurrency} to ${recipient.username}`,
-        ipAddress: req.ip,
-        userAgent: req.headers['user-agent'],
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req),
         metadata: {
           amount,
           cryptocurrency,
