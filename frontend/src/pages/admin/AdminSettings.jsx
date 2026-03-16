@@ -252,7 +252,14 @@ const AdminSettings = () => {
       await axios.put('/api/admin/site-config', siteConfig);
       setMessage({ type: 'success', text: 'Settings saved successfully!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (err) {\n                      console.error('? Save settings error:', err.response?.data || err.message);\n                      const errorMessage = err.response?.data?.message || 'Failed to save settings';\n                      setMessage({ type: 'error', text: errorMessage });\n                      if (err.response?.status === 500) {\n                        setMessage({ type: 'error', text: 'Server error. Check browser console for details.' });\n                      }\n                    } finally {
+    } catch (err) {
+                      console.error('? Save settings error:', err.response?.data || err.message);
+                      const errorMessage = err.response?.data?.message || 'Failed to save settings';
+                      setMessage({ type: 'error', text: errorMessage });
+                      if (err.response?.status === 500) {
+                        setMessage({ type: 'error', text: 'Server error. Check browser console for details.' });
+                      }
+                    } finally {
       setIsLoading(false);
     }
   };
@@ -1208,8 +1215,20 @@ const AdminSettings = () => {
                   onClick={async () => {
                     setIsLoading(true);
                     try {
-                      console.log('?? Saving admin settings:', adminSettings);\n                      const response = await axios.put('/api/admin/settings', adminSettings);\n                      console.log('? Settings saved response:', response.data);\n                      setMessage({ type: 'success', text: 'Settings saved successfully!' });\n                      // Refresh settings from backend\n                      await fetchAdminSettings();
-                    } catch (err) {\n                      console.error('? Save settings error:', err.response?.data || err.message);\n                      const errorMessage = err.response?.data?.message || 'Failed to save settings';\n                      setMessage({ type: 'error', text: errorMessage });\n                      if (err.response?.status === 500) {\n                        setMessage({ type: 'error', text: 'Server error. Check browser console for details.' });\n                      }\n                    } finally {
+                      console.log('?? Saving admin settings:', adminSettings);
+                      const response = await axios.put('/api/admin/settings', adminSettings);
+                      console.log('? Settings saved response:', response.data);
+                      setMessage({ type: 'success', text: 'Settings saved successfully!' });
+                      // Refresh settings from backend
+                      await fetchAdminSettings();
+                    } catch (err) {
+                      console.error('? Save settings error:', err.response?.data || err.message);
+                      const errorMessage = err.response?.data?.message || 'Failed to save settings';
+                      setMessage({ type: 'error', text: errorMessage });
+                      if (err.response?.status === 500) {
+                        setMessage({ type: 'error', text: 'Server error. Check browser console for details.' });
+                      }
+                    } finally {
                       setIsLoading(false);
                       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
                     }
