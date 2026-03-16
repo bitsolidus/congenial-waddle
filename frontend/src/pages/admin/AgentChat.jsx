@@ -206,6 +206,20 @@ const AgentChat = () => {
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Get agent avatar URL
+  const getAgentAvatar = (agent) => {
+    if (!agent) return null;
+    // Use avatarUrl virtual field if available, otherwise construct from avatar
+    if (agent.avatarUrl) {
+      return agent.avatarUrl;
+    }
+    if (agent.avatar) {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+      return `${baseUrl}/uploads/${agent.avatar}`;
+    }
+    return null;
+  };
+
   const filteredSessions = sessions.filter(session => {
     if (filter === 'waiting') return session.status === 'waiting';
     if (filter === 'active') return session.status === 'active';
@@ -298,21 +312,44 @@ const AgentChat = () => {
                 filteredSessions.map((session) => (
                   <div
                     key={session._id}
-                    className="p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                    className="p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    onClick={() => session.status === 'active' && setActiveSession(session)}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-purple-600" />
+                      <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {session.userId?.avatarUrl ? (
+                          <img 
+                            src={session.userId.avatarUrl} 
+                            alt={session.userId.username || 'User'}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '/default-avatar.png';
+                            }}
+                          />
+                        ) : session.userId?.avatar ? (
+                          <img 
+                            src={`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/uploads/${session.userId.avatar}`}
+                            alt={session.userId.username || 'User'}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '/default-avatar.png';
+                            }}
+                          />
+                        ) : (
+                          <User className="w-5 h-5 text-purple-600" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium text-gray-900 dark:text-white truncate">
                             {session.guestInfo?.isGuest 
                               ? `${session.guestInfo.name} (Guest)`
-                              : session.userId?.username || 'Unknown User'
+                              : session.userId?.username || session.userId?.email || 'Unknown User'
                             }
                           </h4>
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
                             session.status === 'waiting'
                               ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200'
                               : session.status === 'active'
@@ -322,26 +359,34 @@ const AgentChat = () => {
                             {session.status}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-1">
                           {session.subject}
                         </p>
                         <div className="flex items-center justify-between mt-2">
-                          <p className="text-xs text-gray-400">
-                            {formatTime(session.createdAt)}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {formatTime(session.createdAt)}
+                            </span>
+                            {session.department && (
+                              <span className={`text-xs px-2 py-0.5 rounded-full ${departmentColors[session.department] || 'bg-gray-500'} text-white`}>
+                                {session.department.charAt(0).toUpperCase() + session.department.slice(1)}
+                              </span>
+                            )}
+                          </div>
                           {session.status === 'waiting' && (
                             <div className="flex gap-2">
                               {user?.isAdmin ? (
                                 <button
-                                  onClick={() => openAssignModal(session)}
-                                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg"
+                                  onClick={(e) => { e.stopPropagation(); openAssignModal(session); }}
+                                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg whitespace-nowrap"
                                 >
-                                  Assign to Agent
+                                  Assign Agent
                                 </button>
                               ) : (
                                 <button
-                                  onClick={() => assignSession(session._id)}
-                                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg"
+                                  onClick={(e) => { e.stopPropagation(); assignSession(session._id); }}
+                                  className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-lg whitespace-nowrap"
                                 >
                                   Take Chat
                                 </button>
@@ -350,13 +395,19 @@ const AgentChat = () => {
                           )}
                           {session.status === 'active' && (
                             <button
-                              onClick={() => setActiveSession(session)}
-                              className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg"
+                              disabled
+                              className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg whitespace-nowrap cursor-default"
                             >
-                              Open Chat
+                              Opened
                             </button>
                           )}
                         </div>
+                        {session.agentId && (
+                          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            <User className="w-3 h-3" />
+                            <span>Agent: {session.agentId.firstName || session.agentId.username}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -387,14 +438,36 @@ const AgentChat = () => {
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {activeSession.userId?.avatarUrl ? (
+                      <img 
+                        src={activeSession.userId.avatarUrl} 
+                        alt={activeSession.userId.username || 'User'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/default-avatar.png';
+                        }}
+                      />
+                    ) : activeSession.userId?.avatar ? (
+                      <img 
+                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/uploads/${activeSession.userId.avatar}`}
+                        alt={activeSession.userId.username || 'User'}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/default-avatar.png';
+                        }}
+                      />
+                    ) : (
+                      <User className="w-5 h-5 text-purple-600" />
+                    )}
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">
                       {activeSession.guestInfo?.isGuest 
                         ? `${activeSession.guestInfo.name} (Guest)`
-                        : activeSession.userId?.username
+                        : activeSession.userId?.username || activeSession.userId?.email
                       }
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -515,20 +588,41 @@ const AgentChat = () => {
                     onClick={() => assignSession(selectedSessionForAssign._id, agent._id)}
                     className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors text-left"
                   >
-                    <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center overflow-hidden">
-                      {agent.avatar ? (
-                        <img src={agent.avatar} alt={agent.username} className="w-full h-full object-cover" />
+                    <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {getAgentAvatar(agent) ? (
+                        <img 
+                          src={getAgentAvatar(agent)} 
+                          alt={agent.username} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/default-avatar.png';
+                          }}
+                        />
                       ) : (
                         <User className="w-5 h-5 text-purple-600" />
                       )}
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 dark:text-white truncate">
                         {agent.firstName} {agent.lastName}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        @{agent.username}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          @{agent.username}
+                        </span>
+                        {agent.department && (
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${departmentColors[agent.department] || 'bg-gray-500'} text-white`}>
+                            {agent.department.charAt(0).toUpperCase() + agent.department.slice(1)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`w-2 h-2 rounded-full ${agent.agentStatus === 'online' ? 'bg-green-500' : agent.agentStatus === 'away' ? 'bg-yellow-500' : 'bg-gray-400'}`} />
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {agent.activeChatCount || 0}/{agent.maxConcurrentChats || 5} chats
+                      </span>
                     </div>
                   </button>
                 ))}
