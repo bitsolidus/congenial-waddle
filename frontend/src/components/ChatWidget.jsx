@@ -322,6 +322,21 @@ const ChatWidget = () => {
       }
     } catch (error) {
       console.error('Close chat error:', error);
+      // Even if API call fails, still clear local state
+      // This prevents redirect to login page
+      setSession(null);
+      setMessages([]);
+      setIsOpen(false);
+      setShowCloseConfirm(false);
+      lastMessageCountRef.current = 0;
+      
+      // Clear guest session from localStorage
+      if (isGuestMode) {
+        localStorage.removeItem('guestChatSession');
+        setIsGuestMode(false);
+        setGuestName('');
+        setGuestEmail('');
+      }
     }
   };
 
