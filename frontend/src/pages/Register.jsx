@@ -7,12 +7,14 @@ import { motion } from 'framer-motion';
 import { getPasswordStrength, getPasswordStrengthLabel, getPasswordStrengthColor } from '../utils/helpers';
 import { getCurrencyByCountry } from '../utils/currency';
 import axios from 'axios';
+import { API_BASE_URL } from '../utils/constants';
 
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { isLoading, error, registrationSuccess } = useSelector((state) => state.auth);
+  const siteConfig = useSelector((state) => state.siteConfig.config);
   
   const referralCode = searchParams.get('ref');
   
@@ -121,9 +123,18 @@ const Register = () => {
         className="max-w-md w-full space-y-6 bg-white dark:bg-crypto-card p-8 rounded-2xl shadow-xl"
       >
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center mb-4">
-            <span className="text-white text-2xl font-bold">C</span>
-          </div>
+          {/* Site Logo */}
+          {siteConfig?.logo ? (
+            <img
+              src={siteConfig.logo.startsWith('http') ? siteConfig.logo : `${API_BASE_URL}${siteConfig.logo}`}
+              alt="Site Logo"
+              className="mx-auto h-16 w-auto mb-4 object-contain"
+            />
+          ) : (
+            <div className="mx-auto h-16 w-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center mb-4">
+              <span className="text-white text-2xl font-bold">B</span>
+            </div>
+          )}
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             Create Account
           </h2>
@@ -417,13 +428,23 @@ const Register = () => {
             />
             <label htmlFor="agreeTerms" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
               I agree to the{' '}
-              <a href="#" className="text-primary-600 hover:text-primary-500 dark:text-primary-400">
+              <Link
+                to="/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-500 dark:text-primary-400 underline"
+              >
                 Terms of Service
-              </a>{' '}
+              </Link>{' '}
               and{' '}
-              <a href="#" className="text-primary-600 hover:text-primary-500 dark:text-primary-400">
+              <Link
+                to="/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-600 hover:text-primary-500 dark:text-primary-400 underline"
+              >
                 Privacy Policy
-              </a>
+              </Link>
             </label>
           </div>
 
