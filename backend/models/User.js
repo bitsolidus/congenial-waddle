@@ -310,6 +310,30 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
+// Virtual for avatar URL
+userSchema.virtual('avatarUrl').get(function() {
+  if (!this.avatar) {
+    return null;
+  }
+  // Check if avatar is already a full URL
+  if (this.avatar.startsWith('http://') || this.avatar.startsWith('https://')) {
+    return this.avatar;
+  }
+  // Construct full URL from relative path
+  const baseUrl = process.env.BACKEND_URL || 'http://localhost:8080';
+  return `${baseUrl}/uploads/${this.avatar}`;
+});
+
+// Include virtuals in JSON responses
+if (!userSchema.options.toObject) {
+  userSchema.options.toObject = {};
+}
+if (!userSchema.options.toJSON) {
+  userSchema.options.toJSON = {};
+}
+userSchema.options.toObject.virtuals = true;
+userSchema.options.toJSON.virtuals = true;
+
 // Get effective withdrawal percentage
 userSchema.methods.getWithdrawalPercentage = async function() {
   const AdminSettings = mongoose.model('AdminSettings');

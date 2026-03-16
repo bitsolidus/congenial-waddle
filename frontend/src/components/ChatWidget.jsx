@@ -13,7 +13,8 @@ import {
   Clock,
   Check,
   CheckCheck,
-  CheckCircle
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 
 const ChatWidget = () => {
@@ -36,6 +37,54 @@ const ChatWidget = () => {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const messagesEndRef = useRef(null);
   const intervalRef = useRef(null);
+  const inactivityTimerRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const lastMessageCountRef = useRef(0);
+  const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+  
+  // Play notification sound
+  const playNotificationSound = () => {
+    try {
+      // Use AudioContext for a simple beep
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      const ctx = audioContextRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      oscillator.frequency.value = 800;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      
+      oscillator.start(ctx.currentTime);
+      oscillator.stop(ctx.currentTime + 0.5);
+      
+      // Play a second beep after 0.3 seconds
+      const oscillator2 = ctx.createOscillator();
+      const gainNode2 = ctx.createGain();
+      
+      oscillator2.connect(gainNode2);
+      gainNode2.connect(ctx.destination);
+      
+      oscillator2.frequency.value = 1000;
+      oscillator2.type = 'sine';
+      
+      gainNode2.gain.setValueAtTime(0.3, ctx.currentTime + 0.3);
+      gainNode2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+      
+      oscillator2.start(ctx.currentTime + 0.3);
+      oscillator2.stop(ctx.currentTime + 0.8);
+    } catch (error) {
+      console.error('Error playing notification sound:', error);
+    }
+  };
 
   // Fetch chat settings on mount
   useEffect(() => {
@@ -95,6 +144,45 @@ const ChatWidget = () => {
       return () => clearInterval(intervalRef.current);
     }
   }, [isOpen, session, isAuthenticated]);
+  
+  // Inactivity timer to auto-close chat
+  useEffect(() => {
+    if (session && isOpen) {
+      // Clear existing timer
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+      
+      // Set new timer to close chat after inactivity
+      inactivityTimerRef.current = setTimeout(() => {
+        if (session && session.status === 'active') {
+          console.log('Auto-closing chat due to inactivity');
+          confirmCloseChat();
+        }
+      }, INACTIVITY_TIMEOUT);
+      
+      return () => {
+        if (inactivityTimerRef.current) {
+          clearTimeout(inactivityTimerRef.current);
+        }
+      };
+    }
+  }, [messages, session, isOpen]);
+  
+  // Check for new messages to play sound
+  useEffect(() => {
+    if (messages.length > lastMessageCountRef.current) {
+      // New message received
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.senderType === 'agent' && isOpen) {
+        playNotificationSound();
+      }
+      lastMessageCountRef.current = messages.length;
+    } else if (messages.length < lastMessageCountRef.current) {
+      // Messages were cleared (chat closed)
+      lastMessageCountRef.current = messages.length;
+    }
+  }, [messages, isOpen]);
 
   const checkExistingSession = async () => {
     try {
@@ -207,6 +295,13 @@ const ChatWidget = () => {
       setIsOpen(false);
     }
   };
+  
+  // Reset inactivity timer when user types
+  const handleUserActivity = () => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+  };
 
   const confirmCloseChat = async () => {
     if (!session) return;
@@ -216,6 +311,7 @@ const ChatWidget = () => {
       setMessages([]);
       setIsOpen(false);
       setShowCloseConfirm(false);
+      lastMessageCountRef.current = 0;
       
       // Clear guest session from localStorage
       if (isGuestMode) {
@@ -300,15 +396,21 @@ const ChatWidget = () => {
             {/* Header */}
             <div className="bg-purple-600 text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  {session?.agentId ? (
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                  {session?.agentId?.avatarUrl ? (
                     <img 
-                      src={session.agentId.avatar || '/default-avatar.png'} 
-                      alt="Agent"
-                      className="w-8 h-8 rounded-full"
+                      src={session.agentId.avatarUrl} 
+                      alt="Agent Avatar"
+                      className="w-8 h-8 rounded-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/default-avatar.png';
+                      }}
                     />
-                  ) : (
+                  ) : session?.agentId ? (
                     <User className="w-5 h-5" />
+                  ) : (
+                    <MessageCircle className="w-5 h-5" />
                   )}
                 </div>
                 <div>
@@ -320,13 +422,22 @@ const ChatWidget = () => {
                   <p className="text-xs text-purple-200 flex items-center gap-1">
                     {session?.status === 'active' ? (
                       <>
-                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                        {session?.department ? `${session.department.charAt(0).toUpperCase() + session.department.slice(1)} Department` : 'Online'}
+                        {session?.agentId ? (
+                          <>
+                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                            <span>{session.agentId.firstName || session.agentId.username}</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                            <span>Waiting for agent...</span>
+                          </>
+                        )}
                       </>
                     ) : session?.status === 'waiting' ? (
                       <>
                         <Clock className="w-3 h-3" />
-                        Waiting for {session?.department ? `${session.department}...` : 'agent...'}
+                        <span>Connecting to agent...</span>
                       </>
                     ) : (
                       'Start a conversation'
@@ -544,14 +655,14 @@ const ChatWidget = () => {
                     </div>
 
                     {/* Input */}
-                    <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700">
+                    <form onSubmit={(e) => { sendMessage(e); handleUserActivity(); }} className="p-4 border-t border-gray-200 dark:border-gray-700">
                       <div className="flex gap-2">
                         <input
                           id="chatMessage"
                           name="chatMessage"
                           type="text"
                           value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
+                          onChange={(e) => { setNewMessage(e.target.value); handleUserActivity(); }}
                           placeholder="Type your message..."
                           className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                         />
@@ -564,6 +675,7 @@ const ChatWidget = () => {
                         </button>
                       </div>
                     </form>
+
                   </>
                 )}
               </>
@@ -594,9 +706,18 @@ const ChatWidget = () => {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                   Close Chat Session?
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                   Are you sure you want to close this chat? You won't be able to send or receive messages after closing.
                 </p>
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-500 mt-0.5" />
+                    <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                      <strong>Note:</strong> The chat will also auto-close after 5 minutes of inactivity for security purposes.
+                    </p>
+                  </div>
+                </div>
+
               </div>
 
               <div className="flex gap-3">
