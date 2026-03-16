@@ -7,6 +7,34 @@ import { useSelector, useDispatch } from 'react-redux';
 import { fetchCryptoPrices } from '../../store/cryptoSlice';
 import { formatCurrency, formatDate } from '../../utils/helpers';
 import { convertFromUSD, formatCurrencyWithSymbol } from '../../utils/currency';
+
+// Helper function to parse user agent and extract browser/device info
+const parseUserAgent = (userAgent) => {
+  if (!userAgent) return { browser: 'Unknown', os: 'Unknown', device: 'Unknown' };
+  
+  // Detect browser
+  let browser = 'Unknown';
+  if (userAgent.includes('Firefox/')) browser = 'Firefox';
+  else if (userAgent.includes('Edg/')) browser = 'Edge';
+  else if (userAgent.includes('Chrome/')) browser = 'Chrome';
+  else if (userAgent.includes('Safari/')) browser = 'Safari';
+  else if (userAgent.includes('MSIE') || userAgent.includes('Trident/')) browser = 'Internet Explorer';
+  
+  // Detect OS
+  let os = 'Unknown';
+  if (userAgent.includes('Win')) os = 'Windows';
+  else if (userAgent.includes('Mac')) os = 'macOS';
+  else if (userAgent.includes('Linux')) os = 'Linux';
+  else if (userAgent.includes('Android')) os = 'Android';
+  else if (userAgent.includes('iOS') || userAgent.includes('iPhone') || userAgent.includes('iPad')) os = 'iOS';
+  
+  // Detect device type
+  let device = 'Desktop';
+  if (/Mobile|Android|iPhone|iPad/i.test(userAgent)) device = 'Mobile';
+  if (/Tablet|iPad/i.test(userAgent)) device = 'Tablet';
+  
+  return { browser, os, device };
+};
 import {
   ArrowLeft,
   User,
@@ -1545,58 +1573,108 @@ const AdminUserDetail = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {userActivities.map((activity) => (
-                <div 
-                  key={activity._id} 
-                  className={`p-4 rounded-lg border-l-4 ${
-                    activity.severity === 'critical' ? 'bg-red-50 dark:bg-red-900/20 border-red-500' :
-                    activity.severity === 'warning' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500' :
-                    'bg-gray-50 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                          activity.type === 'login' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
-                          activity.type === 'deposit' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
-                          activity.type === 'withdrawal' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
-                          activity.type === 'transfer_sent' ? 'bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200' :
-                          activity.type === 'transfer_received' ? 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200' :
-                          activity.type === 'trade' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' :
-                          activity.type?.includes('kyc') ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
-                          'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                        }`}>
-                          {activity.type?.replace(/_/g, ' ')?.toUpperCase()}
-                        </span>
-                        {activity.severity !== 'info' && (
+              {userActivities.map((activity) => {
+                const { browser, os, device } = parseUserAgent(activity.userAgent);
+                
+                return (
+                  <div 
+                    key={activity._id} 
+                    className={`p-4 rounded-lg border-l-4 ${
+                      activity.severity === 'critical' ? 'bg-red-50 dark:bg-red-900/20 border-red-500' :
+                      activity.severity === 'warning' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500' :
+                      'bg-gray-50 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
                           <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                            activity.severity === 'critical' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
-                            'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                            activity.type === 'login' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                            activity.type === 'deposit' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                            activity.type === 'withdrawal' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                            activity.type === 'transfer_sent' ? 'bg-pink-100 dark:bg-pink-900 text-pink-800 dark:text-pink-200' :
+                            activity.type === 'transfer_received' ? 'bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200' :
+                            activity.type === 'trade' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' :
+                            activity.type?.includes('kyc') ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' :
+                            'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                           }`}>
-                            {activity.severity?.toUpperCase()}
+                            {activity.type?.replace(/_/g, ' ')?.toUpperCase()}
                           </span>
+                          {activity.severity !== 'info' && (
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                              activity.severity === 'critical' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                              'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                            }`}>
+                              {activity.severity?.toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-medium text-gray-900 dark:text-white mt-2">{activity.title}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{activity.description}</p>
+                        
+                        {/* Device & IP Information */}
+                        {(activity.ipAddress || activity.userAgent) && (
+                          <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                              {/* IP Address */}
+                              {activity.ipAddress && (
+                                <div className="flex items-center gap-2">
+                                  <MapPin className="w-3 h-3 text-gray-400" />
+                                  <span className="text-gray-500 dark:text-gray-400">IP Address:</span>
+                                  <span className="font-mono text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
+                                    {activity.ipAddress}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Browser */}
+                              {browser && (
+                                <div className="flex items-center gap-2">
+                                  <Activity className="w-3 h-3 text-gray-400" />
+                                  <span className="text-gray-500 dark:text-gray-400">Browser:</span>
+                                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                                    {browser}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Operating System */}
+                              {os && (
+                                <div className="flex items-center gap-2">
+                                  <Shield className="w-3 h-3 text-gray-400" />
+                                  <span className="text-gray-500 dark:text-gray-400">OS:</span>
+                                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                                    {os}
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {/* Device Type */}
+                              {device && (
+                                <div className="flex items-center gap-2">
+                                  <Award className="w-3 h-3 text-gray-400" />
+                                  <span className="text-gray-500 dark:text-gray-400">Device:</span>
+                                  <span className="font-medium text-gray-700 dark:text-gray-300">
+                                    {device}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         )}
                       </div>
-                      <h4 className="font-medium text-gray-900 dark:text-white mt-2">{activity.title}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{activity.description}</p>
-                      {activity.ipAddress && (
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                          IP: {activity.ipAddress}
+                      <div className="text-right ml-4">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {formatDate(activity.createdAt)}
                         </p>
-                      )}
-                    </div>
-                    <div className="text-right ml-4">
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {formatDate(activity.createdAt)}
-                      </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        {new Date(activity.createdAt).toLocaleTimeString()}
-                      </p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          {new Date(activity.createdAt).toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
