@@ -271,15 +271,17 @@ const Terms = () => {
           <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Legal Department Email</p>
-              <a href="mailto:legal@bitsolidus.io" className="text-purple-600 hover:underline font-medium">
-                legal@bitsolidus.io
+              <a href="mailto:legal@bitsolidus.tech" className="text-purple-600 hover:underline font-medium">
+                legal@bitsolidus.tech
               </a>
+
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Customer Support</p>
-              <a href="mailto:support@bitsolidus.io" className="text-purple-600 hover:underline font-medium">
-                support@bitsolidus.io
+              <a href="mailto:support@bitsolidus.tech" className="text-purple-600 hover:underline font-medium">
+                support@bitsolidus.tech
               </a>
+
             </div>
           </div>
         </div>

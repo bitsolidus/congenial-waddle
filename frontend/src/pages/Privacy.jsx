@@ -88,7 +88,7 @@ const Privacy = () => {
             <li><strong>Opt-Out:</strong> Opt-out of marketing communications at any time</li>
             <li><strong>Cookie Control:</strong> Manage cookie preferences through your browser settings</li>
           </ul>
-          <p className="mt-4">To exercise these rights, please contact us at <a href="mailto:privacy@bitsolidus.io" className="text-purple-600 hover:underline">privacy@bitsolidus.io</a></p>
+          <p className="mt-4">To exercise these rights, please contact us at <a href="mailto:privacy@bitsolidus.tech" className="text-purple-600 hover:underline">privacy@bitsolidus.tech</a></p>
         </div>
       )
     },
@@ -113,7 +113,7 @@ const Privacy = () => {
       title: 'Children\'s Privacy',
       content: (
         <div className="space-y-4">
-          <p>Our services are not directed to individuals under the age of 18 (or the age of legal majority in your jurisdiction). We do not knowingly collect personal information from children. If you believe that we have collected information from a child, please contact us immediately at <a href="mailto:privacy@bitsolidus.io" className="text-purple-600 hover:underline">privacy@bitsolidus.io</a>, and we will take steps to delete such information.</p>
+          <p>Our services are not directed to individuals under the age of 18 (or the age of legal majority in your jurisdiction). We do not knowingly collect personal information from children. If you believe that we have collected information from a child, please contact us immediately at <a href="mailto:privacy@bitsolidus.tech" className="text-purple-600 hover:underline">privacy@bitsolidus.tech</a>, and we will take steps to delete such information.</p>
         </div>
       )
     }
@@ -198,15 +198,15 @@ const Privacy = () => {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
               <Mail className="w-5 h-5 text-purple-600 mx-auto mb-2" />
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Email</p>
-              <a href="mailto:privacy@bitsolidus.io" className="text-purple-600 hover:underline font-medium">
-                privacy@bitsolidus.io
+              <a href="mailto:privacy@bitsolidus.tech" className="text-purple-600 hover:underline font-medium">
+                privacy@bitsolidus.tech
               </a>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
               <Mail className="w-5 h-5 text-purple-600 mx-auto mb-2" />
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">General Inquiries</p>
-              <a href="mailto:support@bitsolidus.io" className="text-purple-600 hover:underline font-medium">
-                support@bitsolidus.io
+              <a href="mailto:support@bitsolidus.tech" className="text-purple-600 hover:underline font-medium">
+                support@bitsolidus.tech
               </a>
             </div>
           </div>
