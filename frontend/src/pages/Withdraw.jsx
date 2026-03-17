@@ -101,6 +101,13 @@ const Withdraw = () => {
     }
   }, [dispatch, isAuthenticated]);
 
+  // Re-fetch tier limits when user's tier changes
+  useEffect(() => {
+    if (isAuthenticated && user?.tier) {
+      fetchTierLimits();
+    }
+  }, [user?.tier, isAuthenticated]);
+
   useEffect(() => {
     if (formData.amount && formData.network) {
       calculateGas();
@@ -508,10 +515,10 @@ const Withdraw = () => {
               Your Withdrawal Limits
             </label>
             <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-              user?.tier === 'vip' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-              user?.tier === 'premium' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' :
-              user?.tier === 'verified' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-              'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400'
+              user?.tier === 'vip' || user?.tier === 'platinum' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+              user?.tier === 'gold' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+              user?.tier === 'silver' ? 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300' :
+              'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
             }`}>
               {(user?.tier || 'bronze').toUpperCase()} TIER
             </span>
