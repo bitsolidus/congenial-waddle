@@ -667,12 +667,7 @@ const Withdraw = () => {
                 );
               })()}
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                Transaction fee is calculated from the {userCurrency} value of your withdrawal and deducted from your USDT balance.
-              </p>
-              
-              {/* Min/Max info */}
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                (Min: {formatCurrency(gasFeeSettings.minFee, userCurrency)} | Max: {formatCurrency(gasFeeSettings.maxFee, userCurrency)})
+                Transaction fee: <strong>{gasFeeSettings.percentage}%</strong> of withdrawal amount (Min: {formatCurrency(gasFeeSettings.minFee, userCurrency)} | Max: {formatCurrency(gasFeeSettings.maxFee, userCurrency)})
               </p>
 
               <div className="border-t border-gray-200 dark:border-gray-600 pt-3">

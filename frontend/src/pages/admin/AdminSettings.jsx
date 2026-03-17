@@ -1545,14 +1545,14 @@ const AdminSettings = () => {
                       }))}
                       className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                     />
-                    <span className="text-gray-700 dark:text-gray-300">Enable Gas Fee for Withdrawals</span>
+                    <span className="text-gray-700 dark:text-gray-300">Enable Transaction Fee for Withdrawals</span>
                   </label>
 
                   {adminSettings.withdrawalGasFee?.enabled && (
                     <div className="space-y-4 pl-8">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Gas Fee Percentage (%)
+                          Transaction Fee Percentage (%)
                         </label>
                         <div className="flex items-center gap-4">
                           <input
@@ -1575,14 +1575,14 @@ const AdminSettings = () => {
                           </span>
                         </div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          Percentage of withdrawal USD value charged as gas fee (deducted in USDT)
+                          Percentage of withdrawal value charged as transaction fee
                         </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Minimum Gas Fee (USD)
+                            Minimum Fee (USD)
                           </label>
                           <input
                             type="number"
@@ -1604,7 +1604,7 @@ const AdminSettings = () => {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Maximum Gas Fee (USD)
+                            Maximum Fee (USD)
                           </label>
                           <input
                             type="number"
@@ -1635,7 +1635,7 @@ const AdminSettings = () => {
                               Math.max(5025 * ((adminSettings.withdrawalGasFee?.percentage || 2.5) / 100), adminSettings.withdrawalGasFee?.minFee || 5), 
                               adminSettings.withdrawalGasFee?.maxFee || 500
                             ).toFixed(2)
-                          } USD Gas Fee</p>
+                          } USD Transaction Fee</p>
                           <p className="text-xs mt-2 pt-2 border-t border-blue-200 dark:border-blue-800">
                             Formula: USD Value × {adminSettings.withdrawalGasFee?.percentage || 2.5}% (min ${adminSettings.withdrawalGasFee?.minFee || 5}, max ${adminSettings.withdrawalGasFee?.maxFee || 500})
                           </p>
