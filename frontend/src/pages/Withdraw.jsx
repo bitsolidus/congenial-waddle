@@ -911,7 +911,7 @@ const Withdraw = () => {
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-medium transition-colors"
         >
           {gasFeeSettings.enabled && gasBalance < requiredGasFee 
-            ? 'Insufficient Gas Balance' 
+            ? 'Insufficient USDT Balance' 
             : walletError 
               ? 'Invalid Wallet Address'
               : 'Withdraw'
@@ -958,9 +958,9 @@ const Withdraw = () => {
           {gasFeeSettings.enabled && (
             <div className="flex justify-between items-start">
               <span className="text-gray-600 dark:text-gray-400">
-                Gas Fee (USDT)<br />
+                Transaction Fee<br />
                 <span className="text-xs text-gray-500">
-                  ({formatCurrency(parseFloat(formData.amount) || 0)} {formData.fromCrypto} × {gasFeeSettings.percentage}%)
+                  ({formatCurrency(parseFloat(formData.amount) || 0, userCurrency)} {formData.fromCrypto} × {gasFeeSettings.percentage}%)
                 </span>
               </span>
               <span className={`font-medium text-right ${
@@ -993,17 +993,17 @@ const Withdraw = () => {
             <Fuel className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                Insufficient Gas Balance
+                Insufficient USDT Balance
               </p>
               <p className="text-xs text-red-700 dark:text-red-300 mt-1">
-                You need {formatCurrency(requiredGasFee - gasBalance)} more to cover the gas fee.
+                You need {formatCurrency(requiredGasFee - gasBalance, userCurrency)} more USDT to cover the transaction fee.
               </p>
               <button 
-                onClick={() => navigate('/buy-gas')}
+                onClick={() => navigate('/deposit')}
                 className="mt-3 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <Wallet className="w-4 h-4" />
-                Buy Gas Now
+                Deposit USDT
               </button>
             </div>
           </div>
