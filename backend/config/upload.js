@@ -17,13 +17,23 @@ console.log('Uploads directory:', uploadsBaseDir);
 console.log('KYC directory:', kycDir);
 
 // Create directories if they don't exist
-if (!fs.existsSync(uploadsBaseDir)) {
-  fs.mkdirSync(uploadsBaseDir, { recursive: true });
-  console.log('Created uploads directory:', uploadsBaseDir);
-}
-if (!fs.existsSync(kycDir)) {
-  fs.mkdirSync(kycDir, { recursive: true });
-  console.log('Created KYC directory:', kycDir);
+try {
+  if (!fs.existsSync(uploadsBaseDir)) {
+    fs.mkdirSync(uploadsBaseDir, { recursive: true });
+    console.log('Created uploads directory:', uploadsBaseDir);
+  } else {
+    console.log('Uploads directory already exists:', uploadsBaseDir);
+  }
+  
+  if (!fs.existsSync(kycDir)) {
+    fs.mkdirSync(kycDir, { recursive: true });
+    console.log('Created KYC directory:', kycDir);
+  } else {
+    console.log('KYC directory already exists:', kycDir);
+  }
+} catch (error) {
+  console.error('Error creating upload directories:', error.message);
+  console.error('This is not fatal - the app will continue, but uploads may fail.');
 }
 
 // File filter for images
@@ -82,8 +92,11 @@ export const uploadBranding = multer({
 
 // Serve static files middleware
 export const serveUploads = (app) => {
+  // Use the same uploadsBaseDir that was determined at module load
+  console.log('Serving uploads from:', uploadsBaseDir);
+  
   // Serve uploads with CORS enabled for frontend domain
-  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
+  app.use('/uploads', express.static(uploadsBaseDir, {
     setHeaders: (res, path, stat) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
