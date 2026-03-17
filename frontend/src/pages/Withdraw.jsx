@@ -91,6 +91,13 @@ const Withdraw = () => {
       fetchGasBalance();
       fetchTierLimits();
       loadRecentAddresses();
+      
+      // Refresh prices every 30 seconds for real-time updates
+      const priceInterval = setInterval(() => {
+        dispatch(fetchBalance());
+      }, 30000);
+      
+      return () => clearInterval(priceInterval);
     }
   }, [dispatch, isAuthenticated]);
 
