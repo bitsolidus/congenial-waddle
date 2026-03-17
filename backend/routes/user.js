@@ -62,6 +62,10 @@ router.get('/profile', protect, async (req, res) => {
         kycStatus: user.kycStatus,
         kycData: user.kycData,
         isAdmin: user.isAdmin,
+        isAgent: user.isAgent,
+        agentStatus: user.agentStatus,
+        department: user.department,
+        maxConcurrentChats: user.maxConcurrentChats,
         settings: user.settings,
         createdAt: user.createdAt,
         lastLogin: user.lastLogin

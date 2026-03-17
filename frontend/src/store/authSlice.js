@@ -16,13 +16,15 @@ if (token) {
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only logout on 401 for non-admin routes
-    // Admin routes may return 403 which shouldn't trigger logout
+    // Only logout on 401 for non-admin/agent routes
+    // Admin/agent routes may return 403 which shouldn't trigger logout
     if (error.response?.status === 401) {
-      // Check if this is an admin route
+      // Check if this is an admin or agent route
       const isAdminRoute = error.config?.url?.includes('/admin/');
+      const isAgentRoute = error.config?.url?.includes('/agent/') || 
+                           error.config?.url?.includes('/chat/agent');
       
-      if (!isAdminRoute) {
+      if (!isAdminRoute && !isAgentRoute) {
         // Token expired or invalid
         localStorage.removeItem('token');
         delete axios.defaults.headers.common['Authorization'];
