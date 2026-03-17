@@ -721,9 +721,10 @@ router.get('/tier-limits', protect, async (req, res) => {
     res.json({
       success: true,
       tierLimits: settings.tierLimits || {
-        standard: { min: 10, max: 10000, dailyLimit: 50000 },
+        bronze: { min: 10, max: 10000, dailyLimit: 50000 },
+        silver: { min: 10, max: 25000, dailyLimit: 100000 },
         gold: { min: 10, max: 50000, dailyLimit: 200000 },
-        platinum: { min: 10, max: 100000, dailyLimit: 500000 }
+        vip: { min: 10, max: 100000, dailyLimit: 500000 }
       },
       // Withdrawal gas fee settings - users need to see this
       withdrawalGasFee: {
@@ -864,7 +865,7 @@ router.get('/tier-progress', protect, async (req, res) => {
       accountAge,
       referrals: referralCount,
       premiumDuration,
-      currentTier: user.tier || 'standard',
+      currentTier: user.tier || 'bronze',
       lastEvaluated: user.tierUpgradeProgress?.lastEvaluated || null
     };
     

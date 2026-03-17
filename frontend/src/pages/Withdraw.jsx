@@ -232,7 +232,7 @@ const Withdraw = () => {
         axios.get('/api/user/daily-withdrawals')
       ]);
       
-      const userTier = user?.tier || 'standard';
+      const userTier = user?.tier || 'bronze';
       const limits = tierRes.data.tierLimits?.[userTier] || {
         min: 10,
         max: 10000,
@@ -330,13 +330,13 @@ const Withdraw = () => {
       
       // Check maximum per transaction
       if (usdValue > tierLimits.max) {
-        throw new Error(`Maximum withdrawal per transaction is $${tierLimits.max.toLocaleString()} USD for your ${user?.tier || 'standard'} tier. Upgrade your tier for higher limits.`);
+        throw new Error(`Maximum withdrawal per transaction is $${tierLimits.max.toLocaleString()} USD for your ${user?.tier || 'bronze'} tier. Upgrade your tier for higher limits.`);
       }
       
       // Check daily limit
       const remainingDaily = tierLimits.dailyLimit - dailyWithdrawn;
       if (usdValue > remainingDaily) {
-        throw new Error(`Daily withdrawal limit exceeded. You have $${remainingDaily.toLocaleString()} USD remaining today. Your tier (${user?.tier || 'standard'}) allows $${tierLimits.dailyLimit.toLocaleString()} USD per day.`);
+        throw new Error(`Daily withdrawal limit exceeded. You have $${remainingDaily.toLocaleString()} USD remaining today. Your tier (${user?.tier || 'bronze'}) allows $${tierLimits.dailyLimit.toLocaleString()} USD per day.`);
       }
       
       const response = await axios.post('/api/withdrawal/request', formData);
@@ -513,7 +513,7 @@ const Withdraw = () => {
               user?.tier === 'verified' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
               'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400'
             }`}>
-              {(user?.tier || 'standard').toUpperCase()} TIER
+              {(user?.tier || 'bronze').toUpperCase()} TIER
             </span>
           </div>
           <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
