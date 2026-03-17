@@ -12,63 +12,54 @@ import {
   Loader2,
   ArrowLeft
 } from 'lucide-react';
-import axios from 'axios';
-import { loginSuccess } from '../../store/authSlice';
+import { agentLogin, clearError } from '../../store/authSlice';
 
 const AgentLogin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, isLoading, error } = useSelector((state) => state.auth);
   
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [localError, setLocalError] = useState('');
 
   // Redirect if already authenticated as agent
   useEffect(() => {
-    if (isAuthenticated && user?.isAgent) {
-      navigate('/agent');
+    if (isAuthenticated && user) {
+      if (user.isAgent) {
+        navigate('/agent');
+      } else {
+        setLocalError('Access denied. You do not have agent privileges.');
+      }
     }
   }, [isAuthenticated, user, navigate]);
+
+  // Clear error on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    setError('');
+    setLocalError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const response = await axios.post('/api/auth/agent-login', formData);
-      
-      if (response.data.success) {
-        // Store token
-        localStorage.setItem('token', response.data.token);
-        
-        // Update Redux state
-        dispatch(loginSuccess({
-          user: response.data.user,
-          token: response.data.token
-        }));
-        
-        // Navigate to agent dashboard
-        navigate('/agent');
-      }
-    } catch (err) {
-      console.error('Agent login error:', err);
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    setLocalError('');
+    dispatch(agentLogin({
+      email: formData.email,
+      password: formData.password
+    }));
   };
+
+  const displayError = localError || error;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 flex items-center justify-center p-4">
@@ -98,14 +89,14 @@ const AgentLogin = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {error && (
+            {displayError && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400"
               >
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm">{error}</span>
+                <span className="text-sm">{displayError}</span>
               </motion.div>
             )}
 

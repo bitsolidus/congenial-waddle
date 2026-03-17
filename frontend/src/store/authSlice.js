@@ -100,6 +100,20 @@ export const adminLogin = createAsyncThunk(
   }
 );
 
+export const agentLogin = createAsyncThunk(
+  'auth/agentLogin',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await axios.post('/api/auth/agent-login', credentials);
+      localStorage.setItem('token', response.data.token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Agent login failed');
+    }
+  }
+);
+
 export const register = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
@@ -260,6 +274,23 @@ const authSlice = createSlice({
         state.maskedEmail = null;
       })
       .addCase(adminLogin.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      // Agent Login (no OTP required)
+      .addCase(agentLogin.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(agentLogin.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.isAuthenticated = true;
+        state.requiresOtp = false;
+        state.tempUserId = null;
+        state.maskedEmail = null;
+      })
+      .addCase(agentLogin.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
