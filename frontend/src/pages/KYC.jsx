@@ -116,27 +116,27 @@ const KYC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Validation functions
+  // Validation functions - safely handle null/undefined values
   const isStep1Valid = () => {
-    return formData.firstName.trim() &&
-           formData.lastName.trim() &&
+    return formData.firstName?.trim() &&
+           formData.lastName?.trim() &&
            formData.gender &&
            formData.dateOfBirth &&
-           formData.nationality.trim() &&
-           formData.phoneNumber.trim();
+           formData.nationality?.trim() &&
+           formData.phoneNumber?.trim();
   };
 
   const isStep2Valid = () => {
-    return formData.address.trim() &&
-           formData.city.trim() &&
-           formData.country.trim() &&
-           formData.postalCode.trim();
+    return formData.address?.trim() &&
+           formData.city?.trim() &&
+           formData.country?.trim() &&
+           formData.postalCode?.trim();
   };
 
   const isStep3Valid = () => {
-    return formData.phoneNumber.trim() &&
+    return formData.phoneNumber?.trim() &&
            formData.idType &&
-           formData.idNumber.trim();
+           formData.idNumber?.trim();
   };
 
   const isStep4Valid = () => {
