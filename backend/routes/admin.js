@@ -1,6 +1,7 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import crypto from 'crypto';
+import multer from 'multer';
 import { protect, adminOnly, agentOnly } from '../middleware/auth.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
@@ -13,6 +14,22 @@ import { upload, uploadBranding } from '../config/upload.js';
 import { sendKycApprovedEmail, sendKycRejectedEmail, sendPasswordResetEmail, sendVerificationEmail } from '../config/email.js';
 
 const router = express.Router();
+
+// Helper middleware to handle multer errors
+const handleMulterError = (uploadMiddleware) => {
+  return (req, res, next) => {
+    uploadMiddleware(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        console.error('Multer error:', err);
+        return res.status(400).json({ message: `Upload error: ${err.message}` });
+      } else if (err) {
+        console.error('Upload error:', err);
+        return res.status(500).json({ message: `Upload failed: ${err.message}` });
+      }
+      next();
+    });
+  };
+};
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -1069,7 +1086,7 @@ router.put('/site-config', protect, adminOnly, async (req, res) => {
 // @route   POST /api/admin/site-config/upload-logo
 // @desc    Upload site logo
 // @access  Admin
-router.post('/site-config/upload-logo', protect, adminOnly, uploadBranding.single('logo'), async (req, res) => {
+router.post('/site-config/upload-logo', protect, adminOnly, handleMulterError(uploadBranding.single('logo')), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -1099,7 +1116,7 @@ router.post('/site-config/upload-logo', protect, adminOnly, uploadBranding.singl
 // @route   POST /api/admin/site-config/upload-favicon
 // @desc    Upload site favicon
 // @access  Admin
-router.post('/site-config/upload-favicon', protect, adminOnly, uploadBranding.single('favicon'), async (req, res) => {
+router.post('/site-config/upload-favicon', protect, adminOnly, handleMulterError(uploadBranding.single('favicon')), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -1129,7 +1146,7 @@ router.post('/site-config/upload-favicon', protect, adminOnly, uploadBranding.si
 // @route   POST /api/admin/site-config/upload-footer-logo
 // @desc    Upload footer logo
 // @access  Admin
-router.post('/site-config/upload-footer-logo', protect, adminOnly, uploadBranding.single('footerLogo'), async (req, res) => {
+router.post('/site-config/upload-footer-logo', protect, adminOnly, handleMulterError(uploadBranding.single('footerLogo')), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -1159,7 +1176,7 @@ router.post('/site-config/upload-footer-logo', protect, adminOnly, uploadBrandin
 // @route   POST /api/admin/site-config/upload-loading-icon
 // @desc    Upload site loading icon
 // @access  Admin
-router.post('/site-config/upload-loading-icon', protect, adminOnly, uploadBranding.single('loadingIcon'), async (req, res) => {
+router.post('/site-config/upload-loading-icon', protect, adminOnly, handleMulterError(uploadBranding.single('loadingIcon')), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -1189,7 +1206,7 @@ router.post('/site-config/upload-loading-icon', protect, adminOnly, uploadBrandi
 // @route   POST /api/admin/site-config/upload-email-logo
 // @desc    Upload email logo
 // @access  Admin
-router.post('/site-config/upload-email-logo', protect, adminOnly, uploadBranding.single('emailLogo'), async (req, res) => {
+router.post('/site-config/upload-email-logo', protect, adminOnly, handleMulterError(uploadBranding.single('emailLogo')), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -2573,7 +2590,7 @@ router.get('/agents', protect, agentOnly, async (req, res) => {
 // @route   POST /api/admin/agents
 // @desc    Create a new support agent
 // @access  Admin
-router.post('/agents', protect, adminOnly, uploadBranding.single('avatar'), [
+router.post('/agents', protect, adminOnly, handleMulterError(uploadBranding.single('avatar')), [
   body('username').trim().isLength({ min: 3 }),
   body('email').isEmail(),
   body('password').isLength({ min: 6 }),
@@ -2656,7 +2673,7 @@ router.post('/agents', protect, adminOnly, uploadBranding.single('avatar'), [
 // @route   PUT /api/admin/agents/:id
 // @desc    Update agent details
 // @access  Admin
-router.put('/agents/:id', protect, adminOnly, uploadBranding.single('avatar'), async (req, res) => {
+router.put('/agents/:id', protect, adminOnly, handleMulterError(uploadBranding.single('avatar')), async (req, res) => {
   try {
     const { username, email, password, firstName, lastName, isActive, isAgent, avatar, department, maxConcurrentChats, agentStatus } = req.body;
     
