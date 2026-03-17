@@ -222,7 +222,10 @@ const AdminAgents = () => {
   const getAvatarUrl = (avatar) => {
     if (!avatar) return null;
     if (avatar.startsWith('http')) return avatar;
-    if (avatar.startsWith('/')) return avatar;
+    if (avatar.startsWith('/')) {
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+      return `${baseUrl}${avatar}`;
+    }
     return `/default-avatar.svg`;
   };
 

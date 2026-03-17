@@ -27,6 +27,17 @@ const AgentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Helper to get full avatar URL
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return null;
+    if (avatarPath.startsWith('http')) return avatarPath;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    if (avatarPath.startsWith('/')) {
+      return `${baseUrl}${avatarPath}`;
+    }
+    return `${baseUrl}/uploads/${avatarPath}`;
+  };
+
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 15000);
@@ -224,9 +235,10 @@ const AgentDashboard = () => {
                     <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
                       {session.userId?.avatar ? (
                         <img 
-                          src={session.userId.avatar} 
+                          src={getAvatarUrl(session.userId.avatar)} 
                           alt="" 
                           className="w-full h-full rounded-full object-cover"
+                          onError={(e) => { e.target.style.display = 'none'; }}
                         />
                       ) : (
                         <User className="w-5 h-5 text-purple-600" />

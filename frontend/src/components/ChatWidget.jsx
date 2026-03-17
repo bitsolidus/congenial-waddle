@@ -42,6 +42,17 @@ const ChatWidget = () => {
   const lastMessageCountRef = useRef(0);
   const INACTIVITY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
   
+  // Helper to get full avatar URL
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return null;
+    if (avatarPath.startsWith('http')) return avatarPath;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    if (avatarPath.startsWith('/')) {
+      return `${baseUrl}${avatarPath}`;
+    }
+    return `${baseUrl}/uploads/${avatarPath}`;
+  };
+
   // Play notification sound
   const playNotificationSound = () => {
     try {
@@ -412,14 +423,14 @@ const ChatWidget = () => {
             <div className="bg-purple-600 text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
-                  {session?.agentId?.avatarUrl ? (
+                  {session?.agentId?.avatar ? (
                     <img 
-                      src={session.agentId.avatarUrl} 
+                      src={getAvatarUrl(session.agentId.avatar)} 
                       alt="Agent Avatar"
                       className="w-8 h-8 rounded-full object-cover"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = '/default-avatar.png';
+                        e.target.style.display = 'none';
                       }}
                     />
                   ) : session?.agentId ? (

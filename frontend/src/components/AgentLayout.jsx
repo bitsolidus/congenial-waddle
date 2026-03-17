@@ -28,6 +28,17 @@ const AgentLayout = () => {
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [statusDropdown, setStatusDropdown] = useState(false);
+
+  // Helper to get full avatar URL
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return null;
+    if (avatarPath.startsWith('http')) return avatarPath;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    if (avatarPath.startsWith('/')) {
+      return `${baseUrl}${avatarPath}`;
+    }
+    return `${baseUrl}/uploads/${avatarPath}`;
+  };
   const [stats, setStats] = useState({ waiting: 0, active: 0, totalHandled: 0 });
 
   // Fetch stats periodically
@@ -135,9 +146,10 @@ const AgentLayout = () => {
                 <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center overflow-hidden">
                   {user?.avatar ? (
                     <img 
-                      src={user.avatar} 
+                      src={getAvatarUrl(user.avatar)} 
                       alt={user.username} 
                       className="w-full h-full object-cover"
+                      onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   ) : (
                     <User className="w-5 h-5 text-purple-600" />
