@@ -127,7 +127,8 @@ const AdminSettings = () => {
       verified: { min: 10, max: 50000, dailyLimit: 200000 },
       premium: { min: 10, max: 250000, dailyLimit: 1000000 },
       vip: { min: 10, max: 1000000, dailyLimit: 5000000 }
-    }
+    },
+    networks: []
   });
 
   // Logo/Favicon Preview

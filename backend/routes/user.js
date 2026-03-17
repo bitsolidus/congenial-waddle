@@ -724,6 +724,7 @@ router.get('/tier-limits', protect, async (req, res) => {
         bronze: { min: 10, max: 10000, dailyLimit: 50000 },
         silver: { min: 10, max: 25000, dailyLimit: 100000 },
         gold: { min: 10, max: 50000, dailyLimit: 200000 },
+        platinum: { min: 10, max: 75000, dailyLimit: 350000 },
         vip: { min: 10, max: 100000, dailyLimit: 500000 }
       },
       // Withdrawal gas fee settings - users need to see this
