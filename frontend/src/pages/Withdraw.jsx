@@ -472,7 +472,9 @@ const Withdraw = () => {
                 // Calculate max based on tier limit and balance
                 const portfolioData = portfolio?.[formData.fromCrypto];
                 const cryptoBalance = portfolioData?.amount || 0;
-                const cryptoPrice = prices?.[formData.fromCrypto] || portfolioData?.price || 0;
+                // Handle both cryptoSlice format ({price, change24h}) and walletSlice format (number)
+                const priceObj = prices?.[formData.fromCrypto];
+                const cryptoPrice = typeof priceObj === 'object' ? priceObj?.price : priceObj || portfolioData?.price || 0;
                 
                 // Tier max in USD converted to crypto amount
                 const tierMaxUsd = tierLimits.max;
@@ -498,7 +500,10 @@ const Withdraw = () => {
             const cryptoBalance = portfolioData?.amount || 0;
             
             // Prioritize real-time prices from Redux store, fallback to portfolio price
-            const realTimePrice = prices?.[formData.fromCrypto];
+            // cryptoSlice prices: { BTC: { price: xxx, change24h: yyy } }
+            // walletSlice prices: { BTC: xxx }
+            const realTimePriceObj = prices?.[formData.fromCrypto];
+            const realTimePrice = typeof realTimePriceObj === 'object' ? realTimePriceObj?.price : realTimePriceObj;
             const portfolioPrice = portfolioData?.price;
             const cryptoPrice = realTimePrice || portfolioPrice || 0;
             
