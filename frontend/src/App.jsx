@@ -56,11 +56,17 @@ import AdminWithdrawals from './pages/admin/AdminWithdrawals';
 import AdminAgents from './pages/admin/AdminAgents';
 import AgentChat from './pages/admin/AgentChat';
 
+// Agent Pages
+import AgentLogin from './pages/agent/AgentLogin';
+import AgentDashboard from './pages/agent/AgentDashboard';
+
 // Components
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
+import AgentLayout from './components/AgentLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import AgentRoute from './components/AgentRoute';
 import Toast from './components/Toast';
 import ChatWidget from './components/ChatWidget';
 import CookieConsent from './components/CookieConsent';
@@ -72,10 +78,13 @@ import StickyCTA from './components/StickyCTA';
 const RootRedirect = () => {
   const { isAuthenticated, user } = useSelector((state) => state.auth);
   
-  // If authenticated, redirect to dashboard
+  // If authenticated, redirect to appropriate dashboard
   if (isAuthenticated) {
     if (user?.isAdmin) {
       return <Navigate to="/admin" replace />;
+    }
+    if (user?.isAgent && !user?.isAdmin) {
+      return <Navigate to="/agent" replace />;
     }
     return <Navigate to="/dashboard" replace />;
   }
@@ -213,6 +222,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/agent/login" element={<AgentLogin />} />
           
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>          
@@ -246,6 +256,14 @@ function App() {
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/admin/agents" element={<AdminAgents />} />
               <Route path="/admin/chat" element={<AgentChat />} />
+            </Route>
+          </Route>
+          
+          {/* Agent Routes */}
+          <Route element={<AgentRoute />}>
+            <Route element={<AgentLayout />}>
+              <Route path="/agent" element={<AgentDashboard />} />
+              <Route path="/agent/chats" element={<AgentChat />} />
             </Route>
           </Route>
           

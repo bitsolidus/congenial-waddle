@@ -560,6 +560,78 @@ router.post(
   }
 );
 
+// @route   POST /api/auth/agent-login
+// @desc    Agent login (for support agents)
+// @access  Public
+router.post(
+  '/agent-login',
+  [
+    body('email').isEmail().normalizeEmail(),
+    body('password').notEmpty(),
+    handleValidationErrors
+  ],
+  async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      // Check if user exists and is an agent
+      const user = await User.findOne({ email }).select('+password');
+
+      if (!user || !user.isAgent) {
+        return res.status(401).json({ message: 'Invalid agent credentials' });
+      }
+
+      if (!user.isActive) {
+        return res.status(401).json({ message: 'Agent account is deactivated' });
+      }
+
+      const isMatch = await user.comparePassword(password);
+
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid agent credentials' });
+      }
+
+      // Update agent status to online
+      user.agentStatus = 'online';
+      user.lastLogin = new Date();
+      await user.save();
+
+      const token = generateToken(user._id);
+
+      // Log activity
+      await ActivityLog.create({
+        userId: user._id,
+        action: 'agent_login',
+        details: 'Agent logged in successfully',
+        ipAddress: getClientIP(req),
+        userAgent: getUserAgent(req)
+      });
+
+      res.json({
+        success: true,
+        message: 'Agent login successful',
+        token,
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          avatar: user.avatar,
+          isAgent: true,
+          isAdmin: user.isAdmin,
+          department: user.department,
+          agentStatus: user.agentStatus,
+          maxConcurrentChats: user.maxConcurrentChats
+        }
+      });
+    } catch (error) {
+      console.error('Agent login error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
+
 // @route   GET /api/auth/verify-email
 // @desc    Verify user email with token
 // @access  Public

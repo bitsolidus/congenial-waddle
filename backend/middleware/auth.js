@@ -92,3 +92,31 @@ export const optionalProtect = async (req, res, next) => {
     next();
   }
 };
+
+// Agent only middleware - allows agents and admins
+export const agentOnly = async (req, res, next) => {
+  try {
+    if (req.user && (req.user.isAgent || req.user.isAdmin)) {
+      next();
+    } else {
+      return res.status(403).json({ message: 'Not authorized as agent' });
+    }
+  } catch (error) {
+    console.error('Agent middleware error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Strict agent only middleware - only agents (not admins)
+export const strictAgentOnly = async (req, res, next) => {
+  try {
+    if (req.user && req.user.isAgent && !req.user.isAdmin) {
+      next();
+    } else {
+      return res.status(403).json({ message: 'This route is for agents only' });
+    }
+  } catch (error) {
+    console.error('Strict agent middleware error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
