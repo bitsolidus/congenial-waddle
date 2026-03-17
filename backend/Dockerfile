@@ -14,5 +14,5 @@ COPY . .
 # Expose port
 EXPOSE 5000
 
-# Start the application
-CMD ["node", "server.js"]
+# Ensure uploads directory exists and start the application
+CMD sh -c "node scripts/ensure-uploads-dir.js && node server.js"

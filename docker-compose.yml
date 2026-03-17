@@ -12,11 +12,13 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=5000
+      - UPLOADS_DIR=/app/uploads
     env_file:
       - ./backend/.env
     volumes:
       # Persist uploads outside container - survives redeployment
-      - ./uploads:/app/backend/uploads
+      # The backend Dockerfile uses WORKDIR /app, so uploads go to /app/uploads
+      - ./backend/uploads:/app/uploads
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/api/health"]
       interval: 30s
