@@ -395,15 +395,22 @@ router.put('/session/:id/close', protect, async (req, res) => {
     }
     
     // Only user, assigned agent, or admin can close
-    if (session.userId.toString() !== req.user._id.toString() && 
-        session.agentId?.toString() !== req.user._id.toString() &&
-        !req.user.isAdmin) {
+    const isUser = session.userId && session.userId.toString() === req.user._id.toString();
+    const isAgent = session.agentId && session.agentId.toString() === req.user._id.toString();
+    const isAdmin = req.user.isAdmin || req.user.isAgent;
+    
+    if (!isUser && !isAgent && !isAdmin) {
       return res.status(403).json({ message: 'Not authorized' });
     }
     
     session.status = 'closed';
     session.closedAt = new Date();
     await session.save();
+    
+    // Decrement agent's active chat count if there was an agent
+    if (session.agentId) {
+      await User.findByIdAndUpdate(session.agentId, { $inc: { activeChatCount: -1 } });
+    }
     
     // Add system message
     await ChatMessage.create({
