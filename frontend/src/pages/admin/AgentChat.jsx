@@ -209,12 +209,16 @@ const AgentChat = () => {
   // Get agent avatar URL
   const getAgentAvatar = (agent) => {
     if (!agent) return null;
-    // Use avatarUrl virtual field if available, otherwise construct from avatar
+    // Use avatarUrl virtual field if available
     if (agent.avatarUrl) {
       return agent.avatarUrl;
     }
     if (agent.avatar) {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+      // Avatar might already be a full path like /uploads/filename
+      if (agent.avatar.startsWith('/')) {
+        return `${baseUrl}${agent.avatar}`;
+      }
       return `${baseUrl}/uploads/${agent.avatar}`;
     }
     return null;
@@ -317,19 +321,9 @@ const AgentChat = () => {
                   >
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {session.userId?.avatarUrl ? (
+                        {session.userId?.avatar ? (
                           <img 
-                            src={session.userId.avatarUrl} 
-                            alt={session.userId.username || 'User'}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = '/default-avatar.png';
-                            }}
-                          />
-                        ) : session.userId?.avatar ? (
-                          <img 
-                            src={`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/uploads/${session.userId.avatar}`}
+                            src={getAgentAvatar(session.userId)} 
                             alt={session.userId.username || 'User'}
                             className="w-full h-full object-cover"
                             onError={(e) => {
@@ -439,19 +433,9 @@ const AgentChat = () => {
                     <ArrowLeft className="w-5 h-5" />
                   </button>
                   <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {activeSession.userId?.avatarUrl ? (
+                    {activeSession.userId?.avatar ? (
                       <img 
-                        src={activeSession.userId.avatarUrl} 
-                        alt={activeSession.userId.username || 'User'}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/default-avatar.png';
-                        }}
-                      />
-                    ) : activeSession.userId?.avatar ? (
-                      <img 
-                        src={`${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/uploads/${activeSession.userId.avatar}`}
+                        src={getAgentAvatar(activeSession.userId)} 
                         alt={activeSession.userId.username || 'User'}
                         className="w-full h-full object-cover"
                         onError={(e) => {

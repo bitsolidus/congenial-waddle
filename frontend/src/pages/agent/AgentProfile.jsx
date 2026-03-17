@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
@@ -9,13 +9,15 @@ import {
   Save,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Camera
 } from 'lucide-react';
 import { fetchProfile } from '../../store/authSlice';
 
 const AgentProfile = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const fileInputRef = useRef(null);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -23,6 +25,7 @@ const AgentProfile = () => {
     phone: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
@@ -59,6 +62,57 @@ const AgentProfile = () => {
     }
   };
 
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await axios.post('/api/user/upload-avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      dispatch(fetchProfile());
+      setSuccess('Avatar uploaded successfully');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to upload avatar');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Helper to get full avatar URL
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return null;
+    if (avatarPath.startsWith('http')) return avatarPath;
+    return `${import.meta.env.VITE_API_URL}${avatarPath}`;
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'online': return 'bg-green-500';
@@ -78,13 +132,42 @@ const AgentProfile = () => {
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="h-32 bg-gradient-to-r from-purple-600 to-indigo-600 relative">
           <div className="absolute -bottom-12 left-6">
-            <div className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center overflow-hidden">
+            <div 
+              className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center overflow-hidden relative group cursor-pointer"
+              onClick={handleAvatarClick}
+            >
               {user?.avatar ? (
-                <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                <img 
+                  src={getAvatarUrl(user.avatar)} 
+                  alt={user.username} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '';
+                  }}
+                />
               ) : (
                 <User className="w-10 h-10 text-purple-600" />
               )}
+              
+              {/* Upload overlay */}
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {isUploading ? (
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-6 h-6 text-white" />
+                )}
+              </div>
             </div>
+            
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarChange}
+              className="hidden"
+            />
           </div>
         </div>
 
