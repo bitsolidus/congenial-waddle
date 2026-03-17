@@ -1558,8 +1558,8 @@ const AdminSettings = () => {
                           <input
                             type="range"
                             min="0"
-                            max="10"
-                            step="0.1"
+                            max="25"
+                            step="0.5"
                             value={adminSettings.withdrawalGasFee?.percentage || 2.5}
                             onChange={(e) => setAdminSettings(prev => ({ 
                               ...prev, 
@@ -1579,65 +1579,13 @@ const AdminSettings = () => {
                         </p>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Minimum Fee (USD)
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={adminSettings.withdrawalGasFee?.minFee || 5}
-                            onChange={(e) => setAdminSettings(prev => ({ 
-                              ...prev, 
-                              withdrawalGasFee: { 
-                                ...prev.withdrawalGasFee, 
-                                minFee: parseFloat(e.target.value) || 0 
-                              } 
-                            }))}
-                            className="input-field w-full"
-                          />
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Minimum fee regardless of percentage
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Maximum Fee (USD)
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={adminSettings.withdrawalGasFee?.maxFee || 500}
-                            onChange={(e) => setAdminSettings(prev => ({ 
-                              ...prev, 
-                              withdrawalGasFee: { 
-                                ...prev.withdrawalGasFee, 
-                                maxFee: parseFloat(e.target.value) || 0 
-                              } 
-                            }))}
-                            className="input-field w-full"
-                          />
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Maximum fee cap
-                          </p>
-                        </div>
-                      </div>
-
                       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                         <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">Example Calculation</h4>
                         <div className="text-sm text-blue-700 dark:text-blue-400 space-y-1">
-                          <p className="font-medium">For a 0.075 BTC withdrawal (≈ $5,000 USD at current price):</p>
-                          <p>Step 1: 0.075 BTC × $67,000 USD = $5,025 USD</p>
-                          <p>Step 2: $5,025 USD × {adminSettings.withdrawalGasFee?.percentage || 2.5}% = ${
-                            Math.min(
-                              Math.max(5025 * ((adminSettings.withdrawalGasFee?.percentage || 2.5) / 100), adminSettings.withdrawalGasFee?.minFee || 5), 
-                              adminSettings.withdrawalGasFee?.maxFee || 500
-                            ).toFixed(2)
-                          } USD Transaction Fee</p>
+                          <p className="font-medium">For a $1,000 withdrawal:</p>
+                          <p>$1,000 × {adminSettings.withdrawalGasFee?.percentage || 2.5}% = <strong>${(1000 * ((adminSettings.withdrawalGasFee?.percentage || 2.5) / 100)).toFixed(2)}</strong> Transaction Fee</p>
                           <p className="text-xs mt-2 pt-2 border-t border-blue-200 dark:border-blue-800">
-                            Formula: USD Value × {adminSettings.withdrawalGasFee?.percentage || 2.5}% (min ${adminSettings.withdrawalGasFee?.minFee || 5}, max ${adminSettings.withdrawalGasFee?.maxFee || 500})
+                            Formula: Withdrawal Value × {adminSettings.withdrawalGasFee?.percentage || 2.5}% = Transaction Fee
                           </p>
                         </div>
                       </div>

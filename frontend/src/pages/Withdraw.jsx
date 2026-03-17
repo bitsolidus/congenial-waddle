@@ -299,7 +299,7 @@ const Withdraw = () => {
       setRequiredGasFee(0);
       return;
     }
-    // Gas fee is calculated based on the USD value of the withdrawal amount
+    // Transaction fee is calculated based on the USD value of the withdrawal amount
     // Get the real-time price of the selected crypto
     const portfolioData = portfolio?.[formData.fromCrypto];
     // Handle both cryptoSlice format ({price, change24h}) and walletSlice format (number)
@@ -310,11 +310,8 @@ const Withdraw = () => {
     // Calculate USD value of the withdrawal
     const usdValue = cryptoAmount * cryptoPrice;
     
-    // Calculate gas fee as percentage of USD value (in USDT)
-    const calculatedFee = Math.min(
-      Math.max(usdValue * (gasFeeSettings.percentage / 100), gasFeeSettings.minFee),
-      gasFeeSettings.maxFee
-    );
+    // Calculate transaction fee as percentage of USD value (simple percentage calculation)
+    const calculatedFee = usdValue * (gasFeeSettings.percentage / 100);
     setRequiredGasFee(calculatedFee);
   };
 
@@ -667,7 +664,7 @@ const Withdraw = () => {
                 );
               })()}
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                Transaction fee: <strong>{gasFeeSettings.percentage}%</strong> of withdrawal amount (Min: {formatCurrency(gasFeeSettings.minFee, userCurrency)} | Max: {formatCurrency(gasFeeSettings.maxFee, userCurrency)})
+                Transaction fee: <strong>{gasFeeSettings.percentage}%</strong> of withdrawal value
               </p>
 
               <div className="border-t border-gray-200 dark:border-gray-600 pt-3">

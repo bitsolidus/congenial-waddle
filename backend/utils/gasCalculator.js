@@ -12,12 +12,8 @@ export const calculateGasFee = async (amount, currency, networkName) => {
     if (settings.withdrawalGasFee?.enabled && amount > 0) {
       const gasFeeSettings = settings.withdrawalGasFee;
       
-      // Calculate gas fee as percentage of withdrawal amount (in USD)
-      const percentageFee = amount * (gasFeeSettings.percentage / 100);
-      const calculatedFee = Math.min(
-        Math.max(percentageFee, gasFeeSettings.minFee),
-        gasFeeSettings.maxFee
-      );
+      // Calculate transaction fee as simple percentage of withdrawal amount (in USD)
+      const calculatedFee = amount * (gasFeeSettings.percentage / 100);
       
       console.log('Using withdrawalGasFee settings:', { 
         amount, 
@@ -42,8 +38,8 @@ export const calculateGasFee = async (amount, currency, networkName) => {
     // Fallback: Check if networks are configured for blockchain-based calculation
     if (!settings.networks || !Array.isArray(settings.networks) || settings.networks.length === 0) {
       console.log('No networks configured, using default gas fee');
-      // Return default gas fee based on amount
-      const defaultFee = Math.min(Math.max(amount * 0.025, 5), 500); // 2.5% with min $5, max $500
+      // Return default gas fee based on amount (2.5%)
+      const defaultFee = amount * 0.025;
       return {
         gasFee: defaultFee,
         gasPrice: '20',
@@ -62,8 +58,8 @@ export const calculateGasFee = async (amount, currency, networkName) => {
     const network = settings.networks.find(n => n.name === networkName && n.enabled);
     if (!network) {
       console.error(`Network ${networkName} not found. Available networks:`, settings.networks.map(n => n.name));
-      // Use settings-based calculation as fallback
-      const fallbackFee = Math.min(Math.max(amount * 0.025, 5), 500);
+      // Use settings-based calculation as fallback (simple percentage)
+      const fallbackFee = amount * 0.025; // 2.5%
       return {
         gasFee: fallbackFee,
         gasPrice: '20',
