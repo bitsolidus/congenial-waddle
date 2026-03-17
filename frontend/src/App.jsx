@@ -59,6 +59,8 @@ import AgentChat from './pages/admin/AgentChat';
 // Agent Pages
 import AgentLogin from './pages/agent/AgentLogin';
 import AgentDashboard from './pages/agent/AgentDashboard';
+import AgentHistory from './pages/agent/AgentHistory';
+import AgentProfile from './pages/agent/AgentProfile';
 
 // Components
 import Layout from './components/Layout';
@@ -264,6 +266,8 @@ function App() {
             <Route element={<AgentLayout />}>
               <Route path="/agent" element={<AgentDashboard />} />
               <Route path="/agent/chats" element={<AgentChat />} />
+              <Route path="/agent/history" element={<AgentHistory />} />
+              <Route path="/agent/profile" element={<AgentProfile />} />
             </Route>
           </Route>
           
