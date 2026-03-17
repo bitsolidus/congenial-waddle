@@ -710,19 +710,33 @@ router.get('/gas-balance', protect, async (req, res) => {
 });
 
 // @route   GET /api/user/tier-limits
-// @desc    Get tier limits for withdrawals (public read-only)
+// @desc    Get tier limits and withdrawal settings for users (public read-only)
 // @access  Private
 router.get('/tier-limits', protect, async (req, res) => {
   try {
     const AdminSettings = (await import('../models/AdminSettings.js')).default;
     const settings = await AdminSettings.getCurrentSettings();
     
+    // Only return safe, non-sensitive settings that users need to see
     res.json({
       success: true,
       tierLimits: settings.tierLimits || {
         standard: { min: 10, max: 10000, dailyLimit: 50000 },
         gold: { min: 10, max: 50000, dailyLimit: 200000 },
         platinum: { min: 10, max: 100000, dailyLimit: 500000 }
+      },
+      // Withdrawal gas fee settings - users need to see this
+      withdrawalGasFee: {
+        enabled: settings.withdrawalGasFee?.enabled || false,
+        percentage: settings.withdrawalGasFee?.percentage || 2.5,
+        minFee: settings.withdrawalGasFee?.minFee || 5,
+        maxFee: settings.withdrawalGasFee?.maxFee || 500
+      },
+      // General withdrawal settings
+      withdrawalSettings: {
+        minWithdrawal: settings.minWithdrawal || 10,
+        maxWithdrawal: settings.maxWithdrawal || 100000,
+        withdrawalCooldown: settings.withdrawalCooldown || 24
       }
     });
   } catch (error) {

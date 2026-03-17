@@ -234,6 +234,11 @@ const Withdraw = () => {
       
       setTierLimits(limits);
       setDailyWithdrawn(dailyRes.data.total || 0);
+      
+      // Also update gas fee settings from admin settings
+      if (tierRes.data.withdrawalGasFee) {
+        setGasFeeSettings(tierRes.data.withdrawalGasFee);
+      }
     } catch (err) {
       console.error('Failed to fetch tier limits:', err);
     }
