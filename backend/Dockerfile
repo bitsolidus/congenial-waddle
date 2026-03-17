@@ -15,8 +15,12 @@ COPY . .
 # This ensures the directory exists even if volume mount fails
 RUN mkdir -p /app/uploads/kyc && chmod -R 777 /app/uploads
 
+# Copy startup script
+COPY start-backend.sh /app/start-backend.sh
+RUN chmod +x /app/start-backend.sh
+
 # Expose port
 EXPOSE 5000
 
-# Ensure uploads directory exists and start the application
-CMD sh -c "node scripts/ensure-uploads-dir.js && node server.js"
+# Use the startup script to ensure directory exists before starting
+CMD ["/app/start-backend.sh"]
