@@ -239,13 +239,20 @@ const Withdraw = () => {
         axios.get('/api/user/daily-withdrawals')
       ]);
       
+      console.log('Tier limits response:', tierRes.data);
+      console.log('User tier:', user?.tier);
+      
       const userTier = user?.tier || 'bronze';
+      console.log('Using tier:', userTier);
+      console.log('Available tiers:', Object.keys(tierRes.data.tierLimits || {}));
+      
       const limits = tierRes.data.tierLimits?.[userTier] || {
         min: 10,
         max: 10000,
         dailyLimit: 50000
       };
       
+      console.log('Setting tier limits:', limits);
       setTierLimits(limits);
       setDailyWithdrawn(dailyRes.data.total || 0);
       
@@ -485,6 +492,14 @@ const Withdraw = () => {
             const cryptoPrice = prices?.[formData.fromCrypto] || portfolioData?.price || 0;
             const enteredAmount = parseFloat(formData.amount) || 0;
             const usdValue = enteredAmount * cryptoPrice;
+            
+            console.log('Price debug:', { 
+              fromCrypto: formData.fromCrypto, 
+              prices, 
+              portfolioPrice: portfolioData?.price, 
+              cryptoPrice,
+              tierLimits
+            });
             
             return (
               <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
