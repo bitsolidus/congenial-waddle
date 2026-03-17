@@ -34,6 +34,28 @@ const Withdraw = () => {
   // Use crypto prices (real-time from CoinGecko) as priority, fallback to wallet prices
   const prices = cryptoPrices || walletPrices;
   
+  // Get user's preferred currency
+  const userCurrency = user?.settings?.currency || 'USD';
+  
+  // Currency symbol helper
+  const getCurrencySymbol = (currency) => {
+    const symbols = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'JPY': '¥',
+      'CNY': '¥',
+      'AUD': 'A$',
+      'CAD': 'C$',
+      'CHF': 'CHF',
+      'SEK': 'kr',
+      'NZD': 'NZ$'
+    };
+    return symbols[currency] || currency + ' ';
+  };
+  
+  const currencySymbol = getCurrencySymbol(userCurrency);
+  
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -350,18 +372,18 @@ const Withdraw = () => {
       
       // Check minimum withdrawal
       if (usdValue < tierLimits.min) {
-        throw new Error(`Minimum withdrawal is $${tierLimits.min} USD. Your withdrawal is worth $${usdValue.toFixed(2)} USD.`);
+        throw new Error(`Minimum withdrawal is ${currencySymbol}${tierLimits.min} ${userCurrency}. Your withdrawal is worth ${currencySymbol}${usdValue.toFixed(2)} ${userCurrency}.`);
       }
       
       // Check maximum per transaction
       if (usdValue > tierLimits.max) {
-        throw new Error(`Maximum withdrawal per transaction is $${tierLimits.max.toLocaleString()} USD for your ${user?.tier || 'bronze'} tier. Upgrade your tier for higher limits.`);
+        throw new Error(`Maximum withdrawal per transaction is ${currencySymbol}${tierLimits.max.toLocaleString()} ${userCurrency} for your ${user?.tier || 'bronze'} tier. Upgrade your tier for higher limits.`);
       }
       
       // Check daily limit
       const remainingDaily = tierLimits.dailyLimit - dailyWithdrawn;
       if (usdValue > remainingDaily) {
-        throw new Error(`Daily withdrawal limit exceeded. You have $${remainingDaily.toLocaleString()} USD remaining today. Your tier (${user?.tier || 'bronze'}) allows $${tierLimits.dailyLimit.toLocaleString()} USD per day.`);
+        throw new Error(`Daily withdrawal limit exceeded. You have ${currencySymbol}${remainingDaily.toLocaleString()} ${userCurrency} remaining today. Your tier (${user?.tier || 'bronze'}) allows ${currencySymbol}${tierLimits.dailyLimit.toLocaleString()} ${userCurrency} per day.`);
       }
       
       const response = await axios.post('/api/withdrawal/request', formData);
@@ -438,7 +460,7 @@ const Withdraw = () => {
                       </p>
                       {hasBalance && cryptoPrice > 0 && (
                         <p className="text-xs text-gray-500 dark:text-gray-400">
-                          ≈ {formatCurrency(usdValue)} USD
+                          ≈ {formatCurrency(usdValue, userCurrency)}
                         </p>
                       )}
                     </div>
@@ -530,14 +552,14 @@ const Withdraw = () => {
                 <p>
                   Available: <span className="font-medium text-gray-700 dark:text-gray-300">{cryptoBalance.toFixed(6)} {formData.fromCrypto}</span>
                   <span className="mx-2">|</span>
-                  <span className="text-xs">MAX uses your tier limit (${tierLimits.max.toLocaleString()} USD)</span>
+                  <span className="text-xs">MAX uses your tier limit ({currencySymbol}{tierLimits.max.toLocaleString()} {userCurrency})</span>
                 </p>
                 {cryptoPrice > 0 && (
                   <p className="text-xs mt-1">
-                    Current Price: <span className="font-medium">{formatCurrency(cryptoPrice)} USD/{formData.fromCrypto}</span>
+                    Current Price: <span className="font-medium">{formatCurrency(cryptoPrice, userCurrency)}/{formData.fromCrypto}</span>
                     {enteredAmount > 0 && (
                       <span className="ml-2">
-                        | You will receive: <span className="font-medium text-primary-600">{formatCurrency(usdValue)} USD</span>
+                        | You will receive: <span className="font-medium text-primary-600">{formatCurrency(usdValue, userCurrency)}</span>
                       </span>
                     )}
                   </p>
@@ -566,27 +588,27 @@ const Withdraw = () => {
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Min</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">${tierLimits.min}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{currencySymbol}{tierLimits.min}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Max/Tx</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">${tierLimits.max.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{currencySymbol}{tierLimits.max.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Daily</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">${tierLimits.dailyLimit.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{currencySymbol}{tierLimits.dailyLimit.toLocaleString()}</p>
               </div>
             </div>
             {dailyWithdrawn > 0 && (
               <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500 dark:text-gray-400">Withdrawn today:</span>
-                  <span className="font-medium text-gray-900 dark:text-white">${dailyWithdrawn.toLocaleString()}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{currencySymbol}{dailyWithdrawn.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-xs mt-1">
                   <span className="text-gray-500 dark:text-gray-400">Remaining today:</span>
                   <span className="font-medium text-green-600 dark:text-green-400">
-                    ${Math.max(0, tierLimits.dailyLimit - dailyWithdrawn).toLocaleString()}
+                    {currencySymbol}{Math.max(0, tierLimits.dailyLimit - dailyWithdrawn).toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -624,12 +646,12 @@ const Withdraw = () => {
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                       <span className="font-medium text-gray-900 dark:text-white">{cryptoAmount.toFixed(6)} {formData.fromCrypto}</span>
                       <span className="mx-1">×</span>
-                      <span className="font-medium text-gray-600">{formatCurrency(cryptoPrice)} USD</span>
+                      <span className="font-medium text-gray-600">{formatCurrency(cryptoPrice, userCurrency)}</span>
                       <span className="mx-1">=</span>
-                      <span className="font-medium text-primary-600">{formatCurrency(usdValue)} USD</span>
+                      <span className="font-medium text-primary-600">{formatCurrency(usdValue, userCurrency)}</span>
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      <span className="font-medium text-primary-600">{formatCurrency(usdValue)} USD</span>
+                      <span className="font-medium text-primary-600">{formatCurrency(usdValue, userCurrency)}</span>
                       <span className="mx-1">×</span>
                       <span className="font-medium text-primary-600">{gasFeeSettings.percentage}%</span>
                       <span className="mx-1">=</span>
@@ -638,19 +660,19 @@ const Withdraw = () => {
                           ? 'text-red-600 dark:text-red-400' 
                           : 'text-primary-600 dark:text-primary-400'
                       }`}>
-                        {formatCurrency(requiredGasFee)} USDT Gas Fee
+                        {formatCurrency(requiredGasFee, userCurrency)} Gas Fee
                       </span>
                     </div>
                   </>
                 );
               })()}
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                Gas fee is calculated from the USD value of your withdrawal and deducted from your USDT balance.
+                Gas fee is calculated from the {userCurrency} value of your withdrawal and deducted from your balance.
               </p>
               
               {/* Min/Max info */}
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                (Min: {formatCurrency(gasFeeSettings.minFee)} | Max: {formatCurrency(gasFeeSettings.maxFee)})
+                (Min: {formatCurrency(gasFeeSettings.minFee, userCurrency)} | Max: {formatCurrency(gasFeeSettings.maxFee, userCurrency)})
               </p>
 
               <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
@@ -661,7 +683,7 @@ const Withdraw = () => {
                       ? 'text-red-600 dark:text-red-400' 
                       : 'text-green-600 dark:text-green-400'
                   }`}>
-                    {formatCurrency(gasBalance)}
+                    {formatCurrency(gasBalance, userCurrency)}
                   </span>
                 </div>
               </div>
@@ -670,7 +692,7 @@ const Withdraw = () => {
                 <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-800">
                   <p className="text-sm text-red-600 dark:text-red-400 mb-2">
                     <span className="font-bold">Insufficient gas balance!</span><br />
-                    You need {formatCurrency(requiredGasFee - gasBalance)} more to process this withdrawal.
+                    You need {formatCurrency(requiredGasFee - gasBalance, userCurrency)} more to process this withdrawal.
                   </p>
                   <button 
                     type="button"
@@ -687,7 +709,7 @@ const Withdraw = () => {
                 <div className="mt-3 pt-3 border-t border-green-200 dark:border-green-800">
                   <p className="text-sm text-green-600 dark:text-green-400">
                     <span className="font-bold">✓ Sufficient gas balance</span><br />
-                    {formatCurrency(requiredGasFee)} will be deducted from your gas balance.
+                    {formatCurrency(requiredGasFee, userCurrency)} will be deducted from your gas balance.
                   </p>
                 </div>
               )}
@@ -1049,7 +1071,7 @@ const Withdraw = () => {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Amount</span>
-              <span className="text-gray-900 dark:text-white">{formatCurrency(withdrawalResult.amount)}</span>
+              <span className="text-gray-900 dark:text-white">{formatCurrency(withdrawalResult.amount, userCurrency)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Status</span>
@@ -1058,7 +1080,7 @@ const Withdraw = () => {
             {withdrawalResult.blockedAmount > 0 && (
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Blocked (75% limit)</span>
-                <span className="text-red-600 dark:text-red-400">{formatCurrency(withdrawalResult.blockedAmount)}</span>
+                <span className="text-red-600 dark:text-red-400">{formatCurrency(withdrawalResult.blockedAmount, userCurrency)}</span>
               </div>
             )}
           </div>
@@ -1104,25 +1126,25 @@ const Withdraw = () => {
             
             <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4 text-left">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Gas Fee Calculation (deducted in USDT):
+                Gas Fee Calculation:
               </p>
               <p className="text-lg font-medium text-gray-900 dark:text-white mb-3">
-                {formatCurrency(parseFloat(formData.amount) || 0)} {formData.fromCrypto} × {gasFeeSettings.percentage}% = {formatCurrency(requiredGasFee)} USDT
+                {formatCurrency(parseFloat(formData.amount) || 0, userCurrency)} {formData.fromCrypto} × {gasFeeSettings.percentage}% = {formatCurrency(requiredGasFee, userCurrency)}
               </p>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600 dark:text-gray-400">Required Gas Fee:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(requiredGasFee)} USDT</span>
+                <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(requiredGasFee, userCurrency)}</span>
               </div>
               <div className="flex justify-between mb-2">
-                <span className="text-gray-600 dark:text-gray-400">Your USDT Gas Balance:</span>
+                <span className="text-gray-600 dark:text-gray-400">Your Gas Balance:</span>
                 <span className={`font-bold ${gasBalance < requiredGasFee ? 'text-red-500' : 'text-green-500'}`}>
-                  {formatCurrency(gasBalance)} USDT
+                  {formatCurrency(gasBalance, userCurrency)}
                 </span>
               </div>
               <div className="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Amount Needed:</span>
-                  <span className="font-bold text-red-500">{formatCurrency(deficit)} USDT</span>
+                  <span className="font-bold text-red-500">{formatCurrency(deficit, userCurrency)}</span>
                 </div>
               </div>
             </div>
