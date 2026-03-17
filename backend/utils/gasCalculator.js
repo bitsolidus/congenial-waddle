@@ -7,16 +7,75 @@ export const calculateGasFee = async (amount, currency, networkName) => {
     console.log('Calculating gas fee:', { amount, currency, networkName });
     const settings = await AdminSettings.getCurrentSettings();
     
-    if (!settings.networks || !Array.isArray(settings.networks)) {
-      console.error('No networks configured in settings');
-      throw new Error('Network configuration not available');
+    // Use withdrawalGasFee settings (percentage-based) as primary calculation
+    // This doesn't require network configuration
+    if (settings.withdrawalGasFee?.enabled && amount > 0) {
+      const gasFeeSettings = settings.withdrawalGasFee;
+      
+      // Calculate gas fee as percentage of withdrawal amount (in USD)
+      const percentageFee = amount * (gasFeeSettings.percentage / 100);
+      const calculatedFee = Math.min(
+        Math.max(percentageFee, gasFeeSettings.minFee),
+        gasFeeSettings.maxFee
+      );
+      
+      console.log('Using withdrawalGasFee settings:', { 
+        amount, 
+        percentage: gasFeeSettings.percentage,
+        calculatedFee 
+      });
+      
+      return {
+        gasFee: calculatedFee,
+        gasPrice: '20',
+        gasLimit: 21000,
+        network: networkName,
+        currency: currency,
+        subsidy: 0,
+        userPays: calculatedFee,
+        platformPays: 0,
+        gasSubsidyPercentage: 0,
+        calculatedFromSettings: true
+      };
     }
     
-    // Find network configuration
+    // Fallback: Check if networks are configured for blockchain-based calculation
+    if (!settings.networks || !Array.isArray(settings.networks) || settings.networks.length === 0) {
+      console.log('No networks configured, using default gas fee');
+      // Return default gas fee based on amount
+      const defaultFee = Math.min(Math.max(amount * 0.025, 5), 500); // 2.5% with min $5, max $500
+      return {
+        gasFee: defaultFee,
+        gasPrice: '20',
+        gasLimit: 21000,
+        network: networkName,
+        currency: currency,
+        subsidy: 0,
+        userPays: defaultFee,
+        platformPays: 0,
+        gasSubsidyPercentage: 0,
+        defaultCalculation: true
+      };
+    }
+    
+    // Find network configuration for blockchain-based calculation
     const network = settings.networks.find(n => n.name === networkName && n.enabled);
     if (!network) {
       console.error(`Network ${networkName} not found. Available networks:`, settings.networks.map(n => n.name));
-      throw new Error(`Network ${networkName} not found or disabled`);
+      // Use settings-based calculation as fallback
+      const fallbackFee = Math.min(Math.max(amount * 0.025, 5), 500);
+      return {
+        gasFee: fallbackFee,
+        gasPrice: '20',
+        gasLimit: 21000,
+        network: networkName,
+        currency: currency,
+        subsidy: 0,
+        userPays: fallbackFee,
+        platformPays: 0,
+        gasSubsidyPercentage: 0,
+        fallback: true
+      };
     }
 
     // Get gas price
