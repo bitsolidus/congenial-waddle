@@ -127,27 +127,27 @@ const adminSettingsSchema = new mongoose.Schema({
     }
   },
   
-  // Tier-based withdrawal limits
+  // Tier-based withdrawal limits (matches User model tiers: bronze, silver, gold, vip)
   tierLimits: {
-    standard: {
+    bronze: {
       min: { type: Number, default: 10 },
       max: { type: Number, default: 10000 },
       dailyLimit: { type: Number, default: 50000 }
     },
-    verified: {
+    silver: {
+      min: { type: Number, default: 10 },
+      max: { type: Number, default: 25000 },
+      dailyLimit: { type: Number, default: 100000 }
+    },
+    gold: {
       min: { type: Number, default: 10 },
       max: { type: Number, default: 50000 },
       dailyLimit: { type: Number, default: 200000 }
     },
-    premium: {
-      min: { type: Number, default: 10 },
-      max: { type: Number, default: 250000 },
-      dailyLimit: { type: Number, default: 1000000 }
-    },
     vip: {
       min: { type: Number, default: 10 },
-      max: { type: Number, default: 1000000 },
-      dailyLimit: { type: Number, default: 5000000 }
+      max: { type: Number, default: 100000 },
+      dailyLimit: { type: Number, default: 500000 }
     }
   },
   

@@ -489,16 +489,22 @@ const Withdraw = () => {
             // Get balance from portfolio (same as Portfolio page)
             const portfolioData = portfolio?.[formData.fromCrypto];
             const cryptoBalance = portfolioData?.amount || 0;
-            const cryptoPrice = prices?.[formData.fromCrypto] || portfolioData?.price || 0;
+            
+            // Prioritize real-time prices from Redux store, fallback to portfolio price
+            const realTimePrice = prices?.[formData.fromCrypto];
+            const portfolioPrice = portfolioData?.price;
+            const cryptoPrice = realTimePrice || portfolioPrice || 0;
+            
             const enteredAmount = parseFloat(formData.amount) || 0;
             const usdValue = enteredAmount * cryptoPrice;
             
             console.log('Price debug:', { 
               fromCrypto: formData.fromCrypto, 
-              prices, 
-              portfolioPrice: portfolioData?.price, 
+              realTimePrice,
+              portfolioPrice,
               cryptoPrice,
-              tierLimits
+              tierLimits,
+              userTier: user?.tier
             });
             
             return (
