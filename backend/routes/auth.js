@@ -812,10 +812,14 @@ router.post('/forgot-password', async (req, res) => {
 
     // Send password reset email
     const resetLink = `${process.env.FRONTEND_URL || 'https://bitsolidus.io'}/reset-password?token=${resetToken}`;
+    console.log('Sending password reset email to:', email);
+    console.log('Reset link:', resetLink);
     try {
       await sendPasswordResetEmail(email, user.username, resetLink);
+      console.log('Password reset email sent successfully to:', email);
     } catch (emailError) {
       console.error('Failed to send password reset email:', emailError);
+      console.error('Error details:', emailError.message);
       return res.status(500).json({ message: 'Failed to send password reset email' });
     }
 
