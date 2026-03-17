@@ -1,7 +1,7 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import crypto from 'crypto';
-import { protect, adminOnly } from '../middleware/auth.js';
+import { protect, adminOnly, agentOnly } from '../middleware/auth.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
 import Notification from '../models/Notification.js';
@@ -2553,8 +2553,8 @@ router.get('/deposit-confirmations/stats', protect, adminOnly, async (req, res) 
 
 // @route   GET /api/admin/agents
 // @desc    Get all support agents
-// @access  Admin
-router.get('/agents', protect, adminOnly, async (req, res) => {
+// @access  Admin/Agent
+router.get('/agents', protect, agentOnly, async (req, res) => {
   try {
     const agents = await User.find({ isAgent: true })
       .select('-password -twoFactorSecret')

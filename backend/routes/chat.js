@@ -260,9 +260,12 @@ router.get('/messages/:sessionId', optionalProtect, async (req, res) => {
     
     if (req.user) {
       // Authenticated user
-      if (session.userId?.toString() === req.user._id.toString() ||
-          session.agentId?.toString() === req.user._id.toString() ||
-          req.user.isAdmin) {
+      const isSessionUser = session.userId && session.userId.toString() === req.user._id.toString();
+      const isSessionAgent = session.agentId && session.agentId.toString() === req.user._id.toString();
+      const isAdmin = req.user.isAdmin;
+      const isAgentRole = req.user.isAgent;
+      
+      if (isSessionUser || isSessionAgent || isAdmin || isAgentRole) {
         isAuthorized = true;
       }
     } else if (session.guestInfo?.isGuest && session.guestInfo?.email === guestEmail) {
