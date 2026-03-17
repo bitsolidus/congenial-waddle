@@ -598,15 +598,6 @@ router.post(
 
       const token = generateToken(user._id);
 
-      // Log activity
-      await ActivityLog.create({
-        userId: user._id,
-        action: 'agent_login',
-        details: 'Agent logged in successfully',
-        ipAddress: getClientIP(req),
-        userAgent: getUserAgent(req)
-      });
-
       res.json({
         success: true,
         message: 'Agent login successful',
