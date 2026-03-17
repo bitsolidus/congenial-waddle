@@ -621,11 +621,11 @@ const Withdraw = () => {
           </p>
         </div>
 
-        {/* Gas Fee - Calculated from Withdrawal Amount */}
+        {/* Transaction Fee - Calculated from Withdrawal Amount */}
         {gasFeeSettings.enabled && formData.amount && (
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Gas Fee Calculation
+              Transaction Fee Calculation
             </label>
             <div className={`border p-4 rounded-lg ${
               gasBalance < requiredGasFee 
@@ -660,14 +660,14 @@ const Withdraw = () => {
                           ? 'text-red-600 dark:text-red-400' 
                           : 'text-primary-600 dark:text-primary-400'
                       }`}>
-                        {formatCurrency(requiredGasFee, userCurrency)} Gas Fee
+                        {formatCurrency(requiredGasFee, userCurrency)} Transaction Fee
                       </span>
                     </div>
                   </>
                 );
               })()}
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                Gas fee is calculated from the {userCurrency} value of your withdrawal and deducted from your balance.
+                Transaction fee is calculated from the {userCurrency} value of your withdrawal and deducted from your USDT balance.
               </p>
               
               {/* Min/Max info */}
@@ -677,7 +677,7 @@ const Withdraw = () => {
 
               <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Your Gas Balance:</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Your USDT Balance:</span>
                   <span className={`font-medium ${
                     gasBalance < requiredGasFee 
                       ? 'text-red-600 dark:text-red-400' 
@@ -691,16 +691,16 @@ const Withdraw = () => {
               {gasBalance < requiredGasFee && (
                 <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-800">
                   <p className="text-sm text-red-600 dark:text-red-400 mb-2">
-                    <span className="font-bold">Insufficient gas balance!</span><br />
-                    You need {formatCurrency(requiredGasFee - gasBalance, userCurrency)} more to process this withdrawal.
+                    <span className="font-bold">Insufficient USDT balance!</span><br />
+                    You need {formatCurrency(requiredGasFee - gasBalance, userCurrency)} more USDT to process this withdrawal.
                   </p>
                   <button 
                     type="button"
-                    onClick={() => navigate('/buy-gas')}
+                    onClick={() => navigate('/deposit')}
                     className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   >
                     <Fuel className="w-4 h-4" />
-                    Buy Gas Now
+                    Deposit USDT
                   </button>
                 </div>
               )}
@@ -708,8 +708,8 @@ const Withdraw = () => {
               {gasBalance >= requiredGasFee && (
                 <div className="mt-3 pt-3 border-t border-green-200 dark:border-green-800">
                   <p className="text-sm text-green-600 dark:text-green-400">
-                    <span className="font-bold">✓ Sufficient gas balance</span><br />
-                    {formatCurrency(requiredGasFee, userCurrency)} will be deducted from your gas balance.
+                    <span className="font-bold">✓ Sufficient USDT balance</span><br />
+                    {formatCurrency(requiredGasFee, userCurrency)} will be deducted from your USDT balance.
                   </p>
                 </div>
               )}
@@ -1100,7 +1100,7 @@ const Withdraw = () => {
     </motion.div>
   );
 
-  // Insufficient Gas Modal
+  // Insufficient USDT Modal
   const renderGasModal = () => {
     if (!showGasModal) return null;
     
@@ -1118,32 +1118,32 @@ const Withdraw = () => {
               <Fuel className="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              Insufficient Gas Balance
+              Insufficient USDT Balance
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              You need additional gas to complete this withdrawal
+              You need additional USDT to complete this withdrawal
             </p>
             
             <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg mb-4 text-left">
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                Gas Fee Calculation:
+                Transaction Fee Calculation:
               </p>
               <p className="text-lg font-medium text-gray-900 dark:text-white mb-3">
                 {formatCurrency(parseFloat(formData.amount) || 0, userCurrency)} {formData.fromCrypto} × {gasFeeSettings.percentage}% = {formatCurrency(requiredGasFee, userCurrency)}
               </p>
               <div className="flex justify-between mb-2">
-                <span className="text-gray-600 dark:text-gray-400">Required Gas Fee:</span>
+                <span className="text-gray-600 dark:text-gray-400">Required Transaction Fee:</span>
                 <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(requiredGasFee, userCurrency)}</span>
               </div>
               <div className="flex justify-between mb-2">
-                <span className="text-gray-600 dark:text-gray-400">Your Gas Balance:</span>
+                <span className="text-gray-600 dark:text-gray-400">Your USDT Balance:</span>
                 <span className={`font-bold ${gasBalance < requiredGasFee ? 'text-red-500' : 'text-green-500'}`}>
                   {formatCurrency(gasBalance, userCurrency)}
                 </span>
               </div>
               <div className="border-t border-gray-300 dark:border-gray-600 pt-2 mt-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Amount Needed:</span>
+                  <span className="text-gray-600 dark:text-gray-400">USDT Needed:</span>
                   <span className="font-bold text-red-500">{formatCurrency(deficit, userCurrency)}</span>
                 </div>
               </div>
@@ -1159,12 +1159,12 @@ const Withdraw = () => {
               <button 
                 onClick={() => {
                   setShowGasModal(false);
-                  navigate('/buy-gas');
+                  navigate('/deposit');
                 }}
                 className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
                 <Wallet className="w-4 h-4" />
-                Buy Gas
+                Deposit USDT
               </button>
             </div>
           </div>
