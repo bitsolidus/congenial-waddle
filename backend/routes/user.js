@@ -1,5 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import multer from 'multer';
 import { protect } from '../middleware/auth.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
@@ -187,13 +188,34 @@ router.put(
 // @route   POST /api/user/upload-avatar
 // @desc    Upload user avatar
 // @access  Private
-router.post('/upload-avatar', protect, uploadBranding.single('avatar'), async (req, res) => {
+router.post('/upload-avatar', protect, (req, res, next) => {
+  uploadBranding.single('avatar')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      // A Multer error occurred when uploading
+      console.error('Multer error:', err);
+      return res.status(400).json({ message: `Upload error: ${err.message}` });
+    } else if (err) {
+      // An unknown error occurred when uploading
+      console.error('Unknown upload error:', err);
+      return res.status(500).json({ message: `Upload failed: ${err.message}` });
+    }
+    // No error, proceed to the next middleware
+    next();
+  });
+}, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
     const avatarUrl = `/uploads/${req.file.filename}`;
+    
+    console.log('Avatar uploaded:', {
+      filename: req.file.filename,
+      path: req.file.path,
+      avatarUrl: avatarUrl,
+      uploadsDir: process.env.UPLOADS_DIR || 'default'
+    });
     
     const user = await User.findByIdAndUpdate(
       req.user._id,
@@ -214,7 +236,7 @@ router.post('/upload-avatar', protect, uploadBranding.single('avatar'), async (r
     });
   } catch (error) {
     console.error('Upload avatar error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: error.message || 'Server error' });
   }
 });
 
