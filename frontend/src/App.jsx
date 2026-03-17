@@ -34,7 +34,7 @@ import KYC from './pages/KYC';
 import Portfolio from './pages/Portfolio';
 import Transactions from './pages/Transactions';
 import TransactionDetail from './pages/TransactionDetail';
-import BuyGas from './pages/BuyGas';
+import USDTBalance from './pages/BuyGas';
 import TierUpgrade from './pages/TierUpgrade';
 import Notifications from './pages/Notifications';
 import Privacy from './pages/Privacy';
@@ -235,7 +235,7 @@ function App() {
               <Route path="/deposit" element={<Deposit />} />
               <Route path="/withdraw" element={<Withdraw />} />
               <Route path="/receive" element={<Receive />} />
-              <Route path="/buy-gas" element={<BuyGas />} />
+              <Route path="/usdt-balance" element={<USDTBalance />} />
               <Route path="/tier-upgrade" element={<TierUpgrade />} />
               <Route path="/transactions" element={<Transactions />} />
               <Route path="/transactions/:id" element={<TransactionDetail />} />

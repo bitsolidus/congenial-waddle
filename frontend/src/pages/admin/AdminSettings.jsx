@@ -1116,9 +1116,9 @@ const AdminSettings = () => {
                   <span className="text-gray-700 dark:text-gray-300">Require KYC for Trading</span>
                 </label>
 
-                {/* Gas Fee Settings */}
+                {/* Transaction Fee Settings */}
                 <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Gas Fee Settings</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Transaction Fee Settings</h3>
                   
                   <label className="flex items-center gap-3 mb-4">
                     <input
@@ -1127,7 +1127,7 @@ const AdminSettings = () => {
                       onChange={(e) => setSiteConfig(prev => ({ ...prev, platform: { ...prev.platform, gasFeeEnabled: e.target.checked } }))}
                       className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                     />
-                    <span className="text-gray-700 dark:text-gray-300">Enable Gas Fee for Withdrawals</span>
+                    <span className="text-gray-700 dark:text-gray-300">Enable Transaction Fee for Withdrawals</span>
                   </label>
 
                   {siteConfig.platform.gasFeeEnabled && (

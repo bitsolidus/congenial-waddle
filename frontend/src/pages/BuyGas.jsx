@@ -18,7 +18,7 @@ import {
 import axios from 'axios';
 import { formatCurrency } from '../utils/helpers';
 
-const BuyGas = () => {
+const USDTBalance = () => {
   const { user } = useSelector((state) => state.auth);
   const [amount, setAmount] = useState('');
   const [gasBalance, setGasBalance] = useState(0);
@@ -115,13 +115,13 @@ const BuyGas = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Buy Gas</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">USDT Balance</h1>
         <p className="text-gray-500 dark:text-gray-400">
-          Deposit USDT to cover withdrawal gas fees
+          Deposit USDT to cover withdrawal transaction fees
         </p>
       </div>
 
-      {/* Gas Balance Card */}
+      {/* USDT Balance Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -129,7 +129,7 @@ const BuyGas = () => {
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-primary-100 text-sm">Your Gas Balance</p>
+            <p className="text-primary-100 text-sm">Your USDT Balance</p>
             <p className="text-3xl font-bold mt-1">{formatCurrency(gasBalance)}</p>
           </div>
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
@@ -138,7 +138,7 @@ const BuyGas = () => {
         </div>
         <div className="mt-4 pt-4 border-t border-white/20">
           <p className="text-sm text-primary-100">
-            Gas fees are deducted from this balance when you make withdrawals
+            Transaction fees are deducted from this balance when you make withdrawals
           </p>
         </div>
         
@@ -156,7 +156,7 @@ const BuyGas = () => {
         )}
       </motion.div>
 
-      {/* Gas Fee Info */}
+      {/* Transaction Fee Info */}
       {gasFeeSettings.enabled && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -168,17 +168,17 @@ const BuyGas = () => {
             <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
             <div>
               <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-1">
-                Current Gas Fee Rate
+                Current Transaction Fee Rate
               </h3>
               <p className="text-sm text-blue-700 dark:text-blue-400">
-                Withdrawal gas fee: <strong>{gasFeeSettings.percentage}%</strong> of withdrawal amount
+                Withdrawal transaction fee: <strong>{gasFeeSettings.percentage}%</strong> of withdrawal amount
               </p>
               <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
                 Minimum: {formatCurrency(gasFeeSettings.minFee)} | Maximum: {formatCurrency(gasFeeSettings.maxFee)}
               </p>
               <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded-lg">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Example: For a $1,000 withdrawal, gas fee = {formatCurrency(calculatedGasFee)}
+                  Example: For a $1,000 withdrawal, transaction fee = {formatCurrency(calculatedGasFee)}
                 </p>
               </div>
             </div>
@@ -186,7 +186,7 @@ const BuyGas = () => {
         </motion.div>
       )}
 
-      {/* Buy Gas Form */}
+      {/* Deposit USDT Form */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -194,7 +194,7 @@ const BuyGas = () => {
         className="card"
       >
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
-          Purchase Gas
+          Deposit USDT
         </h2>
 
         {message.text && (
@@ -256,7 +256,7 @@ const BuyGas = () => {
                       Low USDT Balance
                     </p>
                     <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">
-                      You need USDT to buy gas. Deposit USDT or other cryptocurrencies to your account.
+                      You need USDT to cover transaction fees. Deposit USDT or other cryptocurrencies to your account.
                     </p>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -269,7 +269,7 @@ const BuyGas = () => {
                         </div>
                         <div className="text-left">
                           <p className="text-xs font-medium text-gray-900 dark:text-white">Deposit USDT</p>
-                          <p className="text-xs text-gray-500">Direct gas funding</p>
+                          <p className="text-xs text-gray-500">Direct USDT funding</p>
                         </div>
                       </Link>
                       
@@ -365,7 +365,7 @@ const BuyGas = () => {
             ) : (
               <>
                 <Wallet className="w-5 h-5" />
-                Buy Gas
+                Deposit USDT
                 {amount && parseFloat(amount) > 0 && (
                   <span className="ml-1">({formatCurrency(parseFloat(amount))})</span>
                 )}
@@ -384,11 +384,11 @@ const BuyGas = () => {
           className="card"
         >
           <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-            What is Gas?
+            What are Transaction Fees?
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Gas is a fee required to process transactions on the blockchain. 
-            We use your gas balance to cover these fees when you make withdrawals.
+            Transaction fees are required to process withdrawals on the blockchain. 
+            We use your USDT balance to cover these fees when you make withdrawals.
           </p>
         </motion.div>
 
@@ -402,9 +402,9 @@ const BuyGas = () => {
             How it Works
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            1. Deposit USDT to your gas balance<br />
-            2. Gas fees are automatically deducted during withdrawals<br />
-            3. No gas = No withdrawal processing
+            1. Deposit USDT to your balance<br />
+            2. Transaction fees are automatically deducted during withdrawals<br />
+            3. No USDT = No withdrawal processing
           </p>
         </motion.div>
       </div>
@@ -412,4 +412,4 @@ const BuyGas = () => {
   );
 };
 
-export default BuyGas;
+export default USDTBalance;

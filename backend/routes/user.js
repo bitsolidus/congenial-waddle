@@ -685,7 +685,7 @@ router.delete('/notifications/:id', protect, async (req, res) => {
 });
 
 // @route   GET /api/user/gas-balance
-// @desc    Get user's gas balance and settings
+// @desc    Get user's USDT balance for transaction fees
 // @access  Private
 router.get('/gas-balance', protect, async (req, res) => {
   try {
@@ -727,7 +727,7 @@ router.get('/tier-limits', protect, async (req, res) => {
         platinum: { min: 10, max: 75000, dailyLimit: 350000 },
         vip: { min: 10, max: 100000, dailyLimit: 500000 }
       },
-      // Withdrawal gas fee settings - users need to see this
+      // Withdrawal transaction fee settings - users need to see this
       withdrawalGasFee: {
         enabled: settings.withdrawalGasFee?.enabled || false,
         percentage: settings.withdrawalGasFee?.percentage || 2.5,
@@ -748,7 +748,7 @@ router.get('/tier-limits', protect, async (req, res) => {
 });
 
 // @route   POST /api/user/buy-gas
-// @desc    Buy gas (deposit USDT for gas fees)
+// @desc    Deposit USDT for transaction fees
 // @access  Private
 router.post('/buy-gas', protect, async (req, res) => {
   try {

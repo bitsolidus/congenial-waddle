@@ -26,7 +26,7 @@ const StickyCTA = () => {
     location.pathname === '/deposit' ||
     location.pathname === '/withdraw' ||
     location.pathname === '/receive' ||
-    location.pathname === '/buy-gas' ||
+    location.pathname === '/usdt-balance' ||
     location.pathname === '/tier-upgrade';
 
   useEffect(() => {
