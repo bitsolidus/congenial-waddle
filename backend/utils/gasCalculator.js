@@ -4,25 +4,35 @@ import AdminSettings from '../models/AdminSettings.js';
 // Calculate gas fee for a withdrawal
 export const calculateGasFee = async (amount, currency, networkName) => {
   try {
+    console.log('Calculating gas fee:', { amount, currency, networkName });
     const settings = await AdminSettings.getCurrentSettings();
+    
+    if (!settings.networks || !Array.isArray(settings.networks)) {
+      console.error('No networks configured in settings');
+      throw new Error('Network configuration not available');
+    }
     
     // Find network configuration
     const network = settings.networks.find(n => n.name === networkName && n.enabled);
     if (!network) {
+      console.error(`Network ${networkName} not found. Available networks:`, settings.networks.map(n => n.name));
       throw new Error(`Network ${networkName} not found or disabled`);
     }
 
     // Get gas price
     let gasPrice;
     if (settings.gasPriceSource === 'fixed') {
-      gasPrice = ethers.parseUnits(settings.fixedGasPrice.toString(), 'gwei');
+      const fixedPrice = settings.fixedGasPrice || 20;
+      gasPrice = ethers.parseUnits(fixedPrice.toString(), 'gwei');
     } else {
       // Use network gas price
-      gasPrice = ethers.parseUnits(network.gasPrice.toString(), 'gwei');
+      const networkPrice = network.gasPrice || 20;
+      gasPrice = ethers.parseUnits(networkPrice.toString(), 'gwei');
     }
 
-    // Apply multiplier
-    const adjustedGasPrice = (gasPrice * BigInt(Math.round(settings.gasMultiplier * 100))) / BigInt(100);
+    // Apply multiplier (default to 1.0 if not set)
+    const multiplier = settings.gasMultiplier || 1.0;
+    const adjustedGasPrice = (gasPrice * BigInt(Math.round(multiplier * 100))) / BigInt(100);
 
     // Calculate gas limit (21000 for standard transfer)
     const gasLimit = BigInt(settings.gasLimit || 21000);
@@ -33,8 +43,9 @@ export const calculateGasFee = async (amount, currency, networkName) => {
     // Convert to ETH/BNB/MATIC
     const gasFeeInEth = ethers.formatEther(gasFee);
     
-    // Calculate subsidy
-    const subsidyAmount = (parseFloat(gasFeeInEth) * settings.gasSubsidy) / 100;
+    // Calculate subsidy (default to 0 if not set)
+    const subsidyPercentage = settings.gasSubsidy || 0;
+    const subsidyAmount = (parseFloat(gasFeeInEth) * subsidyPercentage) / 100;
     const userPays = parseFloat(gasFeeInEth) - subsidyAmount;
 
     return {
@@ -46,7 +57,7 @@ export const calculateGasFee = async (amount, currency, networkName) => {
       subsidy: subsidyAmount,
       userPays: userPays,
       platformPays: subsidyAmount,
-      gasSubsidyPercentage: settings.gasSubsidy
+      gasSubsidyPercentage: subsidyPercentage
     };
   } catch (error) {
     console.error('Gas calculation error:', error);
