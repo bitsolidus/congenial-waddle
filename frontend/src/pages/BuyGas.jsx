@@ -34,6 +34,13 @@ const BuyGas = () => {
 
   useEffect(() => {
     fetchGasBalance();
+    
+    // Auto-refresh gas balance every 30 seconds
+    const interval = setInterval(() => {
+      fetchGasBalance();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchGasBalance = async () => {

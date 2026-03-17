@@ -60,6 +60,14 @@ const Portfolio = () => {
     if (isAuthenticated) {
       dispatch(fetchBalance());
       dispatch(fetchCryptoPrices());
+      
+      // Auto-refresh prices every 30 seconds for real-time updates
+      const interval = setInterval(() => {
+        dispatch(fetchBalance());
+        dispatch(fetchCryptoPrices());
+      }, 30000);
+      
+      return () => clearInterval(interval);
     }
   }, [dispatch, isAuthenticated]);
 

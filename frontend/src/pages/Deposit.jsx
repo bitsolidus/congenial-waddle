@@ -63,6 +63,13 @@ const Deposit = () => {
     dispatch(fetchBalance());
     generateDepositAddress();
     fetchPendingConfirmations();
+    
+    // Auto-refresh balance every 30 seconds for price updates
+    const interval = setInterval(() => {
+      dispatch(fetchBalance());
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, [dispatch, selectedCrypto]);
 
   // Auto-check for deposit status if wallet is connected
