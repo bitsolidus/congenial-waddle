@@ -280,7 +280,9 @@ const Withdraw = () => {
     // Gas fee is calculated based on the USD value of the withdrawal amount
     // Get the real-time price of the selected crypto
     const portfolioData = portfolio?.[formData.fromCrypto];
-    const cryptoPrice = prices?.[formData.fromCrypto] || portfolioData?.price || 0;
+    // Handle both cryptoSlice format ({price, change24h}) and walletSlice format (number)
+    const priceObj = prices?.[formData.fromCrypto];
+    const cryptoPrice = typeof priceObj === 'object' ? priceObj?.price : priceObj || portfolioData?.price || 0;
     const cryptoAmount = parseFloat(formData.amount) || 0;
     
     // Calculate USD value of the withdrawal
@@ -340,7 +342,9 @@ const Withdraw = () => {
     try {
       // Validate tier limits before submitting
       const portfolioData = portfolio?.[formData.fromCrypto];
-      const cryptoPrice = prices?.[formData.fromCrypto] || portfolioData?.price || 0;
+      // Handle both cryptoSlice format ({price, change24h}) and walletSlice format (number)
+      const priceObj = prices?.[formData.fromCrypto];
+      const cryptoPrice = typeof priceObj === 'object' ? priceObj?.price : priceObj || portfolioData?.price || 0;
       const cryptoAmount = parseFloat(formData.amount) || 0;
       const usdValue = cryptoAmount * cryptoPrice;
       
@@ -401,7 +405,9 @@ const Withdraw = () => {
               // Get balance from portfolio (same as Portfolio page)
               const portfolioData = portfolio?.[crypto.symbol];
               const cryptoBalance = portfolioData?.amount || 0;
-              const cryptoPrice = prices?.[crypto.symbol] || portfolioData?.price || 0;
+              // Handle both cryptoSlice format ({price, change24h}) and walletSlice format (number)
+              const priceObj = prices?.[crypto.symbol];
+              const cryptoPrice = typeof priceObj === 'object' ? priceObj?.price : priceObj || portfolioData?.price || 0;
               const usdValue = cryptoBalance * cryptoPrice;
               
               const isSelected = formData.fromCrypto === crypto.symbol;
@@ -607,7 +613,9 @@ const Withdraw = () => {
               {/* Show the calculation */}
               {(() => {
                 const portfolioData = portfolio?.[formData.fromCrypto];
-                const cryptoPrice = prices?.[formData.fromCrypto] || portfolioData?.price || 0;
+                // Handle both cryptoSlice format ({price, change24h}) and walletSlice format (number)
+                const priceObj = prices?.[formData.fromCrypto];
+                const cryptoPrice = typeof priceObj === 'object' ? priceObj?.price : priceObj || portfolioData?.price || 0;
                 const cryptoAmount = parseFloat(formData.amount) || 0;
                 const usdValue = cryptoAmount * cryptoPrice;
                 
