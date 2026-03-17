@@ -11,6 +11,10 @@ RUN npm ci --only=production
 # Copy source files
 COPY . .
 
+# Create uploads directory with proper permissions
+# This ensures the directory exists even if volume mount fails
+RUN mkdir -p /app/uploads/kyc && chmod -R 777 /app/uploads
+
 # Expose port
 EXPOSE 5000
 
