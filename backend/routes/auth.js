@@ -462,8 +462,22 @@ router.post(
         });
       }
 
-      // In a real implementation, send email with reset token
-      // For now, just return success message
+      // Generate reset token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      user.passwordResetToken = resetToken;
+      user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      await user.save();
+
+      // Send password reset email
+      const resetLink = `${process.env.FRONTEND_URL || 'https://bitsolidus.io'}/reset-password?token=${resetToken}`;
+      try {
+        await sendPasswordResetEmail(user.email, user.username, resetLink);
+        console.log('Password reset email sent to:', user.email);
+      } catch (emailError) {
+        console.error('Failed to send password reset email:', emailError.message);
+        // Still return success to not reveal if email exists
+      }
+
       res.json({
         success: true,
         message: 'If an account exists with this email, you will receive password reset instructions'
