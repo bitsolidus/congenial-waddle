@@ -220,13 +220,13 @@ const Withdraw = () => {
 
   const fetchTierLimits = async () => {
     try {
-      const [settingsRes, dailyRes] = await Promise.all([
-        axios.get('/api/admin/settings'),
+      const [tierRes, dailyRes] = await Promise.all([
+        axios.get('/api/user/tier-limits'),
         axios.get('/api/user/daily-withdrawals')
       ]);
       
       const userTier = user?.tier || 'standard';
-      const limits = settingsRes.data.settings?.tierLimits?.[userTier] || {
+      const limits = tierRes.data.tierLimits?.[userTier] || {
         min: 10,
         max: 10000,
         dailyLimit: 50000

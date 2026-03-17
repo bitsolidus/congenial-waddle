@@ -709,6 +709,28 @@ router.get('/gas-balance', protect, async (req, res) => {
   }
 });
 
+// @route   GET /api/user/tier-limits
+// @desc    Get tier limits for withdrawals (public read-only)
+// @access  Private
+router.get('/tier-limits', protect, async (req, res) => {
+  try {
+    const AdminSettings = (await import('../models/AdminSettings.js')).default;
+    const settings = await AdminSettings.getCurrentSettings();
+    
+    res.json({
+      success: true,
+      tierLimits: settings.tierLimits || {
+        standard: { min: 10, max: 10000, dailyLimit: 50000 },
+        gold: { min: 10, max: 50000, dailyLimit: 200000 },
+        platinum: { min: 10, max: 100000, dailyLimit: 500000 }
+      }
+    });
+  } catch (error) {
+    console.error('Get tier limits error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   POST /api/user/buy-gas
 // @desc    Buy gas (deposit USDT for gas fees)
 // @access  Private
