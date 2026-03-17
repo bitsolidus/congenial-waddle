@@ -19,6 +19,7 @@ import {
   Calculator
 } from 'lucide-react';
 import { fetchBalance } from '../store/walletSlice';
+import { fetchCryptoPrices } from '../store/cryptoSlice';
 import { formatCurrency, formatNumber, truncateAddress } from '../utils/helpers';
 import { NETWORKS, CRYPTOCURRENCIES } from '../utils/constants';
 import axios from 'axios';
@@ -27,7 +28,11 @@ const Withdraw = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const { balance, portfolio, prices } = useSelector((state) => state.wallet);
+  const { balance, portfolio, prices: walletPrices } = useSelector((state) => state.wallet);
+  const { prices: cryptoPrices } = useSelector((state) => state.crypto);
+  
+  // Use crypto prices (real-time from CoinGecko) as priority, fallback to wallet prices
+  const prices = cryptoPrices || walletPrices;
   
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,6 +93,7 @@ const Withdraw = () => {
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(fetchBalance());
+      dispatch(fetchCryptoPrices()); // Fetch real-time prices from CoinGecko
       fetchGasBalance();
       fetchTierLimits();
       loadRecentAddresses();
@@ -95,6 +101,7 @@ const Withdraw = () => {
       // Refresh prices every 30 seconds for real-time updates
       const priceInterval = setInterval(() => {
         dispatch(fetchBalance());
+        dispatch(fetchCryptoPrices());
       }, 30000);
       
       return () => clearInterval(priceInterval);
