@@ -78,11 +78,7 @@ const AdminSettings = () => {
       maintenanceMessage: 'We are currently performing maintenance. Please check back later.',
       allowRegistration: true,
       requireEmailVerification: false,
-      requireKycForTrading: false,
-      gasFeePercentage: 2.5,
-      gasFeeEnabled: true,
-      minGasFee: 5,
-      maxGasFee: 500
+      requireKycForTrading: false
     },
     branding: {
       primaryColor: '#7c3aed',
@@ -1116,89 +1112,7 @@ const AdminSettings = () => {
                   <span className="text-gray-700 dark:text-gray-300">Require KYC for Trading</span>
                 </label>
 
-                {/* Transaction Fee Settings */}
-                <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Transaction Fee Settings</h3>
-                  
-                  <label className="flex items-center gap-3 mb-4">
-                    <input
-                      type="checkbox"
-                      checked={siteConfig.platform.gasFeeEnabled}
-                      onChange={(e) => setSiteConfig(prev => ({ ...prev, platform: { ...prev.platform, gasFeeEnabled: e.target.checked } }))}
-                      className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-                    />
-                    <span className="text-gray-700 dark:text-gray-300">Enable Transaction Fee for Withdrawals</span>
-                  </label>
 
-                  {siteConfig.platform.gasFeeEnabled && (
-                    <div className="space-y-4 pl-8">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Gas Fee Percentage (%)
-                        </label>
-                        <div className="flex items-center gap-4">
-                          <input
-                            type="range"
-                            min="0"
-                            max="10"
-                            step="0.1"
-                            value={siteConfig.platform.gasFeePercentage}
-                            onChange={(e) => setSiteConfig(prev => ({ ...prev, platform: { ...prev.platform, gasFeePercentage: parseFloat(e.target.value) } }))}
-                            className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                          />
-                          <span className="text-lg font-semibold text-purple-600 dark:text-purple-400 w-16 text-right">
-                            {siteConfig.platform.gasFeePercentage}%
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          Percentage of withdrawal amount charged as gas fee
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Minimum Gas Fee (USD)
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={siteConfig.platform.minGasFee}
-                            onChange={(e) => setSiteConfig(prev => ({ ...prev, platform: { ...prev.platform, minGasFee: parseFloat(e.target.value) || 0 } }))}
-                            className="input-field w-full"
-                          />
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Minimum fee regardless of percentage
-                          </p>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Maximum Gas Fee (USD)
-                          </label>
-                          <input
-                            type="number"
-                            min="0"
-                            value={siteConfig.platform.maxGasFee}
-                            onChange={(e) => setSiteConfig(prev => ({ ...prev, platform: { ...prev.platform, maxGasFee: parseFloat(e.target.value) || 0 } }))}
-                            className="input-field w-full"
-                          />
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Maximum fee cap
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                        <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">Example Calculation</h4>
-                        <p className="text-sm text-blue-700 dark:text-blue-400">
-                          For a $1,000 withdrawal: Gas Fee = ${Math.min(Math.max(1000 * (siteConfig.platform.gasFeePercentage / 100), siteConfig.platform.minGasFee), siteConfig.platform.maxGasFee).toFixed(2)} USD
-                          ({siteConfig.platform.gasFeePercentage}% of $1,000, min ${siteConfig.platform.minGasFee}, max ${siteConfig.platform.maxGasFee})
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </motion.div>
           )}
@@ -1528,9 +1442,9 @@ const AdminSettings = () => {
 
                 <hr className="border-gray-200 dark:border-gray-700" />
 
-                {/* Gas Fee Settings */}
+                {/* Transaction Fee Settings */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Gas Fee Settings</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Transaction Fee Settings</h3>
                   
                   <label className="flex items-center gap-3">
                     <input
