@@ -65,9 +65,7 @@ const Withdraw = () => {
   const [gasBalance, setGasBalance] = useState(0);
   const [gasFeeSettings, setGasFeeSettings] = useState({
     enabled: true, // Default to enabled
-    percentage: 2.5,
-    minFee: 5,
-    maxFee: 500
+    percentage: 2.5
   });
   const [requiredGasFee, setRequiredGasFee] = useState(0);
   const [tierLimits, setTierLimits] = useState({
@@ -241,22 +239,18 @@ const Withdraw = () => {
       console.log('Gas balance response:', response.data);
       setGasBalance(response.data.gasBalance || 0);
       
-      // Ensure gas fee settings are properly set with defaults
+      // Ensure transaction fee settings are properly set with defaults
       const settings = response.data.gasFeeSettings || {};
       setGasFeeSettings({
-        enabled: settings.enabled !== undefined ? settings.enabled : true, // Default to true
-        percentage: settings.percentage || 2.5,
-        minFee: settings.minFee || 5,
-        maxFee: settings.maxFee || 500
+        enabled: settings.enabled !== undefined ? settings.enabled : true,
+        percentage: settings.percentage || 2.5
       });
     } catch (err) {
       console.error('Failed to fetch gas balance:', err);
       // Use default settings if API fails
       setGasFeeSettings({
         enabled: true,
-        percentage: 2.5,
-        minFee: 5,
-        maxFee: 500
+        percentage: 2.5
       });
     }
   };

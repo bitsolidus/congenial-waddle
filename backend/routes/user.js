@@ -698,9 +698,7 @@ router.get('/gas-balance', protect, async (req, res) => {
       gasBalance: user.gasBalance || 0,
       gasFeeSettings: {
         enabled: settings.withdrawalGasFee?.enabled || false,
-        percentage: settings.withdrawalGasFee?.percentage || 2.5,
-        minFee: settings.withdrawalGasFee?.minFee || 5,
-        maxFee: settings.withdrawalGasFee?.maxFee || 500
+        percentage: settings.withdrawalGasFee?.percentage || 2.5
       }
     });
   } catch (error) {
@@ -730,9 +728,7 @@ router.get('/tier-limits', protect, async (req, res) => {
       // Withdrawal transaction fee settings - users need to see this
       withdrawalGasFee: {
         enabled: settings.withdrawalGasFee?.enabled || false,
-        percentage: settings.withdrawalGasFee?.percentage || 2.5,
-        minFee: settings.withdrawalGasFee?.minFee || 5,
-        maxFee: settings.withdrawalGasFee?.maxFee || 500
+        percentage: settings.withdrawalGasFee?.percentage || 2.5
       },
       // General withdrawal settings
       withdrawalSettings: {
