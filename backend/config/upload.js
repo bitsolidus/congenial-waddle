@@ -46,6 +46,16 @@ const imageFileFilter = (req, file, cb) => {
   }
 };
 
+// File filter for KYC documents (images and PDFs)
+const kycFileFilter = (req, file, cb) => {
+  // Accept images and PDFs
+  if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image and PDF files are allowed!'), false);
+  }
+};
+
 // Configure KYC storage
 const kycStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -73,9 +83,9 @@ const brandingStorage = multer.diskStorage({
 // Create multer upload instances
 export const upload = multer({
   storage: kycStorage,
-  fileFilter: imageFileFilter,
+  fileFilter: kycFileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit for KYC documents
     files: 4 // Maximum 4 files
   }
 });

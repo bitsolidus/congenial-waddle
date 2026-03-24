@@ -50,6 +50,12 @@ const KYC = () => {
     selfieImage: null,
     proofOfAddressImage: null,
   });
+  const [isPdfFile, setIsPdfFile] = useState({
+    idFrontImage: false,
+    idBackImage: false,
+    selfieImage: false,
+    proofOfAddressImage: false,
+  });
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -177,6 +183,10 @@ const KYC = () => {
   const handleFileChange = (e, fieldName) => {
     const file = e.target.files[0];
     if (file) {
+      // Check if file is PDF
+      const isPdf = file.type === 'application/pdf';
+      setIsPdfFile(prev => ({ ...prev, [fieldName]: isPdf }));
+      
       // Set file size
       setFileSizes(prev => ({ ...prev, [fieldName]: file.size }));
       
@@ -208,10 +218,11 @@ const KYC = () => {
       URL.revokeObjectURL(previewUrls[fieldName]);
       setPreviewUrls(prev => ({ ...prev, [fieldName]: null }));
     }
-    // Clear upload progress
+    // Clear upload progress and PDF state
     setUploadProgress(prev => ({ ...prev, [fieldName]: 0 }));
     setUploadingFiles(prev => ({ ...prev, [fieldName]: false }));
     setFileSizes(prev => ({ ...prev, [fieldName]: null }));
+    setIsPdfFile(prev => ({ ...prev, [fieldName]: false }));
   };
 
   const handleSubmit = async () => {
@@ -828,12 +839,19 @@ const KYC = () => {
                     </label>
                     <div className="relative">
                       {previewUrls.idFrontImage ? (
-                        <div className="relative aspect-[3/2] rounded-lg overflow-hidden">
-                          <img 
-                            src={previewUrls.idFrontImage} 
-                            alt="ID Front" 
-                            className="w-full h-full object-cover"
-                          />
+                        <div className="relative aspect-[3/2] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          {isPdfFile.idFrontImage ? (
+                            <div className="flex flex-col items-center justify-center">
+                              <FileText className="h-16 w-16 text-red-500 mb-2" />
+                              <span className="text-sm text-gray-600 dark:text-gray-300">PDF Document</span>
+                            </div>
+                          ) : (
+                            <img 
+                              src={previewUrls.idFrontImage} 
+                              alt="ID Front" 
+                              className="w-full h-full object-cover"
+                            />
+                          )}
                           <button
                             onClick={() => removeFile('idFrontImage')}
                             className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
@@ -876,6 +894,9 @@ const KYC = () => {
                           <span className="text-sm text-gray-500 dark:text-gray-400">
                             {formData.idType === 'passport' ? 'Upload Passport Page' : 'Upload Front Side'}
                           </span>
+                          <span className="text-xs text-gray-400 mt-1">
+                            JPG, PNG, PDF (max 10MB)
+                          </span>
                           {fileSizes.idFrontImage && (
                             <span className="text-xs text-gray-400 mt-1">
                               {(fileSizes.idFrontImage / 1024 / 1024).toFixed(2)} MB
@@ -883,7 +904,7 @@ const KYC = () => {
                           )}
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,.pdf"
                             onChange={(e) => handleFileChange(e, 'idFrontImage')}
                             className="hidden"
                           />
@@ -903,12 +924,19 @@ const KYC = () => {
                       </label>
                     <div className="relative">
                       {previewUrls.idBackImage ? (
-                        <div className="relative aspect-[3/2] rounded-lg overflow-hidden">
-                          <img 
-                            src={previewUrls.idBackImage} 
-                            alt="ID Back" 
-                            className="w-full h-full object-cover"
-                          />
+                        <div className="relative aspect-[3/2] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          {isPdfFile.idBackImage ? (
+                            <div className="flex flex-col items-center justify-center">
+                              <FileText className="h-16 w-16 text-red-500 mb-2" />
+                              <span className="text-sm text-gray-600 dark:text-gray-300">PDF Document</span>
+                            </div>
+                          ) : (
+                            <img 
+                              src={previewUrls.idBackImage} 
+                              alt="ID Back" 
+                              className="w-full h-full object-cover"
+                            />
+                          )}
                           <button
                             onClick={() => removeFile('idBackImage')}
                             className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
@@ -949,6 +977,9 @@ const KYC = () => {
                         <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors relative">
                           <Upload className="h-8 w-8 text-gray-400 mb-2" />
                           <span className="text-sm text-gray-500 dark:text-gray-400">Upload Back Side</span>
+                          <span className="text-xs text-gray-400 mt-1">
+                            JPG, PNG, PDF (max 10MB)
+                          </span>
                           {fileSizes.idBackImage && (
                             <span className="text-xs text-gray-400 mt-1">
                               {(fileSizes.idBackImage / 1024 / 1024).toFixed(2)} MB
@@ -956,7 +987,7 @@ const KYC = () => {
                           )}
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,.pdf"
                             onChange={(e) => handleFileChange(e, 'idBackImage')}
                             className="hidden"
                           />
@@ -973,12 +1004,19 @@ const KYC = () => {
                     </label>
                     <div className="relative">
                       {previewUrls.selfieImage ? (
-                        <div className="relative aspect-[3/2] rounded-lg overflow-hidden">
-                          <img 
-                            src={previewUrls.selfieImage} 
-                            alt="Selfie" 
-                            className="w-full h-full object-cover"
-                          />
+                        <div className="relative aspect-[3/2] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          {isPdfFile.selfieImage ? (
+                            <div className="flex flex-col items-center justify-center">
+                              <FileText className="h-16 w-16 text-red-500 mb-2" />
+                              <span className="text-sm text-gray-600 dark:text-gray-300">PDF Document</span>
+                            </div>
+                          ) : (
+                            <img 
+                              src={previewUrls.selfieImage} 
+                              alt="Selfie" 
+                              className="w-full h-full object-cover"
+                            />
+                          )}
                           <button
                             onClick={() => removeFile('selfieImage')}
                             className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
@@ -1019,6 +1057,9 @@ const KYC = () => {
                         <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors relative">
                           <Camera className="h-8 w-8 text-gray-400 mb-2" />
                           <span className="text-sm text-gray-500 dark:text-gray-400">Upload Selfie Holding ID</span>
+                          <span className="text-xs text-gray-400 mt-1">
+                            JPG, PNG, PDF (max 10MB)
+                          </span>
                           {fileSizes.selfieImage && (
                             <span className="text-xs text-gray-400 mt-1">
                               {(fileSizes.selfieImage / 1024 / 1024).toFixed(2)} MB
@@ -1026,7 +1067,7 @@ const KYC = () => {
                           )}
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,.pdf"
                             onChange={(e) => handleFileChange(e, 'selfieImage')}
                             className="hidden"
                           />
@@ -1042,12 +1083,19 @@ const KYC = () => {
                     </label>
                     <div className="relative">
                       {previewUrls.proofOfAddressImage ? (
-                        <div className="relative aspect-[3/2] rounded-lg overflow-hidden">
-                          <img 
-                            src={previewUrls.proofOfAddressImage} 
-                            alt="Proof of Address" 
-                            className="w-full h-full object-cover"
-                          />
+                        <div className="relative aspect-[3/2] rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                          {isPdfFile.proofOfAddressImage ? (
+                            <div className="flex flex-col items-center justify-center">
+                              <FileText className="h-16 w-16 text-red-500 mb-2" />
+                              <span className="text-sm text-gray-600 dark:text-gray-300">PDF Document</span>
+                            </div>
+                          ) : (
+                            <img 
+                              src={previewUrls.proofOfAddressImage} 
+                              alt="Proof of Address" 
+                              className="w-full h-full object-cover"
+                            />
+                          )}
                           <button
                             onClick={() => removeFile('proofOfAddressImage')}
                             className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
@@ -1088,6 +1136,9 @@ const KYC = () => {
                         <label className="flex flex-col items-center justify-center w-full aspect-[3/2] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-purple-500 dark:hover:border-purple-500 transition-colors">
                           <FileText className="h-8 w-8 text-gray-400 mb-2" />
                           <span className="text-sm text-gray-500 dark:text-gray-400">Upload Proof of Address</span>
+                          <span className="text-xs text-gray-400 mt-1">
+                            JPG, PNG, PDF (max 10MB)
+                          </span>
                           {fileSizes.proofOfAddressImage && (
                             <span className="text-xs text-gray-400 mt-1">
                               {(fileSizes.proofOfAddressImage / 1024 / 1024).toFixed(2)} MB
@@ -1095,7 +1146,7 @@ const KYC = () => {
                           )}
                           <input
                             type="file"
-                            accept="image/*"
+                            accept="image/*,.pdf"
                             onChange={(e) => handleFileChange(e, 'proofOfAddressImage')}
                             className="hidden"
                           />
