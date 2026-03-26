@@ -10,8 +10,10 @@ import {
   History,
   AlertCircle,
   Send,
-  QrCode
+  User,
+  CheckCircle
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { copyToClipboard } from '../utils/helpers';
 import axios from 'axios';
 
@@ -31,6 +33,8 @@ const Receive = () => {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
   const [sendSuccess, setSendSuccess] = useState('');
+  const [recipientInfo, setRecipientInfo] = useState(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
   
   // Transfer history
   const [transferHistory, setTransferHistory] = useState([]);
@@ -72,6 +76,37 @@ const Receive = () => {
     }
   };
 
+  // Lookup recipient by wallet address
+  const lookupRecipient = async (walletAddress) => {
+    if (!walletAddress || walletAddress.length < 8) {
+      setRecipientInfo(null);
+      return;
+    }
+    
+    setLookupLoading(true);
+    try {
+      const response = await axios.get(`/api/user/lookup-wallet/${walletAddress}`);
+      setRecipientInfo(response.data);
+    } catch (err) {
+      setRecipientInfo(null);
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  // Handle wallet address change with debounce
+  const handleWalletChange = (value) => {
+    setSendForm({ ...sendForm, toWallet: value });
+    setSendError('');
+    
+    // Debounce lookup
+    if (value.length >= 8) {
+      setTimeout(() => lookupRecipient(value), 300);
+    } else {
+      setRecipientInfo(null);
+    }
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     setSendError('');
@@ -87,6 +122,7 @@ const Receive = () => {
       
       setSendSuccess(response.data.message);
       setSendForm({ toWallet: '', amount: '', cryptocurrency: 'USDT' });
+      setRecipientInfo(null);
       fetchTransferHistory();
     } catch (err) {
       setSendError(err.response?.data?.message || 'Transfer failed');
@@ -195,10 +231,15 @@ const Receive = () => {
                   </div>
                 </div>
 
-                {/* QR Code Placeholder */}
+                {/* QR Code */}
                 <div className="flex justify-center mb-4">
                   <div className="bg-white p-4 rounded-xl">
-                    <QrCode className="w-32 h-32 text-gray-900" />
+                    <QRCodeSVG 
+                      value={internalWallet} 
+                      size={150}
+                      level="H"
+                      includeMargin={false}
+                    />
                   </div>
                 </div>
 
@@ -276,12 +317,45 @@ const Receive = () => {
                 <input
                   type="text"
                   value={sendForm.toWallet}
-                  onChange={(e) => setSendForm({ ...sendForm, toWallet: e.target.value })}
+                  onChange={(e) => handleWalletChange(e.target.value)}
                   className="input-field w-full"
                   placeholder="Enter wallet address (e.g., BITS1A2B3C4)"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">Enter a valid BitSolidus internal wallet address (format: BITSXXXXXXX)</p>
+                
+                {/* Recipient Info Display */}
+                {lookupLoading && (
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                    Looking up recipient...
+                  </div>
+                )}
+                {recipientInfo && (
+                  <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      <div>
+                        <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                          {recipientInfo.username}
+                        </p>
+                        <p className="text-xs text-green-600 dark:text-green-400">
+                          Verified BitSolidus User
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {sendForm.toWallet.length >= 8 && !lookupLoading && !recipientInfo && (
+                  <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                      <p className="text-sm text-red-700 dark:text-red-300">
+                        User not found. Check the wallet address.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Cryptocurrency Selection */}
@@ -382,9 +456,9 @@ const Receive = () => {
                   >
                     <div className="flex items-center gap-4">
                       <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                        tx.type === 'transfer_sent' ? 'bg-red-100 dark:bg-red-900' : 'bg-green-100 dark:bg-green-900'
+                        tx.type === 'internal_transfer_sent' ? 'bg-red-100 dark:bg-red-900' : 'bg-green-100 dark:bg-green-900'
                       }`}>
-                        {tx.type === 'transfer_sent' ? (
+                        {tx.type === 'internal_transfer_sent' ? (
                           <ArrowUpRight className="h-5 w-5 text-red-600 dark:text-red-400" />
                         ) : (
                           <ArrowDownLeft className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -392,7 +466,7 @@ const Receive = () => {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900 dark:text-white">
-                          {tx.type === 'transfer_sent' ? 'Sent' : 'Received'}
+                          {tx.type === 'internal_transfer_sent' ? 'Sent' : 'Received'}
                         </p>
                         <p className="text-sm text-gray-500">{tx.description}</p>
                         <p className="text-xs text-gray-400">
@@ -402,9 +476,9 @@ const Receive = () => {
                     </div>
                     <div className="text-right">
                       <p className={`font-medium ${
-                        tx.type === 'transfer_sent' ? 'text-red-600' : 'text-green-600'
+                        tx.type === 'internal_transfer_sent' ? 'text-red-600' : 'text-green-600'
                       }`}>
-                        {tx.type === 'transfer_sent' ? '-' : '+'}{tx.amount} {tx.cryptocurrency}
+                        {tx.type === 'internal_transfer_sent' ? '-' : '+'}{tx.amount} {tx.cryptocurrency}
                       </p>
                       <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full">
                         {tx.status}
