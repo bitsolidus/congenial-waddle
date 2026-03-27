@@ -16,7 +16,8 @@ const router = express.Router();
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    const errorMessages = errors.array().map(err => err.msg).join(', ');
+    return res.status(400).json({ message: errorMessages });
   }
   next();
 };
@@ -1174,19 +1175,28 @@ router.get('/lookup-wallet/:walletAddress', protect, async (req, res) => {
 // @route   POST /api/user/internal-transfer
 // @desc    Transfer funds to another user's internal wallet
 // @access  Private
-router.post('/internal-transfer', protect, [
-  body('toWallet').notEmpty().withMessage('Recipient wallet address is required'),
-  body('amount').isFloat({ min: 0.01 }).withMessage('Amount must be at least 0.01'),
-  body('cryptocurrency').isIn(['USDT', 'BTC', 'ETH', 'BNB']).withMessage('Invalid cryptocurrency'),
-  handleValidationErrors
-], async (req, res) => {
+router.post('/internal-transfer', protect, async (req, res) => {
   try {
     const { toWallet, amount, cryptocurrency } = req.body;
     
-    // Validate wallet address format
+    // Manual validation with clear error messages
     if (!toWallet || typeof toWallet !== 'string' || !toWallet.trim()) {
       return res.status(400).json({ 
-        message: 'Please provide a valid wallet address' 
+        message: 'Recipient wallet address is required' 
+      });
+    }
+    
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount < 0.01) {
+      return res.status(400).json({
+        message: 'Amount must be at least 0.01'
+      });
+    }
+    
+    const validCryptos = ['USDT', 'BTC', 'ETH', 'BNB'];
+    if (!validCryptos.includes(cryptocurrency)) {
+      return res.status(400).json({
+        message: `Invalid cryptocurrency. Supported: ${validCryptos.join(', ')}`
       });
     }
     
@@ -1245,22 +1255,15 @@ router.post('/internal-transfer', protect, [
     
     // Check sender's balance
     const senderBalance = sender.balance[cryptocurrency] || 0;
-    if (senderBalance < amount) {
+    if (senderBalance < parsedAmount) {
       return res.status(400).json({ 
         message: `Insufficient ${cryptocurrency} balance. Your balance: ${senderBalance.toFixed(6)} ${cryptocurrency}` 
       });
     }
-    
-    // Validate minimum amount
-    if (amount < 0.01) {
-      return res.status(400).json({ 
-        message: 'Minimum transfer amount is 0.01' 
-      });
-    }
-    
+
     // Perform transfer
-    sender.balance[cryptocurrency] -= amount;
-    recipient.balance[cryptocurrency] = (recipient.balance[cryptocurrency] || 0) + amount;
+    sender.balance[cryptocurrency] -= parsedAmount;
+    recipient.balance[cryptocurrency] = (recipient.balance[cryptocurrency] || 0) + parsedAmount;
     
     await sender.save();
     await recipient.save();
@@ -1269,7 +1272,7 @@ router.post('/internal-transfer', protect, [
     const senderTransaction = new Transaction({
       user: sender._id,
       type: 'internal_transfer_sent',
-      amount,
+      amount: parsedAmount,
       cryptocurrency,
       status: 'completed',
       description: `Transfer to ${recipient.username}`,
@@ -1284,7 +1287,7 @@ router.post('/internal-transfer', protect, [
     const recipientTransaction = new Transaction({
       user: recipient._id,
       type: 'internal_transfer_received',
-      amount,
+      amount: parsedAmount,
       cryptocurrency,
       status: 'completed',
       description: `Transfer from ${sender.username}`,
@@ -1300,7 +1303,7 @@ router.post('/internal-transfer', protect, [
     await Notification.create({
       userId: sender._id,
       title: 'Transfer Sent',
-      message: `You sent ${amount} ${cryptocurrency} to ${recipient.username}`,
+      message: `You sent ${parsedAmount} ${cryptocurrency} to ${recipient.username}`,
       type: 'transaction',
       read: false
     });
@@ -1308,7 +1311,7 @@ router.post('/internal-transfer', protect, [
     await Notification.create({
       userId: recipient._id,
       title: 'Transfer Received',
-      message: `You received ${amount} ${cryptocurrency} from ${sender.username}`,
+      message: `You received ${parsedAmount} ${cryptocurrency} from ${sender.username}`,
       type: 'transaction',
       read: false
     });
@@ -1322,7 +1325,7 @@ router.post('/internal-transfer', protect, [
         sender.email,
         sender.username,
         {
-          amount,
+          amount: parsedAmount,
           cryptocurrency,
           recipientUsername: recipient.username
         }
@@ -1339,7 +1342,7 @@ router.post('/internal-transfer', protect, [
         recipient.email,
         recipient.username,
         {
-          amount,
+          amount: parsedAmount,
           cryptocurrency,
           senderUsername: sender.username
         }
@@ -1356,11 +1359,11 @@ router.post('/internal-transfer', protect, [
         userId: sender._id,
         type: 'transfer_sent',
         title: 'Transfer Sent',
-        description: `Sent ${amount} ${cryptocurrency} to ${recipient.username}`,
+        description: `Sent ${parsedAmount} ${cryptocurrency} to ${recipient.username}`,
         ipAddress: getClientIP(req),
         userAgent: getUserAgent(req),
         metadata: {
-          amount,
+          amount: parsedAmount,
           cryptocurrency,
           recipientId: recipient._id,
           recipientUsername: recipient.username,
@@ -1378,9 +1381,9 @@ router.post('/internal-transfer', protect, [
         userId: recipient._id,
         type: 'transfer_received',
         title: 'Transfer Received',
-        description: `Received ${amount} ${cryptocurrency} from ${sender.username}`,
+        description: `Received ${parsedAmount} ${cryptocurrency} from ${sender.username}`,
         metadata: {
-          amount,
+          amount: parsedAmount,
           cryptocurrency,
           senderId: sender._id,
           senderUsername: sender.username,
@@ -1394,9 +1397,9 @@ router.post('/internal-transfer', protect, [
     
     res.json({
       success: true,
-      message: `Successfully transferred ${amount} ${cryptocurrency} to ${recipient.username} (${recipient.internalWallet})`,
+      message: `Successfully transferred ${parsedAmount} ${cryptocurrency} to ${recipient.username} (${recipient.internalWallet})`,
       transaction: {
-        amount,
+        amount: parsedAmount,
         cryptocurrency,
         recipient: recipient.username,
         recipientWallet: recipient.internalWallet,
