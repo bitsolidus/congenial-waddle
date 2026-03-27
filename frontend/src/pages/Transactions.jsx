@@ -105,11 +105,38 @@ const Transactions = () => {
         return <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
           <ArrowLeftRight className="w-5 h-5 text-blue-600" />
         </div>;
+      case 'internal_transfer_sent':
+        return <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
+          <span className="text-orange-600 text-lg">→</span>
+        </div>;
+      case 'internal_transfer_received':
+        return <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center">
+          <span className="text-teal-600 text-lg">←</span>
+        </div>;
+      case 'gas_purchase':
+        return <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+          <span className="text-purple-600 text-lg">$</span>
+        </div>;
       default:
         return <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
           <span className="text-gray-600">•</span>
         </div>;
     }
+  };
+
+  // Format transaction type for display
+  const formatTransactionType = (type) => {
+    const typeMap = {
+      'deposit': 'Deposit',
+      'withdrawal': 'Withdrawal',
+      'trade': 'Trade',
+      'buy': 'Buy',
+      'sell': 'Sell',
+      'gas_purchase': 'USDT Purchase',
+      'internal_transfer_sent': 'Transfer Sent',
+      'internal_transfer_received': 'Transfer Received'
+    };
+    return typeMap[type] || type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   return (
@@ -286,8 +313,8 @@ const Transactions = () => {
                         <div className="flex items-center gap-3">
                           {getTransactionIcon(tx.type)}
                           <div>
-                            <p className="font-medium text-gray-900 dark:text-white capitalize">
-                              {tx.type}
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {formatTransactionType(tx.type)}
                             </p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
                               {tx.description || '-'}
@@ -296,12 +323,12 @@ const Transactions = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`capitalize ${
-                          tx.type === 'deposit' ? 'text-green-600' :
-                          tx.type === 'withdrawal' ? 'text-red-600' :
+                        <span className={
+                          tx.type === 'deposit' || tx.type === 'internal_transfer_received' ? 'text-green-600' :
+                          tx.type === 'withdrawal' || tx.type === 'internal_transfer_sent' ? 'text-red-600' :
                           'text-blue-600'
-                        }`}>
-                          {tx.type}
+                        }>
+                          {formatTransactionType(tx.type)}
                         </span>
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
