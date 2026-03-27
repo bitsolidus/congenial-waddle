@@ -1433,7 +1433,7 @@ router.get('/internal-transfer-history', protect, async (req, res) => {
   try {
     const transactions = await Transaction.find({
       userId: req.user._id,
-      type: { $in: ['transfer_sent', 'transfer_received'] }
+      type: { $in: ['internal_transfer_sent', 'internal_transfer_received'] }
     })
     .sort({ createdAt: -1 })
     .limit(50);
@@ -1443,10 +1443,10 @@ router.get('/internal-transfer-history', protect, async (req, res) => {
       transactions: transactions.map(tx => ({
         id: tx._id,
         type: tx.type,
-        cryptocurrency: tx.cryptocurrency,
+        cryptocurrency: tx.cryptoCurrency,
         amount: tx.amount,
         status: tx.status,
-        description: tx.description,
+        description: tx.type === 'internal_transfer_sent' ? 'Sent to user' : 'Received from user',
         createdAt: tx.createdAt
       }))
     });
