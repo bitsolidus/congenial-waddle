@@ -1270,32 +1270,22 @@ router.post('/internal-transfer', protect, async (req, res) => {
     
     // Create transaction records with detailed metadata
     const senderTransaction = new Transaction({
-      user: sender._id,
+      userId: sender._id,
       type: 'internal_transfer_sent',
       amount: parsedAmount,
-      cryptocurrency,
-      status: 'completed',
-      description: `Transfer to ${recipient.username}`,
-      metadata: {
-        recipientUsername: recipient.username,
-        recipientWallet: recipient.internalWallet,
-        senderWallet: sender.internalWallet
-      }
+      cryptoCurrency: cryptocurrency,
+      currency: 'USD',
+      status: 'completed'
     });
     await senderTransaction.save();
     
     const recipientTransaction = new Transaction({
-      user: recipient._id,
+      userId: recipient._id,
       type: 'internal_transfer_received',
       amount: parsedAmount,
-      cryptocurrency,
-      status: 'completed',
-      description: `Transfer from ${sender.username}`,
-      metadata: {
-        senderUsername: sender.username,
-        senderWallet: sender.internalWallet,
-        recipientWallet: recipient.internalWallet
-      }
+      cryptoCurrency: cryptocurrency,
+      currency: 'USD',
+      status: 'completed'
     });
     await recipientTransaction.save();
     
@@ -1417,8 +1407,9 @@ router.post('/internal-transfer', protect, async (req, res) => {
     
     // More specific error messages
     if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({ 
-        message: 'Invalid input data. Please check all fields.' 
+        message: `Validation error: ${messages.join(', ')}` 
       });
     }
     
