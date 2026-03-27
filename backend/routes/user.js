@@ -1275,7 +1275,8 @@ router.post('/internal-transfer', protect, async (req, res) => {
       amount: parsedAmount,
       cryptoCurrency: cryptocurrency,
       currency: 'USD',
-      status: 'completed'
+      status: 'completed',
+      toAddress: recipient.internalWallet
     });
     await senderTransaction.save();
     
@@ -1285,7 +1286,8 @@ router.post('/internal-transfer', protect, async (req, res) => {
       amount: parsedAmount,
       cryptoCurrency: cryptocurrency,
       currency: 'USD',
-      status: 'completed'
+      status: 'completed',
+      fromAddress: sender.internalWallet
     });
     await recipientTransaction.save();
     
@@ -1446,7 +1448,10 @@ router.get('/internal-transfer-history', protect, async (req, res) => {
         cryptocurrency: tx.cryptoCurrency,
         amount: tx.amount,
         status: tx.status,
-        description: tx.type === 'internal_transfer_sent' ? 'Sent to user' : 'Received from user',
+        description: tx.type === 'internal_transfer_sent' 
+          ? `Sent to ${tx.toAddress || 'user'}` 
+          : `Received from ${tx.fromAddress || 'user'}`,
+        walletAddress: tx.type === 'internal_transfer_sent' ? tx.toAddress : tx.fromAddress,
         createdAt: tx.createdAt
       }))
     });
