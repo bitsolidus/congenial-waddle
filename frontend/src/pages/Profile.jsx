@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
 import { User, Mail, Wallet, Shield, Edit2, Camera, MapPin, Phone, Calendar, Globe, Upload, X, FileCheck, Users, Eye, EyeOff, DollarSign } from 'lucide-react';
 import { updateProfile } from '../store/authSlice';
+import { fetchBalance } from '../store/walletSlice';
 import { formatCurrency, truncateAddress } from '../utils/helpers';
 import { getAvailableCurrencies, convertFromUSD, formatCurrencyWithSymbol } from '../utils/currency';
 import axios from 'axios';
@@ -12,24 +13,18 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const Profile = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { balance, totalDeposited, totalWithdrawn } = useSelector((state) => state.wallet);
   
   // Get user's currency preference
   const userCurrency = user?.currency || 'USD';
   
-  // Calculate total balance from balance object
-  const calculateTotalBalance = (balance) => {
-    if (!balance) return 0;
-    if (typeof balance === 'number') return balance;
-    if (typeof balance === 'object') {
-      // Sum up all crypto balances (they're stored as USD values)
-      return (balance.USDT || 0) + (balance.BTC || 0) + (balance.ETH || 0) + (balance.BNB || 0);
-    }
-    return 0;
-  };
+  // Fetch balance data on mount
+  useEffect(() => {
+    dispatch(fetchBalance());
+  }, [dispatch]);
   
-  const totalBalance = calculateTotalBalance(user?.balance);
-  const totalDeposited = user?.totalDeposited || 0;
-  const totalWithdrawn = user?.totalWithdrawn || 0;
+  // Use balance from wallet slice (in USD)
+  const totalBalance = balance?.total || 0;
   
   const [isEditing, setIsEditing] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
