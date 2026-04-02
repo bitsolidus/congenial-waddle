@@ -1452,12 +1452,11 @@ router.put('/user/:userId/profile', protect, adminOnly, async (req, res) => {
 
     console.log('Update data being sent:', updateData);
 
-    // Use updateOne with timestamps disabled to bypass Mongoose middleware
+    // Use MongoDB collection directly to completely bypass Mongoose timestamps
     if (Object.keys(updateData).length > 0) {
-      const updateResult = await User.updateOne(
-        { _id: req.params.userId },
-        { $set: updateData },
-        { timestamps: false }
+      const updateResult = await User.collection.updateOne(
+        { _id: user._id },
+        { $set: updateData }
       );
       console.log('Update result:', updateResult);
     }
