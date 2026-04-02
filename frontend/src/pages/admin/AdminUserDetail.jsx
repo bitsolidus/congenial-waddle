@@ -75,6 +75,18 @@ const AdminUserDetail = () => {
   const dispatch = useDispatch();
   const { prices } = useSelector((state) => state.crypto);
   
+  // Helper to safely format dates
+  const formatDate = (dateValue) => {
+    if (!dateValue) return 'Not set';
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      return date.toLocaleDateString();
+    } catch {
+      return 'Invalid date';
+    }
+  };
+  
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editingWallet, setEditingWallet] = useState(false);
@@ -802,7 +814,7 @@ const AdminUserDetail = () => {
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600 dark:text-gray-400">
-                    Joined {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Not set'}
+                    Joined {formatDate(user.createdAt)}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
@@ -967,7 +979,7 @@ const AdminUserDetail = () => {
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           />
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Current: {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Not set'}
+                            Current: {formatDate(user?.createdAt)}
                           </p>
                         </div>
                       </div>
