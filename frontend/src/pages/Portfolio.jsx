@@ -240,11 +240,9 @@ const Portfolio = () => {
           </div>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {showBalance ? (
-              viewMode === 'fiat' && userCurrency !== 'USD' ? (
-                formatCurrencyWithSymbol(convertFromUSD(totalDeposited || 0, userCurrency), userCurrency)
-              ) : (
-                formatCurrency(totalDeposited)
-              )
+              userCurrency !== 'USD' 
+                ? formatCurrencyWithSymbol(convertFromUSD(totalDeposited || 0, userCurrency), userCurrency)
+                : formatCurrency(totalDeposited)
             ) : '****'}
           </p>
         </motion.div>
@@ -263,11 +261,9 @@ const Portfolio = () => {
           </div>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {showBalance ? (
-              viewMode === 'fiat' && userCurrency !== 'USD' ? (
-                formatCurrencyWithSymbol(convertFromUSD(totalWithdrawn || 0, userCurrency), userCurrency)
-              ) : (
-                formatCurrency(totalWithdrawn)
-              )
+              userCurrency !== 'USD' 
+                ? formatCurrencyWithSymbol(convertFromUSD(totalWithdrawn || 0, userCurrency), userCurrency)
+                : formatCurrency(totalWithdrawn)
             ) : '****'}
           </p>
         </motion.div>
@@ -286,11 +282,9 @@ const Portfolio = () => {
           </div>
           <p className={`text-2xl font-bold ${netDeposit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {showBalance ? (
-              viewMode === 'fiat' && userCurrency !== 'USD' ? (
-                formatCurrencyWithSymbol(convertFromUSD(netDeposit, userCurrency), userCurrency)
-              ) : (
-                formatCurrency(netDeposit)
-              )
+              userCurrency !== 'USD' 
+                ? formatCurrencyWithSymbol(convertFromUSD(netDeposit, userCurrency), userCurrency)
+                : formatCurrency(netDeposit)
             ) : '****'}
           </p>
         </motion.div>

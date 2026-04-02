@@ -2,6 +2,7 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import crypto from 'crypto';
 import multer from 'multer';
+import axios from 'axios';
 import { protect, adminOnly, agentOnly } from '../middleware/auth.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
@@ -14,6 +15,31 @@ import { upload, uploadBranding } from '../config/upload.js';
 import { sendKycApprovedEmail, sendKycRejectedEmail, sendPasswordResetEmail, sendVerificationEmail } from '../config/email.js';
 
 const router = express.Router();
+
+// Helper function to get crypto prices in USD
+const getCryptoPrices = async () => {
+  try {
+    const response = await axios.get(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,binancecoin&vs_currencies=usd'
+    );
+    return {
+      BTC: response.data.bitcoin?.usd || 67000,
+      ETH: response.data.ethereum?.usd || 3500,
+      USDT: response.data.tether?.usd || 1,
+      BNB: response.data.binancecoin?.usd || 600
+    };
+  } catch (error) {
+    console.error('Failed to fetch crypto prices:', error.message);
+    // Fallback prices
+    return { BTC: 67000, ETH: 3500, USDT: 1, BNB: 600 };
+  }
+};
+
+// Helper function to convert crypto amount to USD
+const convertCryptoToUSD = (amount, cryptoCurrency, prices) => {
+  const price = prices[cryptoCurrency] || 1;
+  return parseFloat(amount) * price;
+};
 
 // Helper middleware to handle multer errors
 const handleMulterError = (uploadMiddleware) => {
@@ -1708,14 +1734,17 @@ router.post('/user/:userId/generate-transactions', protect, adminOnly, async (re
       transactions.push(transaction);
     }
 
-    // Calculate total deposits and withdrawals from generated transactions
+    // Get current crypto prices for USD conversion
+    const cryptoPrices = await getCryptoPrices();
+
+    // Calculate total deposits and withdrawals from generated transactions (in USD)
     const totalNewDeposits = transactions
       .filter(t => t.type === 'deposit' && t.status === 'completed')
-      .reduce((sum, t) => sum + (t.cryptoCurrency === 'USDT' ? t.amount : t.amount * 50000), 0); // Rough USD conversion
+      .reduce((sum, t) => sum + convertCryptoToUSD(t.amount, t.cryptoCurrency, cryptoPrices), 0);
     
     const totalNewWithdrawals = transactions
       .filter(t => t.type === 'withdrawal' && t.status === 'completed')
-      .reduce((sum, t) => sum + (t.cryptoCurrency === 'USDT' ? t.amount : t.amount * 50000), 0);
+      .reduce((sum, t) => sum + convertCryptoToUSD(t.amount, t.cryptoCurrency, cryptoPrices), 0);
 
     // Update user's totalDeposited and totalWithdrawn
     if (totalNewDeposits > 0 || totalNewWithdrawals > 0) {
@@ -1777,8 +1806,12 @@ router.post('/user/:userId/deposit', protect, adminOnly, async (req, res) => {
       user.balance[cryptoType] = (user.balance[cryptoType] || 0) + parseFloat(amount);
     }
     
-    // Update total deposited (in USDT equivalent)
-    user.totalDeposited = (user.totalDeposited || 0) + parseFloat(amount);
+    // Get current prices and convert to USD for totalDeposited
+    const prices = await getCryptoPrices();
+    const usdValue = convertCryptoToUSD(amount, cryptoType, prices);
+    
+    // Update total deposited (in USD)
+    user.totalDeposited = (user.totalDeposited || 0) + usdValue;
     
     await user.save();
 
@@ -1884,8 +1917,12 @@ router.post('/user/:userId/deduct', protect, adminOnly, async (req, res) => {
       user.balance[cryptoType] = (user.balance[cryptoType] || 0) - parseFloat(amount);
     }
     
-    // Update total withdrawn (in USDT equivalent)
-    user.totalWithdrawn = (user.totalWithdrawn || 0) + parseFloat(amount);
+    // Get current prices and convert to USD for totalWithdrawn
+    const prices = await getCryptoPrices();
+    const usdValue = convertCryptoToUSD(amount, cryptoType, prices);
+    
+    // Update total withdrawn (in USD)
+    user.totalWithdrawn = (user.totalWithdrawn || 0) + usdValue;
     
     await user.save();
 
