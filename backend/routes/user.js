@@ -261,14 +261,15 @@ router.get('/balance', protect, async (req, res) => {
     // Fetch real-time prices from CoinGecko
     let prices = {};
     try {
-      const response = await axios.get(
+      const response = await fetch(
         'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,binancecoin&vs_currencies=usd&include_24hr_change=true'
       );
+      const data = await response.json();
       prices = {
-        BTC: response.data.bitcoin?.usd || 0,
-        ETH: response.data.ethereum?.usd || 0,
-        USDT: response.data.tether?.usd || 1,
-        BNB: response.data.binancecoin?.usd || 0
+        BTC: data.bitcoin?.usd || 0,
+        ETH: data.ethereum?.usd || 0,
+        USDT: data.tether?.usd || 1,
+        BNB: data.binancecoin?.usd || 0
       };
     } catch (priceError) {
       console.error('Failed to fetch prices:', priceError);
