@@ -10,8 +10,11 @@ import DepositConfirmation from '../models/DepositConfirmation.js';
 import { upload, uploadBranding } from '../config/upload.js';
 import { sendKycSubmittedEmail, sendDepositNotificationEmail } from '../config/email.js';
 import { getClientIP, getUserAgent } from '../utils/getClientIP.js';
-import { authenticator } from 'otplib';
+import otplib from 'otplib';
 import QRCode from 'qrcode';
+
+// Get authenticator from otplib
+const { authenticator } = otplib;
 
 const router = express.Router();
 
