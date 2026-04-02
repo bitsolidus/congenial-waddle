@@ -1439,31 +1439,21 @@ router.put('/user/:userId/profile', protect, adminOnly, async (req, res) => {
     // Update createdAt (joined date) if provided
     if (createdAt) {
       const parsedDate = new Date(createdAt);
-      console.log('Updating createdAt:', {
-        originalCreatedAt: user.createdAt,
-        newCreatedAt: createdAt,
-        parsedDate: parsedDate,
-        isValid: !isNaN(parsedDate.getTime())
-      });
       if (!isNaN(parsedDate.getTime())) {
         updateData.createdAt = parsedDate;
       }
     }
 
-    console.log('Update data being sent:', updateData);
-
     // Use MongoDB collection directly to completely bypass Mongoose timestamps
     if (Object.keys(updateData).length > 0) {
-      const updateResult = await User.collection.updateOne(
+      await User.collection.updateOne(
         { _id: user._id },
         { $set: updateData }
       );
-      console.log('Update result:', updateResult);
     }
 
     // Fetch the updated user
     const updatedUser = await User.findById(req.params.userId).select('-password -twoFactorSecret');
-    console.log('Updated user createdAt:', updatedUser?.createdAt);
 
     res.json({
       success: true,
