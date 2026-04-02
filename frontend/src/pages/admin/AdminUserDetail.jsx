@@ -802,7 +802,7 @@ const AdminUserDetail = () => {
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600 dark:text-gray-400">
-                    Joined {user.createdAt ? new Date(user.createdAt + 'T00:00:00').toLocaleDateString() : 'Not set'}
+                    Joined {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Not set'}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
@@ -967,7 +967,7 @@ const AdminUserDetail = () => {
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           />
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Current: {user?.createdAt ? new Date(user.createdAt + 'T00:00:00').toLocaleDateString() : 'Not set'}
+                            Current: {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Not set'}
                           </p>
                         </div>
                       </div>
