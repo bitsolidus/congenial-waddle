@@ -89,10 +89,33 @@ const Portfolio = () => {
   const totalValue = portfolioItems.reduce((sum, item) => sum + item.usdValue, 0);
   const netDeposit = (totalDeposited || 0) - (totalWithdrawn || 0);
 
-  if (isLoading) {
+  // Show loading skeleton if data is not ready
+  const isDataReady = !isLoading && balance && portfolio;
+
+  if (isLoading && !balance?.total) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="h-4 w-64 bg-gray-200 dark:bg-gray-700 rounded mt-2 animate-pulse" />
+          </div>
+        </div>
+        {/* Balance Card Skeleton */}
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-8">
+          <div className="h-4 w-32 bg-white/20 rounded animate-pulse mb-2" />
+          <div className="h-12 w-64 bg-white/20 rounded animate-pulse" />
+        </div>
+        {/* Stats Grid Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+              <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -162,7 +185,9 @@ const Portfolio = () => {
             </p>
             <h2 className="text-4xl font-bold">
               {showBalance ? (
-                viewMode === 'crypto' ? (
+                !isDataReady ? (
+                  <span className="inline-block w-48 h-12 bg-white/20 rounded animate-pulse" />
+                ) : viewMode === 'crypto' ? (
                   // In crypto view, show breakdown of holdings like Dashboard
                   <span className="text-2xl">
                     {portfolioItems.map((item, index) => (
@@ -240,7 +265,9 @@ const Portfolio = () => {
           </div>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {showBalance ? (
-              userCurrency !== 'USD' 
+              !isDataReady ? (
+                <span className="inline-block w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              ) : userCurrency !== 'USD' 
                 ? formatCurrencyWithSymbol(convertFromUSD(totalDeposited || 0, userCurrency), userCurrency)
                 : formatCurrency(totalDeposited)
             ) : '****'}
@@ -261,7 +288,9 @@ const Portfolio = () => {
           </div>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {showBalance ? (
-              userCurrency !== 'USD' 
+              !isDataReady ? (
+                <span className="inline-block w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              ) : userCurrency !== 'USD' 
                 ? formatCurrencyWithSymbol(convertFromUSD(totalWithdrawn || 0, userCurrency), userCurrency)
                 : formatCurrency(totalWithdrawn)
             ) : '****'}
@@ -282,7 +311,9 @@ const Portfolio = () => {
           </div>
           <p className={`text-2xl font-bold ${netDeposit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {showBalance ? (
-              userCurrency !== 'USD' 
+              !isDataReady ? (
+                <span className="inline-block w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              ) : userCurrency !== 'USD' 
                 ? formatCurrencyWithSymbol(convertFromUSD(netDeposit, userCurrency), userCurrency)
                 : formatCurrency(netDeposit)
             ) : '****'}

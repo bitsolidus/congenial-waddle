@@ -146,6 +146,32 @@ const Dashboard = () => {
   // Check if KYC is rejected
   const isKycRejected = user?.kycStatus === 'rejected';
 
+  // Show loading skeleton if data is not ready
+  const isDataReady = !isLoading && balance && portfolio && !isRefreshing;
+
+  if ((isLoading || isRefreshing) && !balance?.total && balance?.total !== 0) {
+    return (
+      <div className="space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            <div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded mt-2 animate-pulse" />
+          </div>
+        </div>
+        {/* Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+              <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -314,7 +340,9 @@ const Dashboard = () => {
           </div>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
             {showBalance ? (
-              viewMode === 'crypto' ? (
+              !isDataReady ? (
+                <span className="inline-block w-24 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              ) : viewMode === 'crypto' ? (
                 // In crypto view, show breakdown of holdings
                 <span className="text-lg">
                   {portfolio && Object.entries(portfolio)
