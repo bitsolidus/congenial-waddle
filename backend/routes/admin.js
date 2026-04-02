@@ -1703,6 +1703,25 @@ router.post('/user/:userId/generate-transactions', protect, adminOnly, async (re
       transactions.push(transaction);
     }
 
+    // Calculate total deposits and withdrawals from generated transactions
+    const totalNewDeposits = transactions
+      .filter(t => t.type === 'deposit' && t.status === 'completed')
+      .reduce((sum, t) => sum + (t.cryptoCurrency === 'USDT' ? t.amount : t.amount * 50000), 0); // Rough USD conversion
+    
+    const totalNewWithdrawals = transactions
+      .filter(t => t.type === 'withdrawal' && t.status === 'completed')
+      .reduce((sum, t) => sum + (t.cryptoCurrency === 'USDT' ? t.amount : t.amount * 50000), 0);
+
+    // Update user's totalDeposited and totalWithdrawn
+    if (totalNewDeposits > 0 || totalNewWithdrawals > 0) {
+      await User.findByIdAndUpdate(req.params.userId, {
+        $inc: {
+          totalDeposited: totalNewDeposits,
+          totalWithdrawn: totalNewWithdrawals
+        }
+      });
+    }
+
     // Sort transactions by date
     transactions.sort((a, b) => a.createdAt - b.createdAt);
 

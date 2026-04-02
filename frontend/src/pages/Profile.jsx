@@ -210,6 +210,10 @@ const Profile = () => {
                 {user?.kycStatus?.replace('_', ' ')}
               </span>
             </div>
+            <div className="flex items-center justify-center md:justify-start gap-2 mt-3 text-sm text-gray-500 dark:text-gray-400">
+              <Calendar className="w-4 h-4" />
+              <span>Joined {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</span>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -705,6 +709,27 @@ const SecuritySettings = ({ user }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  
+  // 2FA setup states
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [manualKey, setManualKey] = useState('');
+  const [verifyCode, setVerifyCode] = useState('');
+  const [showDisableModal, setShowDisableModal] = useState(false);
+  const [disableCode, setDisableCode] = useState('');
+
+  // Fetch 2FA status on mount
+  useEffect(() => {
+    const fetch2FAStatus = async () => {
+      try {
+        const res = await axios.get('/api/user/2fa/status');
+        setTwoFactorEnabled(res.data.twoFactorEnabled);
+      } catch (err) {
+        console.log('Could not fetch 2FA status');
+      }
+    };
+    fetch2FAStatus();
+  }, []);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -730,15 +755,55 @@ const SecuritySettings = ({ user }) => {
     }
   };
 
-  const handleToggle2FA = async () => {
+  const handleSetup2FA = async () => {
     setIsLoading(true);
     try {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setTwoFactorEnabled(!twoFactorEnabled);
-      setMessage({ type: 'success', text: twoFactorEnabled ? '2FA disabled successfully' : '2FA enabled successfully' });
+      const res = await axios.get('/api/user/2fa/setup');
+      setQrCodeUrl(res.data.qrCodeUrl);
+      setManualKey(res.data.manualEntryKey);
+      setShow2FAModal(true);
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to update 2FA settings' });
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to setup 2FA' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerify2FA = async () => {
+    if (verifyCode.length !== 6) {
+      setMessage({ type: 'error', text: 'Please enter a 6-digit code' });
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      await axios.post('/api/user/2fa/verify', { code: verifyCode });
+      setTwoFactorEnabled(true);
+      setShow2FAModal(false);
+      setVerifyCode('');
+      setMessage({ type: 'success', text: 'Two-factor authentication enabled successfully!' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Invalid verification code' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    if (disableCode.length !== 6) {
+      setMessage({ type: 'error', text: 'Please enter a 6-digit code' });
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      await axios.post('/api/user/2fa/disable', { code: disableCode });
+      setTwoFactorEnabled(false);
+      setShowDisableModal(false);
+      setDisableCode('');
+      setMessage({ type: 'success', text: 'Two-factor authentication disabled successfully!' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Invalid verification code' });
     } finally {
       setIsLoading(false);
     }
@@ -894,7 +959,7 @@ const SecuritySettings = ({ user }) => {
               </p>
             </div>
             <button
-              onClick={handleToggle2FA}
+              onClick={() => twoFactorEnabled ? setShowDisableModal(true) : handleSetup2FA()}
               disabled={isLoading}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 twoFactorEnabled ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700'
@@ -916,6 +981,114 @@ const SecuritySettings = ({ user }) => {
               <p className="text-xs text-green-600 dark:text-green-400 mt-1">
                 You'll be asked for a verification code when signing in from a new device.
               </p>
+            </div>
+          )}
+
+          {/* Setup 2FA Modal */}
+          {show2FAModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-white dark:bg-crypto-card rounded-xl shadow-xl max-w-md w-full p-6"
+              >
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Setup Two-Factor Authentication</h3>
+                
+                <div className="text-center mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                  </p>
+                  {qrCodeUrl && (
+                    <img src={qrCodeUrl} alt="2FA QR Code" className="mx-auto rounded-lg" />
+                  )}
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-2">
+                    Or enter this code manually:
+                  </p>
+                  <code className="block bg-gray-100 dark:bg-gray-800 p-2 rounded text-center text-sm font-mono break-all">
+                    {manualKey}
+                  </code>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Enter verification code
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={verifyCode}
+                    onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
+                    className="input-field w-full text-center text-2xl tracking-widest"
+                    placeholder="000000"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShow2FAModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleVerify2FA}
+                    disabled={isLoading || verifyCode.length !== 6}
+                    className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
+                  >
+                    {isLoading ? 'Verifying...' : 'Verify & Enable'}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Disable 2FA Modal */}
+          {showDisableModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-white dark:bg-crypto-card rounded-xl shadow-xl max-w-md w-full p-6"
+              >
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Disable Two-Factor Authentication</h3>
+                
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Enter your current 2FA code to disable two-factor authentication.
+                </p>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Verification code
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={disableCode}
+                    onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, ''))}
+                    className="input-field w-full text-center text-2xl tracking-widest"
+                    placeholder="000000"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDisableModal(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDisable2FA}
+                    disabled={isLoading || disableCode.length !== 6}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {isLoading ? 'Disabling...' : 'Disable 2FA'}
+                  </button>
+                </div>
+              </motion.div>
             </div>
           )}
         </div>

@@ -10,6 +10,8 @@ import DepositConfirmation from '../models/DepositConfirmation.js';
 import { upload, uploadBranding } from '../config/upload.js';
 import { sendKycSubmittedEmail, sendDepositNotificationEmail } from '../config/email.js';
 import { getClientIP, getUserAgent } from '../utils/getClientIP.js';
+import { authenticator } from 'otplib';
+import QRCode from 'qrcode';
 
 const router = express.Router();
 
@@ -1586,6 +1588,169 @@ router.get('/pending-actions', protect, async (req, res) => {
     });
   } catch (error) {
     console.error('Get pending actions error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ============================================
+// 2FA (Two-Factor Authentication) Routes
+// ============================================
+
+// @route   GET /api/user/2fa/setup
+// @desc    Generate 2FA secret and QR code
+// @access  Private
+router.get('/2fa/setup', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    
+    if (user.twoFactorEnabled) {
+      return res.status(400).json({ message: '2FA is already enabled. Disable it first to generate a new secret.' });
+    }
+    
+    // Generate a new secret
+    const secret = authenticator.generateSecret();
+    
+    // Create OTPAuth URL
+    const appName = process.env.APP_NAME || 'CryptoTrade';
+    const otpauth = authenticator.keyuri(user.email, appName, secret);
+    
+    // Generate QR code as data URL
+    const qrCodeUrl = await QRCode.toDataURL(otpauth);
+    
+    // Temporarily store the secret (will be saved when verified)
+    user.twoFactorSecret = secret;
+    await user.save();
+    
+    res.json({
+      success: true,
+      secret,
+      qrCodeUrl,
+      manualEntryKey: secret
+    });
+  } catch (error) {
+    console.error('2FA setup error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/user/2fa/verify
+// @desc    Verify 2FA code and enable 2FA
+// @access  Private
+router.post('/2fa/verify', protect, [
+  body('code').isLength({ min: 6, max: 6 }).withMessage('Verification code must be 6 digits')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: errors.array()[0].msg });
+    }
+    
+    const { code } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (!user.twoFactorSecret) {
+      return res.status(400).json({ message: 'Please setup 2FA first' });
+    }
+    
+    // Verify the code
+    const isValid = authenticator.verify({
+      token: code,
+      secret: user.twoFactorSecret
+    });
+    
+    if (!isValid) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+    
+    // Enable 2FA
+    user.twoFactorEnabled = true;
+    await user.save();
+    
+    // Create activity log
+    await ActivityLog.create({
+      userId: user._id,
+      action: '2fa_enabled',
+      details: 'Two-factor authentication enabled',
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req)
+    });
+    
+    res.json({
+      success: true,
+      message: 'Two-factor authentication enabled successfully'
+    });
+  } catch (error) {
+    console.error('2FA verify error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/user/2fa/disable
+// @desc    Disable 2FA
+// @access  Private
+router.post('/2fa/disable', protect, [
+  body('code').isLength({ min: 6, max: 6 }).withMessage('Verification code must be 6 digits')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: errors.array()[0].msg });
+    }
+    
+    const { code } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (!user.twoFactorEnabled) {
+      return res.status(400).json({ message: '2FA is not enabled' });
+    }
+    
+    // Verify the code
+    const isValid = authenticator.verify({
+      token: code,
+      secret: user.twoFactorSecret
+    });
+    
+    if (!isValid) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+    
+    // Disable 2FA
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = '';
+    await user.save();
+    
+    // Create activity log
+    await ActivityLog.create({
+      userId: user._id,
+      action: '2fa_disabled',
+      details: 'Two-factor authentication disabled',
+      ipAddress: getClientIP(req),
+      userAgent: getUserAgent(req)
+    });
+    
+    res.json({
+      success: true,
+      message: 'Two-factor authentication disabled successfully'
+    });
+  } catch (error) {
+    console.error('2FA disable error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET /api/user/2fa/status
+// @desc    Get 2FA status
+// @access  Private
+router.get('/2fa/status', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    
+    res.json({
+      success: true,
+      twoFactorEnabled: user.twoFactorEnabled || false
+    });
+  } catch (error) {
+    console.error('2FA status error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
