@@ -1435,8 +1435,12 @@ router.put('/user/:userId/profile', protect, adminOnly, async (req, res) => {
 
     // Update createdAt (joined date) if provided
     if (createdAt) {
-      user.createdAt = new Date(createdAt);
-      user.markModified('createdAt'); // Mark as modified since it's a timestamp field
+      // Parse the date and set to noon UTC to avoid timezone issues
+      const parsedDate = new Date(createdAt);
+      if (!isNaN(parsedDate.getTime())) {
+        user.createdAt = parsedDate;
+        user.markModified('createdAt'); // Mark as modified since it's a timestamp field
+      }
     }
 
     await user.save();
