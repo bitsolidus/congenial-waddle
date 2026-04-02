@@ -1444,12 +1444,17 @@ router.put('/user/:userId/profile', protect, adminOnly, async (req, res) => {
       }
     }
 
-    // Use findByIdAndUpdate to bypass timestamp middleware
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.userId,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    ).select('-password -twoFactorSecret');
+    // Use updateOne with timestamps disabled to bypass Mongoose middleware
+    if (Object.keys(updateData).length > 0) {
+      await User.updateOne(
+        { _id: req.params.userId },
+        { $set: updateData },
+        { timestamps: false }
+      );
+    }
+
+    // Fetch the updated user
+    const updatedUser = await User.findById(req.params.userId).select('-password -twoFactorSecret');
 
     res.json({
       success: true,
