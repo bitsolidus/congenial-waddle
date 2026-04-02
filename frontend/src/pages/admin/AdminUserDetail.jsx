@@ -568,6 +568,32 @@ const AdminUserDetail = () => {
     }
   };
 
+  // Handle recalculate totals
+  const handleRecalculateTotals = async () => {
+    try {
+      const response = await axios.post(`/api/admin/user/${userId}/recalculate-totals`);
+      
+      // Update user state with new values
+      setUser(prev => ({
+        ...prev,
+        totalDeposited: response.data.user.totalDeposited,
+        totalWithdrawn: response.data.user.totalWithdrawn
+      }));
+      
+      setNotification({
+        message: `Totals recalculated: Deposited $${response.data.user.totalDeposited.toFixed(2)}, Withdrawn $${response.data.user.totalWithdrawn.toFixed(2)}`,
+        type: 'success'
+      });
+    } catch (err) {
+      setNotification({
+        message: err.response?.data?.message || 'Failed to recalculate totals',
+        type: 'error'
+      });
+    } finally {
+      setTimeout(() => setNotification(null), 5000);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -1219,7 +1245,16 @@ const AdminUserDetail = () => {
 
             {/* Transaction Stats */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Transaction Summary</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Transaction Summary</h3>
+                <button
+                  onClick={handleRecalculateTotals}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Recalculate
+                </button>
+              </div>
               <div className="grid grid-cols-3 gap-6">
                 <div className="text-center">
                   <p className="text-3xl font-bold text-green-600 dark:text-green-400">

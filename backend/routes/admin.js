@@ -3719,4 +3719,74 @@ router.get('/analytics', protect, adminOnly, async (req, res) => {
   }
 });
 
+// @route   POST /api/admin/user/:userId/recalculate-totals
+// @desc    Recalculate totalDeposited and totalWithdrawn from transaction history
+// @access  Admin
+router.post('/user/:userId/recalculate-totals', protect, adminOnly, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get all completed deposit transactions
+    const depositTransactions = await Transaction.find({
+      userId: user._id,
+      type: 'deposit',
+      status: 'completed'
+    });
+
+    // Get all completed withdrawal transactions
+    const withdrawalTransactions = await Transaction.find({
+      userId: user._id,
+      type: 'withdrawal',
+      status: { $in: ['completed', 'approved'] }
+    });
+
+    // Get current prices for conversion
+    const prices = await getCryptoPrices();
+
+    // Calculate total deposited in USD
+    let totalDepositedUSD = 0;
+    for (const tx of depositTransactions) {
+      const crypto = tx.cryptoCurrency || 'USDT';
+      const usdValue = convertCryptoToUSD(tx.amount, crypto, prices);
+      totalDepositedUSD += usdValue;
+    }
+
+    // Calculate total withdrawn in USD
+    let totalWithdrawnUSD = 0;
+    for (const tx of withdrawalTransactions) {
+      const crypto = tx.cryptoCurrency || tx.sourceCrypto || 'USDT';
+      const usdValue = convertCryptoToUSD(tx.amount, crypto, prices);
+      totalWithdrawnUSD += usdValue;
+    }
+
+    // Update user with calculated values
+    user.totalDeposited = totalDepositedUSD;
+    user.totalWithdrawn = totalWithdrawnUSD;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Totals recalculated successfully',
+      user: {
+        id: user._id,
+        username: user.username,
+        totalDeposited: user.totalDeposited,
+        totalWithdrawn: user.totalWithdrawn,
+        netDeposit: user.totalDeposited - user.totalWithdrawn
+      },
+      details: {
+        depositCount: depositTransactions.length,
+        withdrawalCount: withdrawalTransactions.length,
+        prices: prices
+      }
+    });
+  } catch (error) {
+    console.error('Recalculate totals error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
