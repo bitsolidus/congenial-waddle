@@ -2,7 +2,6 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import crypto from 'crypto';
 import multer from 'multer';
-import axios from 'axios';
 import { protect, adminOnly, agentOnly } from '../middleware/auth.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
@@ -19,14 +18,15 @@ const router = express.Router();
 // Helper function to get crypto prices in USD
 const getCryptoPrices = async () => {
   try {
-    const response = await axios.get(
+    const response = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,binancecoin&vs_currencies=usd'
     );
+    const data = await response.json();
     return {
-      BTC: response.data.bitcoin?.usd || 67000,
-      ETH: response.data.ethereum?.usd || 3500,
-      USDT: response.data.tether?.usd || 1,
-      BNB: response.data.binancecoin?.usd || 600
+      BTC: data.bitcoin?.usd || 67000,
+      ETH: data.ethereum?.usd || 3500,
+      USDT: data.tether?.usd || 1,
+      BNB: data.binancecoin?.usd || 600
     };
   } catch (error) {
     console.error('Failed to fetch crypto prices:', error.message);
