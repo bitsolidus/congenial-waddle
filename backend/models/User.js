@@ -69,8 +69,8 @@ const userSchema = new mongoose.Schema({
   },
   tier: {
     type: String,
-    enum: ['bronze', 'silver', 'gold', 'vip'],
-    default: 'bronze'
+    enum: ['standard', 'verified', 'premium', 'vip'],
+    default: 'standard'
   },
   tierUpgradeProgress: {
     kycCompleted: { type: Boolean, default: false },
