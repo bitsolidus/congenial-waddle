@@ -360,7 +360,9 @@ router.post(
           settings: user.settings,
           isAdmin: user.isAdmin,
           country: user.country,
-          currency: user.settings?.currency || 'USD'
+          currency: user.settings?.currency || 'USD',
+          createdAt: user.createdAt,
+          avatar: user.avatar
         }
       });
     } catch (error) {
