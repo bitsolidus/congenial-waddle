@@ -143,7 +143,8 @@ const AdminUserDetail = () => {
   const [fundForm, setFundForm] = useState({
     amount: '',
     crypto: 'USDT',
-    reason: ''
+    reason: '',
+    transactionDate: '' // Custom date for the transaction
   });
   const [processingFund, setProcessingFund] = useState(false);
 
@@ -494,7 +495,8 @@ const AdminUserDetail = () => {
         amount: amount,
         crypto: fundForm.crypto,
         description: fundAction === 'deposit' ? 'Admin deposit' : 'Admin deduction',
-        reason: fundForm.reason
+        reason: fundForm.reason,
+        transactionDate: fundForm.transactionDate || undefined
       });
       
       // Ensure balance is properly formatted
@@ -514,7 +516,7 @@ const AdminUserDetail = () => {
       }));
       
       setShowFundModal(false);
-      setFundForm({ amount: '', crypto: 'USDT', reason: '' });
+      setFundForm({ amount: '', crypto: 'USDT', reason: '', transactionDate: '' });
       
       setNotification({ 
         message: response.data.message || `${fundAction === 'deposit' ? 'Deposit' : 'Deduction'} successful`, 
@@ -1948,6 +1950,24 @@ const AdminUserDetail = () => {
                     ))}
                   </div>
                 </div>
+
+                {fundAction === 'deposit' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Transaction Date (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={fundForm.transactionDate}
+                      onChange={(e) => setFundForm(prev => ({ ...prev, transactionDate: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      max={new Date().toISOString().split('T')[0]}
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Leave empty to use today's date
+                    </p>
+                  </div>
+                )}
 
                 {fundAction === 'deduct' && (
                   <div>

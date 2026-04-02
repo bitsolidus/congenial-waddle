@@ -1730,7 +1730,7 @@ router.post('/user/:userId/generate-transactions', protect, adminOnly, async (re
 // @access  Admin
 router.post('/user/:userId/deposit', protect, adminOnly, async (req, res) => {
   try {
-    const { amount, crypto: cryptoType = 'USDT', description = 'Admin deposit' } = req.body;
+    const { amount, crypto: cryptoType = 'USDT', description = 'Admin deposit', transactionDate } = req.body;
     
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Valid amount is required' });
@@ -1758,8 +1758,8 @@ router.post('/user/:userId/deposit', protect, adminOnly, async (req, res) => {
     
     await user.save();
 
-    // Create transaction record
-    const transaction = await Transaction.create({
+    // Create transaction record with optional custom date
+    const transactionData = {
       userId: user._id,
       type: 'deposit',
       cryptoCurrency: cryptoType,
@@ -1768,7 +1768,20 @@ router.post('/user/:userId/deposit', protect, adminOnly, async (req, res) => {
       description,
       transactionHash: '0x' + crypto.randomBytes(32).toString('hex'),
       gasFee: 0
-    });
+    };
+
+    // If transactionDate is provided, use it instead of current date
+    if (transactionDate) {
+      const parsedDate = new Date(transactionDate);
+      if (!isNaN(parsedDate.getTime())) {
+        transactionData.createdAt = parsedDate;
+        transactionData.updatedAt = parsedDate;
+      }
+    }
+
+    // Use insertMany to bypass timestamp middleware for custom dates
+    const transactionResult = await Transaction.insertMany([transactionData]);
+    const transaction = transactionResult[0];
 
     // Create notification for user
     await Notification.create({
