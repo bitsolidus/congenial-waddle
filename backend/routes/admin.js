@@ -1433,11 +1433,25 @@ router.put('/user/:userId/verify-email', protect, adminOnly, async (req, res) =>
 });
 
 // @route   PUT /api/admin/user/:userId/profile
-// @desc    Update user profile (username, name, and joined date)
+// @desc    Update user profile (all personal details)
 // @access  Admin
 router.put('/user/:userId/profile', protect, adminOnly, async (req, res) => {
   try {
-    const { username, name, createdAt } = req.body;
+    const { 
+      username, 
+      name, 
+      createdAt,
+      firstName,
+      lastName,
+      email,
+      phone,
+      gender,
+      dateOfBirth,
+      address,
+      city,
+      country,
+      currency
+    } = req.body;
     
     const user = await User.findById(req.params.userId);
     
@@ -1457,9 +1471,70 @@ router.put('/user/:userId/profile', protect, adminOnly, async (req, res) => {
       updateData.username = username;
     }
 
+    // Check if email is already taken by another user
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email, _id: { $ne: req.params.userId } });
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email is already taken' });
+      }
+      updateData.email = email;
+    }
+
     // Update name if provided
     if (name !== undefined) {
       updateData.name = name;
+    }
+
+    // Update firstName if provided
+    if (firstName !== undefined) {
+      updateData.firstName = firstName;
+    }
+
+    // Update lastName if provided
+    if (lastName !== undefined) {
+      updateData.lastName = lastName;
+    }
+
+    // Update phone if provided
+    if (phone !== undefined) {
+      updateData.phone = phone;
+    }
+
+    // Update gender if provided
+    if (gender !== undefined) {
+      updateData.gender = gender;
+    }
+
+    // Update dateOfBirth if provided
+    if (dateOfBirth) {
+      const parsedDate = new Date(dateOfBirth);
+      if (!isNaN(parsedDate.getTime())) {
+        updateData.dateOfBirth = parsedDate;
+      }
+    }
+
+    // Update address if provided
+    if (address !== undefined) {
+      updateData.address = address;
+    }
+
+    // Update city if provided
+    if (city !== undefined) {
+      updateData.city = city;
+    }
+
+    // Update country if provided
+    if (country !== undefined) {
+      updateData.country = country;
+    }
+
+    // Update currency if provided
+    if (currency !== undefined) {
+      if (!user.settings) {
+        user.settings = {};
+      }
+      user.settings.currency = currency;
+      updateData.settings = user.settings;
     }
 
     // Update createdAt (joined date) if provided
@@ -1488,7 +1563,16 @@ router.put('/user/:userId/profile', protect, adminOnly, async (req, res) => {
         id: updatedUser._id,
         username: updatedUser.username,
         name: updatedUser.name,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
         email: updatedUser.email,
+        phone: updatedUser.phone,
+        gender: updatedUser.gender,
+        dateOfBirth: updatedUser.dateOfBirth,
+        address: updatedUser.address,
+        city: updatedUser.city,
+        country: updatedUser.country,
+        currency: updatedUser.settings?.currency || 'USD',
         createdAt: updatedUser.createdAt
       }
     });

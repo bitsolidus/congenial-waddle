@@ -113,6 +113,16 @@ const AdminUserDetail = () => {
   const [profileData, setProfileData] = useState({
     username: '',
     name: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    gender: '',
+    dateOfBirth: '',
+    address: '',
+    city: '',
+    country: '',
+    currency: 'USD',
     createdAt: ''
   });
   const [savingProfile, setSavingProfile] = useState(false);
@@ -320,7 +330,17 @@ const AdminUserDetail = () => {
     try {
       const updateData = {
         username: profileData.username,
-        name: profileData.name
+        name: profileData.name,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+        phone: profileData.phone,
+        gender: profileData.gender,
+        dateOfBirth: profileData.dateOfBirth,
+        address: profileData.address,
+        city: profileData.city,
+        country: profileData.country,
+        currency: profileData.currency
       };
       
       // Only include createdAt if it was changed
@@ -335,6 +355,16 @@ const AdminUserDetail = () => {
         ...prev, 
         username: response.data.user.username,
         name: response.data.user.name || response.data.user.username,
+        firstName: response.data.user.firstName,
+        lastName: response.data.user.lastName,
+        email: response.data.user.email,
+        phone: response.data.user.phone,
+        gender: response.data.user.gender,
+        dateOfBirth: response.data.user.dateOfBirth,
+        address: response.data.user.address,
+        city: response.data.user.city,
+        country: response.data.user.country,
+        settings: { ...prev.settings, currency: response.data.user.currency },
         createdAt: response.data.user.createdAt
       }));
       
@@ -862,6 +892,16 @@ const AdminUserDetail = () => {
                       setProfileData({ 
                         username: user.username, 
                         name: user.name || '',
+                        firstName: user.firstName || '',
+                        lastName: user.lastName || '',
+                        email: user.email || '',
+                        phone: user.phone || '',
+                        gender: user.gender || '',
+                        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : '',
+                        address: user.address || '',
+                        city: user.city || '',
+                        country: user.country || '',
+                        currency: user.settings?.currency || user.currency || 'USD',
                         createdAt: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : ''
                       });
                       setEditingProfile(true);
@@ -960,47 +1000,148 @@ const AdminUserDetail = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
                     onClick={() => setEditingProfile(false)}
                   >
                     <motion.div
                       initial={{ scale: 0.95, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.95, opacity: 0 }}
-                      className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6"
+                      className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 my-8"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Edit Profile</h3>
-                      <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Username */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
                           <input
-                            id="profile-username"
-                            name="profileUsername"
                             type="text"
                             value={profileData.username}
                             onChange={(e) => setProfileData(prev => ({ ...prev, username: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           />
                         </div>
+                        {/* Email */}
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                           <input
-                            id="profile-name"
-                            name="profileName"
-                            type="text"
-                            value={profileData.name}
-                            onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
+                            type="email"
+                            value={profileData.email}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           />
                         </div>
+                        {/* First Name */}
                         <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
+                          <input
+                            type="text"
+                            value={profileData.firstName}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        {/* Last Name */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
+                          <input
+                            type="text"
+                            value={profileData.lastName}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        {/* Phone */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
+                          <input
+                            type="tel"
+                            value={profileData.phone}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        {/* Gender */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gender</label>
+                          <select
+                            value={profileData.gender}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, gender: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          >
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        {/* Date of Birth */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Birth</label>
+                          <input
+                            type="date"
+                            value={profileData.dateOfBirth}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        {/* Currency */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Currency</label>
+                          <select
+                            value={profileData.currency}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, currency: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          >
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="JPY">JPY</option>
+                            <option value="CAD">CAD</option>
+                            <option value="AUD">AUD</option>
+                            <option value="CHF">CHF</option>
+                            <option value="CNY">CNY</option>
+                            <option value="INR">INR</option>
+                            <option value="BRL">BRL</option>
+                          </select>
+                        </div>
+                        {/* Address */}
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address</label>
+                          <input
+                            type="text"
+                            value={profileData.address}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, address: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        {/* City */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">City</label>
+                          <input
+                            type="text"
+                            value={profileData.city}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, city: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        {/* Country */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Country</label>
+                          <input
+                            type="text"
+                            value={profileData.country}
+                            onChange={(e) => setProfileData(prev => ({ ...prev, country: e.target.value }))}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        {/* Joined Date */}
+                        <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Joined Date
                           </label>
                           <input
-                            id="profile-created-at"
-                            name="profileCreatedAt"
                             type="date"
                             value={profileData.createdAt}
                             onChange={(e) => setProfileData(prev => ({ ...prev, createdAt: e.target.value }))}
