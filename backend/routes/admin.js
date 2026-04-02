@@ -1565,6 +1565,7 @@ router.post('/user/:userId/tier', protect, adminOnly, async (req, res) => {
     await ActivityLog.create({
       userId: req.user._id,
       type: 'tier_change',
+      title: 'User Tier Changed',
       description: `Changed ${user.username}'s tier from ${oldTier} to ${tier}`,
       metadata: { 
         targetUser: user._id, 
