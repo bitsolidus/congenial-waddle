@@ -7,6 +7,31 @@ import AdminSettings from '../models/AdminSettings.js';
 
 const router = express.Router();
 
+// Helper function to get crypto prices in USD
+const getCryptoPrices = async () => {
+  try {
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,binancecoin&vs_currencies=usd'
+    );
+    const data = await response.json();
+    return {
+      BTC: data.bitcoin?.usd || 67000,
+      ETH: data.ethereum?.usd || 3500,
+      USDT: data.tether?.usd || 1,
+      BNB: data.binancecoin?.usd || 600
+    };
+  } catch (error) {
+    console.error('Failed to fetch crypto prices:', error.message);
+    return { BTC: 67000, ETH: 3500, USDT: 1, BNB: 600 };
+  }
+};
+
+// Helper function to convert crypto amount to USD
+const convertCryptoToUSD = (amount, cryptoCurrency, prices) => {
+  const price = prices[cryptoCurrency] || 1;
+  return parseFloat(amount) * price;
+};
+
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -99,9 +124,18 @@ router.post(
         transaction.completedAt = new Date();
         await transaction.save();
         
-        // Update user balance
-        user.balance += amount;
-        user.totalDeposited += amount;
+        // Get prices and convert to USD for totalDeposited
+        const prices = await getCryptoPrices();
+        const usdValue = convertCryptoToUSD(amount, currency, prices);
+        
+        // Update user balance (crypto amount)
+        if (!user.balance || typeof user.balance !== 'object') {
+          user.balance = { USDT: 0, BTC: 0, ETH: 0, BNB: 0 };
+        }
+        user.balance[currency] = (user.balance[currency] || 0) + parseFloat(amount);
+        
+        // Update total deposited (in USD)
+        user.totalDeposited = (user.totalDeposited || 0) + usdValue;
         await user.save();
       }, 5000);
       

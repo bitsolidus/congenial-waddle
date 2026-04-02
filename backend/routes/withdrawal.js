@@ -9,11 +9,36 @@ import {
   calculateGasFee, 
   checkSufficientGas, 
   calculateWithdrawalAmount,
-  getNetworkGasPrices 
+  getNetworkGasPrices
 } from '../utils/gasCalculator.js';
 import { getClientIP, getUserAgent } from '../utils/getClientIP.js';
 
 const router = express.Router();
+
+// Helper function to get crypto prices in USD
+const getCryptoPrices = async () => {
+  try {
+    const response = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tether,binancecoin&vs_currencies=usd'
+    );
+    const data = await response.json();
+    return {
+      BTC: data.bitcoin?.usd || 67000,
+      ETH: data.ethereum?.usd || 3500,
+      USDT: data.tether?.usd || 1,
+      BNB: data.binancecoin?.usd || 600
+    };
+  } catch (error) {
+    console.error('Failed to fetch crypto prices:', error.message);
+    return { BTC: 67000, ETH: 3500, USDT: 1, BNB: 600 };
+  }
+};
+
+// Helper function to convert crypto amount to USD
+const convertCryptoToUSD = (amount, cryptoCurrency, prices) => {
+  const price = prices[cryptoCurrency] || 1;
+  return parseFloat(amount) * price;
+};
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -232,7 +257,11 @@ router.post(
       // Deduct amount from user's selected crypto balance
       if (!user.balance) user.balance = {};
       user.balance[sourceCrypto] = (user.balance[sourceCrypto] || 0) - amount;
-      user.totalWithdrawn = (user.totalWithdrawn || 0) + amount;
+      
+      // Convert to USD for totalWithdrawn
+      const prices = await getCryptoPrices();
+      const usdValue = convertCryptoToUSD(amount, sourceCrypto, prices);
+      user.totalWithdrawn = (user.totalWithdrawn || 0) + usdValue;
       
       // Deduct gas fee from gas balance if enabled
       if (settings.withdrawalGasFee?.enabled && gasFeeUSD > 0) {
@@ -410,8 +439,18 @@ router.post('/cancel/:id', protect, async (req, res) => {
     
     // Refund the amount to user
     const user = await User.findById(req.user._id);
-    user.balance += transaction.amount;
-    user.totalWithdrawn -= transaction.amount;
+    
+    // Get prices and convert to USD for totalWithdrawn adjustment
+    const prices = await getCryptoPrices();
+    const usdValue = convertCryptoToUSD(transaction.amount, transaction.cryptoCurrency || transaction.sourceCrypto, prices);
+    
+    // Refund to the correct crypto balance
+    const cryptoType = transaction.sourceCrypto || transaction.cryptoCurrency || 'USDT';
+    if (!user.balance || typeof user.balance !== 'object') {
+      user.balance = { USDT: 0, BTC: 0, ETH: 0, BNB: 0 };
+    }
+    user.balance[cryptoType] = (user.balance[cryptoType] || 0) + transaction.amount;
+    user.totalWithdrawn = (user.totalWithdrawn || 0) - usdValue;
     await user.save();
     
     // Update transaction status
