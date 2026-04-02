@@ -121,7 +121,8 @@ const AdminUserDetail = () => {
     startDate: '',
     endDate: '',
     transactionCount: 10,
-    types: ['deposit', 'withdrawal', 'trade']
+    types: ['deposit', 'withdrawal', 'trade'],
+    cryptocurrencies: ['USDT', 'BTC', 'ETH']
   });
   
   // Fund management state
@@ -383,7 +384,8 @@ const AdminUserDetail = () => {
         startDate: '',
         endDate: '',
         transactionCount: 10,
-        types: ['deposit', 'withdrawal', 'trade']
+        types: ['deposit', 'withdrawal', 'trade'],
+        cryptocurrencies: ['USDT', 'BTC', 'ETH']
       });
       // Refresh transactions list
       fetchUserTransactions();
@@ -1699,31 +1701,33 @@ const AdminUserDetail = () => {
             >
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Generate Transaction History</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                Generate automatic transactions for {user?.username} between selected dates.
+                Generate realistic transactions for {user?.username} between selected dates.
               </p>
               
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
-                  <input
-                    id="generate-start-date"
-                    name="generateStartDate"
-                    type="date"
-                    value={generateForm.startDate}
-                    onChange={(e) => setGenerateForm(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
-                  <input
-                    id="generate-end-date"
-                    name="generateEndDate"
-                    type="date"
-                    value={generateForm.endDate}
-                    onChange={(e) => setGenerateForm(prev => ({ ...prev, endDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Start Date</label>
+                    <input
+                      id="generate-start-date"
+                      name="generateStartDate"
+                      type="date"
+                      value={generateForm.startDate}
+                      onChange={(e) => setGenerateForm(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">End Date</label>
+                    <input
+                      id="generate-end-date"
+                      name="generateEndDate"
+                      type="date"
+                      value={generateForm.endDate}
+                      onChange={(e) => setGenerateForm(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Number of Transactions</label>
@@ -1737,6 +1741,68 @@ const AdminUserDetail = () => {
                     onChange={(e) => setGenerateForm(prev => ({ ...prev, transactionCount: parseInt(e.target.value) || 10 }))}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
+                </div>
+                
+                {/* Transaction Types */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transaction Types</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['deposit', 'withdrawal', 'trade'].map(type => (
+                      <label 
+                        key={type}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer border transition-colors ${
+                          generateForm.types.includes(type) 
+                            ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-500 text-purple-700 dark:text-purple-300' 
+                            : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={generateForm.types.includes(type)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setGenerateForm(prev => ({ ...prev, types: [...prev.types, type] }));
+                            } else if (generateForm.types.length > 1) {
+                              setGenerateForm(prev => ({ ...prev, types: prev.types.filter(t => t !== type) }));
+                            }
+                          }}
+                        />
+                        <span className="text-sm capitalize">{type}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Cryptocurrencies */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cryptocurrencies</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['USDT', 'BTC', 'ETH', 'BNB', 'SOL'].map(crypto => (
+                      <label 
+                        key={crypto}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer border transition-colors ${
+                          generateForm.cryptocurrencies.includes(crypto) 
+                            ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300' 
+                            : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          className="sr-only"
+                          checked={generateForm.cryptocurrencies.includes(crypto)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setGenerateForm(prev => ({ ...prev, cryptocurrencies: [...prev.cryptocurrencies, crypto] }));
+                            } else if (generateForm.cryptocurrencies.length > 1) {
+                              setGenerateForm(prev => ({ ...prev, cryptocurrencies: prev.cryptocurrencies.filter(c => c !== crypto) }));
+                            }
+                          }}
+                        />
+                        <span className="text-sm font-medium">{crypto}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
 

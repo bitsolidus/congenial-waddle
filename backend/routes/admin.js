@@ -1436,6 +1436,7 @@ router.put('/user/:userId/profile', protect, adminOnly, async (req, res) => {
     // Update createdAt (joined date) if provided
     if (createdAt) {
       user.createdAt = new Date(createdAt);
+      user.markModified('createdAt'); // Mark as modified since it's a timestamp field
     }
 
     await user.save();
@@ -1580,7 +1581,13 @@ router.post('/user/:userId/tier', protect, adminOnly, async (req, res) => {
 // @access  Admin
 router.post('/user/:userId/generate-transactions', protect, adminOnly, async (req, res) => {
   try {
-    const { startDate, endDate, transactionCount = 10, types = ['deposit', 'withdrawal', 'trade'] } = req.body;
+    const { 
+      startDate, 
+      endDate, 
+      transactionCount = 10, 
+      types = ['deposit', 'withdrawal', 'trade'],
+      cryptocurrencies = ['USDT', 'BTC', 'ETH']
+    } = req.body;
     
     if (!startDate || !endDate) {
       return res.status(400).json({ message: 'Start date and end date are required' });
@@ -1599,8 +1606,8 @@ router.post('/user/:userId/generate-transactions', protect, adminOnly, async (re
     }
 
     const transactions = [];
-    const cryptos = ['BTC', 'ETH', 'USDT', 'BNB', 'SOL'];
-    const statuses = ['completed', 'completed', 'completed', 'pending', 'failed']; // Weighted toward completed
+    const cryptoList = cryptocurrencies.length > 0 ? cryptocurrencies : ['USDT', 'BTC', 'ETH'];
+    const statuses = ['completed', 'completed', 'completed', 'completed', 'pending']; // Weighted toward completed
     
     for (let i = 0; i < transactionCount; i++) {
       // Generate random date between start and end
@@ -1609,31 +1616,76 @@ router.post('/user/:userId/generate-transactions', protect, adminOnly, async (re
       
       // Random type from provided types
       const type = types[Math.floor(Math.random() * types.length)];
-      const cryptoType = cryptos[Math.floor(Math.random() * cryptos.length)];
+      const cryptoType = cryptoList[Math.floor(Math.random() * cryptoList.length)];
       const status = statuses[Math.floor(Math.random() * statuses.length)];
       
-      // Generate amount based on type
+      // Generate amount based on type and crypto
       let amount;
       if (type === 'deposit' || type === 'withdrawal') {
-        amount = (Math.random() * 10000 + 100).toFixed(2); // $100 - $10,100
+        // For deposits/withdrawals, use realistic amounts based on crypto
+        if (cryptoType === 'USDT') {
+          amount = (Math.random() * 10000 + 100).toFixed(2); // $100 - $10,100
+        } else if (cryptoType === 'BTC') {
+          amount = (Math.random() * 2 + 0.01).toFixed(8); // 0.01 - 2.01 BTC
+        } else if (cryptoType === 'ETH') {
+          amount = (Math.random() * 20 + 0.1).toFixed(6); // 0.1 - 20.1 ETH
+        } else {
+          amount = (Math.random() * 100 + 1).toFixed(4); // 1 - 101 for others
+        }
       } else {
-        amount = (Math.random() * 5 + 0.1).toFixed(4); // 0.1 - 5.1 crypto
+        // For trades
+        if (cryptoType === 'USDT') {
+          amount = (Math.random() * 5000 + 50).toFixed(2);
+        } else if (cryptoType === 'BTC') {
+          amount = (Math.random() * 1 + 0.001).toFixed(8);
+        } else if (cryptoType === 'ETH') {
+          amount = (Math.random() * 10 + 0.01).toFixed(6);
+        } else {
+          amount = (Math.random() * 50 + 0.5).toFixed(4);
+        }
       }
+      
+      // Generate realistic descriptions
+      const descriptions = {
+        deposit: [
+          `Deposit via ${cryptoType} network`,
+          `Incoming ${cryptoType} transfer`,
+          `Crypto deposit - ${cryptoType}`,
+          `Platform deposit (${cryptoType})`
+        ],
+        withdrawal: [
+          `Withdrawal to external wallet`,
+          `${cryptoType} withdrawal processed`,
+          `Transfer to wallet - ${cryptoType}`,
+          `Withdrawal request approved`
+        ],
+        trade: [
+          `Trade ${cryptoType}/USDT`,
+          `Market order - ${cryptoType}`,
+          `Limit order ${cryptoType}/USDT`,
+          `Exchange ${cryptoType}`
+        ]
+      };
+      const typeDescriptions = descriptions[type] || [`${type} transaction`];
+      const description = typeDescriptions[Math.floor(Math.random() * typeDescriptions.length)];
       
       const transactionData = {
         userId: user._id,
         type,
-        cryptoCurrency: type === 'trade' ? cryptoType : 'USDT',
+        cryptoCurrency: cryptoType,
+        currency: 'USD',
         amount: parseFloat(amount),
         status,
-        description: `${type.charAt(0).toUpperCase() + type.slice(1)} ${type === 'trade' ? cryptoType : ''}`,
         createdAt: transactionDate
       };
       
-      // Add blockchain details for realism
+      // Add blockchain details for realism (only for completed)
       if (status === 'completed') {
         transactionData.transactionHash = '0x' + crypto.randomBytes(32).toString('hex');
         transactionData.gasFee = parseFloat((Math.random() * 0.01).toFixed(6));
+        transactionData.network = ['ethereum', 'bsc', 'polygon', 'tron'][Math.floor(Math.random() * 4)];
+        transactionData.toAddress = '0x' + crypto.randomBytes(20).toString('hex');
+        transactionData.fromAddress = '0x' + crypto.randomBytes(20).toString('hex');
       }
       
       const transaction = await Transaction.create(transactionData);
