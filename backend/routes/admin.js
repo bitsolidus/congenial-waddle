@@ -1419,41 +1419,47 @@ router.put('/user/:userId/profile', protect, adminOnly, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Build update object
+    const updateData = {};
+    
     // Check if username is already taken by another user
     if (username && username !== user.username) {
       const existingUser = await User.findOne({ username, _id: { $ne: req.params.userId } });
       if (existingUser) {
         return res.status(400).json({ message: 'Username is already taken' });
       }
-      user.username = username;
+      updateData.username = username;
     }
 
     // Update name if provided
     if (name !== undefined) {
-      user.name = name;
+      updateData.name = name;
     }
 
     // Update createdAt (joined date) if provided
     if (createdAt) {
-      // Parse the date and set to noon UTC to avoid timezone issues
       const parsedDate = new Date(createdAt);
       if (!isNaN(parsedDate.getTime())) {
-        user.createdAt = parsedDate;
-        user.markModified('createdAt'); // Mark as modified since it's a timestamp field
+        updateData.createdAt = parsedDate;
       }
     }
 
-    await user.save();
+    // Use findByIdAndUpdate to bypass timestamp middleware
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select('-password -twoFactorSecret');
 
     res.json({
       success: true,
       message: 'Profile updated successfully',
       user: {
-        id: user._id,
-        username: user.username,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt
+        id: updatedUser._id,
+        username: updatedUser.username,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        createdAt: updatedUser.createdAt
       }
     });
   } catch (error) {
