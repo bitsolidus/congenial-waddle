@@ -1971,18 +1971,22 @@ router.post('/user/:userId/deposit', protect, adminOnly, async (req, res) => {
       gasFee: 0
     };
 
-    // If transactionDate is provided, use it instead of current date
+    let transaction;
+
+    // If transactionDate is provided, use insertMany to bypass timestamp middleware
     if (transactionDate) {
       const parsedDate = new Date(transactionDate);
       if (!isNaN(parsedDate.getTime())) {
         transactionData.createdAt = parsedDate;
         transactionData.updatedAt = parsedDate;
       }
+      // Use insertMany to bypass timestamp middleware for custom dates
+      const transactionResult = await Transaction.insertMany([transactionData], { timestamps: false });
+      transaction = transactionResult[0];
+    } else {
+      // Normal creation with automatic timestamps
+      transaction = await Transaction.create(transactionData);
     }
-
-    // Use insertMany to bypass timestamp middleware for custom dates
-    const transactionResult = await Transaction.insertMany([transactionData]);
-    const transaction = transactionResult[0];
 
     // Create notification for user
     await Notification.create({
@@ -2017,7 +2021,14 @@ router.post('/user/:userId/deposit', protect, adminOnly, async (req, res) => {
     });
   } catch (error) {
     console.error('Admin deposit error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error stack:', error.stack);
+    if (error.name === 'ValidationError') {
+      console.error('Validation errors:', Object.keys(error.errors).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      })));
+    }
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
