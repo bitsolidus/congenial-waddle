@@ -43,7 +43,8 @@ const convertCryptoToUSD = (amount, cryptoCurrency, prices) => {
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    const errorMessages = errors.array().map(e => e.msg).join(', ');
+    return res.status(400).json({ message: `Validation error: ${errorMessages}`, errors: errors.array() });
   }
   next();
 };
@@ -171,6 +172,9 @@ router.post(
   async (req, res) => {
     try {
       const { amount, currency, network, toAddress, gasOption, fromCrypto } = req.body;
+      
+      console.log('Withdrawal request received:', { amount, currency, network, toAddress, fromCrypto });
+      
       const sourceCrypto = fromCrypto || currency; // Which crypto balance to withdraw from
       
       const user = await User.findById(req.user._id);
