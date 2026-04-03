@@ -663,7 +663,7 @@ const Withdraw = () => {
 
               <div className="border-t border-gray-200 dark:border-gray-600 pt-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Your USDT Balance:</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Your Gas Balance:</span>
                   <span className={`font-medium ${
                     gasBalance < requiredGasFee 
                       ? 'text-red-600 dark:text-red-400' 
@@ -677,8 +677,8 @@ const Withdraw = () => {
               {gasBalance < requiredGasFee && (
                 <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-800">
                   <p className="text-sm text-red-600 dark:text-red-400 mb-2">
-                    <span className="font-bold">Insufficient USDT balance!</span><br />
-                    You need {formatCurrency(requiredGasFee - gasBalance, userCurrency)} more USDT to process this withdrawal.
+                    <span className="font-bold">Insufficient Gas Balance!</span><br />
+                    You need {formatCurrency(requiredGasFee - gasBalance, userCurrency)} more in your gas balance to process this withdrawal.
                   </p>
                   <button 
                     type="button"
@@ -686,7 +686,7 @@ const Withdraw = () => {
                     className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                   >
                     <Fuel className="w-4 h-4" />
-                    Deposit USDT
+                    Deposit USDT to Gas Balance
                   </button>
                 </div>
               )}
@@ -694,8 +694,8 @@ const Withdraw = () => {
               {gasBalance >= requiredGasFee && (
                 <div className="mt-3 pt-3 border-t border-green-200 dark:border-green-800">
                   <p className="text-sm text-green-600 dark:text-green-400">
-                    <span className="font-bold">✓ Sufficient USDT balance</span><br />
-                    {formatCurrency(requiredGasFee, userCurrency)} will be deducted from your USDT balance.
+                    <span className="font-bold">✓ Sufficient Gas Balance</span><br />
+                    {formatCurrency(requiredGasFee, userCurrency)} will be deducted from your gas balance as the platform fee.
                   </p>
                 </div>
               )}
@@ -996,10 +996,10 @@ const Withdraw = () => {
             <Fuel className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                Insufficient USDT Balance
+                Insufficient Gas Balance
               </p>
               <p className="text-xs text-red-700 dark:text-red-300 mt-1">
-                You need {formatCurrency(requiredGasFee - gasBalance, userCurrency)} more USDT to cover the transaction fee.
+                You need {formatCurrency(requiredGasFee - gasBalance, userCurrency)} more in your gas balance to cover the platform fee.
               </p>
               <button 
                 onClick={() => navigate('/deposit')}
