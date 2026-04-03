@@ -658,6 +658,18 @@ export const sendNewsletterEmail = async (to, subject, content, template = 'defa
         { title: 'Better Analytics', content: 'Advanced portfolio tracking and insights.' },
         { title: 'Mobile Improvements', content: 'Updated mobile app with new features.' }
       ]
+    },
+    'custom': {
+      title: 'BitSolidus Update',
+      icon: '✉️',
+      color: '#6b7280',
+      sections: null
+    },
+    'default': {
+      title: 'BitSolidus Update',
+      icon: '✉️',
+      color: '#6b7280',
+      sections: null
     }
   };
   
