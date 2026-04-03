@@ -11,7 +11,7 @@ import AdminSettings from '../models/AdminSettings.js';
 import SiteConfig from '../models/SiteConfig.js';
 import DepositConfirmation from '../models/DepositConfirmation.js';
 import { upload, uploadBranding } from '../config/upload.js';
-import { sendKycApprovedEmail, sendKycRejectedEmail, sendPasswordResetEmail, sendVerificationEmail } from '../config/email.js';
+import { sendKycApprovedEmail, sendKycRejectedEmail, sendPasswordResetEmail, sendVerificationEmail, sendNewsletterEmail } from '../config/email.js';
 
 const router = express.Router();
 
@@ -3869,6 +3869,202 @@ router.post('/user/:userId/recalculate-totals', protect, adminOnly, async (req, 
     });
   } catch (error) {
     console.error('Recalculate totals error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/admin/newsletter/send
+// @desc    Send newsletter to users (single or bulk)
+// @access  Admin
+router.post('/newsletter/send', protect, adminOnly, [
+  body('subject').trim().notEmpty().withMessage('Subject is required'),
+  body('content').trim().notEmpty().withMessage('Content is required'),
+  body('template').optional().isIn(['trading-safety', 'scam-prevention', 'market-update', 'security-update', 'feature-announcement', 'custom']).withMessage('Invalid template'),
+  body('recipientType').optional().isIn(['all', 'active', 'verified', 'specific']).withMessage('Invalid recipient type')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { subject, content, template = 'custom', recipientType = 'all', specificEmails = [] } = req.body;
+    
+    // Build query based on recipient type
+    let userQuery = {};
+    
+    switch (recipientType) {
+      case 'active':
+        userQuery = { isActive: true };
+        break;
+      case 'verified':
+        userQuery = { isEmailVerified: true };
+        break;
+      case 'specific':
+        userQuery = { email: { $in: specificEmails } };
+        break;
+      case 'all':
+      default:
+        userQuery = {};
+        break;
+    }
+    
+    // Get recipient emails
+    let recipients = [];
+    if (recipientType === 'specific' && specificEmails.length > 0) {
+      recipients = specificEmails;
+    } else {
+      const users = await User.find(userQuery).select('email');
+      recipients = users.map(u => u.email);
+    }
+    
+    if (recipients.length === 0) {
+      return res.status(400).json({ message: 'No recipients found' });
+    }
+    
+    // Send emails
+    const results = {
+      successful: [],
+      failed: []
+    };
+    
+    // Send with delay to avoid rate limiting
+    const BATCH_SIZE = 10;
+    const DELAY_MS = 1000;
+    
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const batch = recipients.slice(i, i + BATCH_SIZE);
+      
+      await Promise.all(batch.map(async (email) => {
+        try {
+          const result = await sendNewsletterEmail(email, subject, content, template);
+          if (result.success) {
+            results.successful.push(email);
+          } else {
+            results.failed.push({ email, error: result.error });
+          }
+        } catch (error) {
+          results.failed.push({ email, error: error.message });
+        }
+      }));
+      
+      // Delay between batches
+      if (i + BATCH_SIZE < recipients.length) {
+        await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+      }
+    }
+    
+    // Log activity
+    await ActivityLog.create({
+      userId: req.user._id,
+      type: 'newsletter_sent',
+      title: 'Newsletter Sent',
+      description: `Sent "${subject}" to ${results.successful.length} recipients`,
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+    
+    res.json({
+      success: true,
+      message: `Newsletter sent successfully`,
+      stats: {
+        total: recipients.length,
+        successful: results.successful.length,
+        failed: results.failed.length
+      },
+      failed: results.failed.length > 0 ? results.failed : undefined
+    });
+    
+  } catch (error) {
+    console.error('Newsletter send error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET /api/admin/newsletter/templates
+// @desc    Get available newsletter templates
+// @access  Admin
+router.get('/newsletter/templates', protect, adminOnly, async (req, res) => {
+  try {
+    const templates = [
+      {
+        id: 'trading-safety',
+        name: 'Trading Safety Tips',
+        icon: '🛡️',
+        description: 'Educational content about safe trading practices',
+        color: '#10b981',
+        preview: 'Learn how to trade safely on BitSolidus with our comprehensive security tips.'
+      },
+      {
+        id: 'scam-prevention',
+        name: 'Scam Prevention Guide',
+        icon: '⚠️',
+        description: 'How to identify and avoid common crypto scams',
+        color: '#f59e0b',
+        preview: 'Stay protected from investment scams, impersonation, and fraudulent schemes.'
+      },
+      {
+        id: 'market-update',
+        name: 'Market Insights',
+        icon: '📊',
+        description: 'Latest market trends and trading opportunities',
+        color: '#3b82f6',
+        preview: 'Get the latest crypto market analysis and trading insights.'
+      },
+      {
+        id: 'security-update',
+        name: 'Security Update',
+        icon: '🔒',
+        description: 'New security features and best practices',
+        color: '#7c3aed',
+        preview: 'Learn about our latest security enhancements and account protection features.'
+      },
+      {
+        id: 'feature-announcement',
+        name: 'New Features',
+        icon: '✨',
+        description: 'Announce new platform features and improvements',
+        color: '#ec4899',
+        preview: 'Discover the latest features and improvements on BitSolidus.'
+      },
+      {
+        id: 'custom',
+        name: 'Custom Message',
+        icon: '✉️',
+        description: 'Create your own custom newsletter',
+        color: '#6b7280',
+        preview: 'Send a personalized message to your users.'
+      }
+    ];
+    
+    res.json({ templates });
+  } catch (error) {
+    console.error('Get templates error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/admin/newsletter/preview
+// @desc    Preview newsletter email
+// @access  Admin
+router.post('/newsletter/preview', protect, adminOnly, async (req, res) => {
+  try {
+    const { subject, content, template = 'custom' } = req.body;
+    
+    // Send preview to admin's email
+    const result = await sendNewsletterEmail(req.user.email, `[PREVIEW] ${subject}`, content, template);
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Preview sent to your email',
+        messageId: result.messageId
+      });
+    } else {
+      res.status(500).json({ message: 'Failed to send preview', error: result.error });
+    }
+  } catch (error) {
+    console.error('Preview send error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -601,6 +601,153 @@ export const sendTransferReceivedEmail = async (to, username, transfer) => {
   return sendEmail(to, `💰 Transfer Received - ${transfer.amount} ${transfer.cryptocurrency}`, html, text, branding.replyToEmail);
 };
 
+// Send newsletter email
+export const sendNewsletterEmail = async (to, subject, content, template = 'default') => {
+  const branding = await getEmailBranding();
+  
+  // Pre-defined newsletter templates
+  const templates = {
+    'trading-safety': {
+      title: 'Trading Safety Tips',
+      icon: '🛡️',
+      color: '#10b981',
+      sections: [
+        { title: 'Enable Two-Factor Authentication', content: 'Protect your account with an additional layer of security.' },
+        { title: 'Verify All Transactions', content: 'Always double-check wallet addresses before sending funds.' },
+        { title: 'Use Strong Passwords', content: 'Create unique passwords and change them regularly.' },
+        { title: 'Beware of Phishing', content: 'Only access BitSolidus through our official website.' }
+      ]
+    },
+    'scam-prevention': {
+      title: 'Stay Safe from Scams',
+      icon: '⚠️',
+      color: '#f59e0b',
+      sections: [
+        { title: 'Investment Scams', content: 'BitSolidus will never ask you to send crypto to "verify" your account.' },
+        { title: 'Impersonation', content: 'Our team will never DM you first on social media.' },
+        { title: 'Too Good to Be True', content: 'Be wary of guaranteed returns and high-pressure tactics.' },
+        { title: 'Report Suspicious Activity', content: 'Contact our support team immediately if you suspect fraud.' }
+      ]
+    },
+    'market-update': {
+      title: 'Market Insights',
+      icon: '📊',
+      color: '#3b82f6',
+      sections: [
+        { title: 'Market Analysis', content: 'Stay informed about the latest crypto market trends.' },
+        { title: 'Trading Opportunities', content: 'Discover potential trading strategies and insights.' },
+        { title: 'Risk Management', content: 'Learn how to protect your investments during volatility.' }
+      ]
+    },
+    'security-update': {
+      title: 'Security Update',
+      icon: '🔒',
+      color: '#7c3aed',
+      sections: [
+        { title: 'New Security Features', content: 'We\'ve added new protections to keep your account safe.' },
+        { title: 'Account Monitoring', content: 'Enhanced monitoring for suspicious activities.' },
+        { title: 'Best Practices', content: 'Review our updated security recommendations.' }
+      ]
+    },
+    'feature-announcement': {
+      title: 'New Features Available',
+      icon: '✨',
+      color: '#ec4899',
+      sections: [
+        { title: 'Enhanced Trading', content: 'New tools to improve your trading experience.' },
+        { title: 'Better Analytics', content: 'Advanced portfolio tracking and insights.' },
+        { title: 'Mobile Improvements', content: 'Updated mobile app with new features.' }
+      ]
+    }
+  };
+  
+  const selectedTemplate = templates[template] || templates['default'];
+  
+  const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+  <style>
+    @media only screen and (max-width: 600px) {
+      .container { width: 100% !important; }
+      .content { padding: 20px !important; }
+      .header { padding: 30px 20px !important; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f3f4f6;">
+    <tr>
+      <td align="center" style="padding: 20px 0;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="container" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td class="header" style="background: linear-gradient(135deg, ${branding.primaryColor} 0%, ${branding.secondaryColor} 100%); padding: 40px 30px; text-align: center;">
+              <img src="${branding.emailLogo}" alt="${branding.siteName}" style="max-width: 180px; height: auto; margin-bottom: 20px;">
+              <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">${selectedTemplate.icon} ${selectedTemplate.title}</h1>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td class="content" style="padding: 40px 30px;">
+              <div style="color: #374151; font-size: 16px; line-height: 1.6;">
+                ${content}
+              </div>
+              
+              ${selectedTemplate.sections ? `
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top: 30px;">
+                ${selectedTemplate.sections.map(section => `
+                <tr>
+                  <td style="padding: 20px; background-color: #f9fafb; border-left: 4px solid ${selectedTemplate.color}; margin-bottom: 15px; border-radius: 0 8px 8px 0;">
+                    <h3 style="color: #111827; font-size: 16px; font-weight: 600; margin: 0 0 8px 0;">${section.title}</h3>
+                    <p style="color: #6b7280; font-size: 14px; margin: 0; line-height: 1.5;">${section.content}</p>
+                  </td>
+                </tr>
+                `).join('')}
+              </table>
+              ` : ''}
+            </td>
+          </tr>
+          
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 0 30px 40px; text-align: center;">
+              <a href="${branding.siteUrl}/dashboard" style="display: inline-block; background: linear-gradient(135deg, ${branding.primaryColor} 0%, ${branding.secondaryColor} 100%); color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(124, 58, 237, 0.3);">Access Your Account</a>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f9fafb; padding: 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="color: #6b7280; font-size: 14px; margin: 0 0 10px 0;">Stay connected with us</p>
+              <div style="margin-bottom: 20px;">
+                <a href="${branding.siteUrl}" style="display: inline-block; margin: 0 8px; color: ${branding.primaryColor}; text-decoration: none; font-weight: 500;">Website</a>
+                ${branding.showSupportLink ? `<a href="${branding.supportUrl}" style="display: inline-block; margin: 0 8px; color: ${branding.primaryColor}; text-decoration: none; font-weight: 500;">Support</a>` : ''}
+                ${branding.showLiveChatLink ? `<a href="${branding.liveChatUrl}" style="display: inline-block; margin: 0 8px; color: ${branding.primaryColor}; text-decoration: none; font-weight: 500;">Live Chat</a>` : ''}
+              </div>
+              <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                © ${new Date().getFullYear()} ${branding.siteName}. All rights reserved.<br>
+                You're receiving this because you have an account with us.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `;
+  
+  const text = `${selectedTemplate.title}\n\n${content}\n\n${selectedTemplate.sections ? selectedTemplate.sections.map(s => `${s.title}: ${s.content}`).join('\n\n') : ''}\n\nAccess your account: ${branding.siteUrl}/dashboard`;
+  
+  return sendEmail(to, `${selectedTemplate.icon} ${subject}`, html, text, branding.replyToEmail);
+};
+
 export default {
   sendVerificationEmail,
   sendWelcomeEmail,
@@ -614,5 +761,6 @@ export default {
   sendDepositRejectedEmail,
   sendTransferSentEmail,
   sendTransferReceivedEmail,
+  sendNewsletterEmail,
   verifyEmailConnection
 };

@@ -17,7 +17,8 @@ import {
   Award,
   LogOut,
   Send,
-  DollarSign
+  DollarSign,
+  Mail
 } from 'lucide-react';
 import { logout } from '../store/authSlice';
 import { fetchSiteConfig } from '../store/siteConfigSlice';
@@ -65,6 +66,7 @@ const Sidebar = ({ mobileOpen = false, onClose }) => {
     { to: '/admin/users', icon: Users, label: 'User Management' },
     { to: '/admin/withdrawals', icon: DollarSign, label: 'Withdrawals & Gas' },
     { to: '/admin/transactions', icon: History, label: 'All Transactions' },
+    { to: '/admin/newsletter', icon: Mail, label: 'Newsletter' },
     { to: '/admin/settings', icon: Settings, label: 'Settings' },
     { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
   ];
