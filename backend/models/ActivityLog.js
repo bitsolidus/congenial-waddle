@@ -11,7 +11,7 @@ const activityLogSchema = new mongoose.Schema({
     type: String,
     enum: ['login', 'logout', 'password_change', 'profile_update', 'kyc_submitted', 'kyc_approved', 'kyc_rejected', 
            'deposit', 'withdrawal', 'trade', 'wallet_connected', 'settings_changed', 'security_alert',
-           'transfer_sent', 'transfer_received', 'tier_change', '2fa_enabled', '2fa_disabled', 'newsletter_sent'],
+           'transfer_sent', 'transfer_received', 'tier_change', '2fa_enabled', '2fa_disabled', 'newsletter_sent', 'gas_purchase'],
     required: true
   },
   title: {

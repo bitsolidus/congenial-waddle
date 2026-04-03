@@ -235,7 +235,7 @@ const AdminGasFee = () => {
                         <p className="font-medium text-gray-900 dark:text-white">{selectedUser.username}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">{selectedUser.email}</p>
                         <p className="text-sm text-purple-600 dark:text-purple-400">
-                          Balance: {formatAmount(selectedUser.balance?.USDT)} USDT
+                          Gas Balance: {formatAmount(selectedUser.gasBalance)} USDT
                         </p>
                       </div>
                     </div>

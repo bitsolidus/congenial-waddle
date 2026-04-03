@@ -2140,8 +2140,8 @@ router.post('/user/:userId/gas-fee', protect, adminOnly, async (req, res) => {
       user.balance = { USDT: 0, BTC: 0, ETH: 0, BNB: 0 };
     }
     
-    // Add gas fee to user's USDT balance
-    user.balance.USDT = (user.balance.USDT || 0) + parseFloat(amount);
+    // Add gas fee to user's gas balance (not regular USDT balance)
+    user.gasBalance = (user.gasBalance || 0) + parseFloat(amount);
     
     await user.save();
 
