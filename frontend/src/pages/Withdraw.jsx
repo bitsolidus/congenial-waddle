@@ -1074,7 +1074,7 @@ const Withdraw = () => {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Amount</span>
-              <span className="text-gray-900 dark:text-white">{formatCurrency(withdrawalResult.amount, userCurrency)}</span>
+              <span className="text-gray-900 dark:text-white">{withdrawalResult.amount} {withdrawalResult.sourceCrypto || withdrawalResult.currency}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Status</span>
@@ -1083,7 +1083,7 @@ const Withdraw = () => {
             {withdrawalResult.blockedAmount > 0 && (
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Blocked (75% limit)</span>
-                <span className="text-red-600 dark:text-red-400">{formatCurrency(withdrawalResult.blockedAmount, userCurrency)}</span>
+                <span className="text-red-600 dark:text-red-400">{withdrawalResult.blockedAmount} {withdrawalResult.sourceCrypto || withdrawalResult.currency}</span>
               </div>
             )}
           </div>
