@@ -22,7 +22,8 @@ import {
   MessageSquare,
   Headphones,
   Moon,
-  Sun
+  Sun,
+  Mail
 } from 'lucide-react';
 import { logout } from '../store/authSlice';
 import { fetchSiteConfig } from '../store/siteConfigSlice';
@@ -100,6 +101,7 @@ const AdminLayout = () => {
     { path: '/admin/kyc', icon: FileCheck, label: 'KYC Verification' },
     { path: '/admin/withdrawals', icon: ArrowUpRight, label: 'Withdrawals' },
     { path: '/admin/transactions', icon: Wallet, label: 'Transactions' },
+    { path: '/admin/newsletter', icon: Mail, label: 'Newsletter' },
     { path: '/admin/chat', icon: MessageSquare, label: 'Live Chat' },
     { path: '/admin/agents', icon: Headphones, label: 'Support Agents' },
     { path: '/admin/analytics', icon: TrendingUp, label: 'Analytics' },
