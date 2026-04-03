@@ -65,7 +65,6 @@ const Sidebar = ({ mobileOpen = false, onClose }) => {
     { to: '/admin', icon: Shield, label: 'Admin Dashboard' },
     { to: '/admin/users', icon: Users, label: 'User Management' },
     { to: '/admin/withdrawals', icon: DollarSign, label: 'Withdrawals & Gas' },
-    { to: '/admin/transactions', icon: History, label: 'All Transactions' },
     { to: '/admin/newsletter', icon: Mail, label: 'Newsletter' },
     { to: '/admin/settings', icon: Settings, label: 'Settings' },
     { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
