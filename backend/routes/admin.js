@@ -3633,6 +3633,63 @@ router.get('/transactions', protect, adminOnly, async (req, res) => {
   }
 });
 
+// @route   PUT /api/admin/withdrawals/:id
+// @desc    Update withdrawal confirmations and status
+// @access  Admin
+router.put('/withdrawals/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const { confirmations, requiredConfirmations, status, confirmationStatus } = req.body;
+    
+    const withdrawal = await Transaction.findById(req.params.id);
+    
+    if (!withdrawal) {
+      return res.status(404).json({ message: 'Withdrawal not found' });
+    }
+    
+    if (withdrawal.type !== 'withdrawal') {
+      return res.status(400).json({ message: 'Transaction is not a withdrawal' });
+    }
+    
+    // Update fields
+    if (confirmations !== undefined) withdrawal.confirmations = confirmations;
+    if (requiredConfirmations !== undefined) withdrawal.requiredConfirmations = requiredConfirmations;
+    if (status) withdrawal.status = status;
+    if (confirmationStatus) withdrawal.confirmationStatus = confirmationStatus;
+    
+    // Auto-update status based on confirmations
+    if (withdrawal.confirmations >= withdrawal.requiredConfirmations) {
+      withdrawal.confirmationStatus = 'confirmed';
+      if (withdrawal.status === 'pending' || withdrawal.status === 'processing') {
+        withdrawal.status = 'completed';
+        withdrawal.completedAt = new Date();
+      }
+    } else if (withdrawal.confirmations > 0) {
+      withdrawal.confirmationStatus = 'confirming';
+    }
+    
+    await withdrawal.save();
+    
+    // Log the update
+    await ActivityLog.create({
+      userId: req.user._id,
+      type: 'withdrawal',
+      title: 'Withdrawal Updated',
+      description: `Updated withdrawal ${withdrawal._id} - Confirmations: ${withdrawal.confirmations}/${withdrawal.requiredConfirmations}, Status: ${withdrawal.status}`,
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+    
+    res.json({
+      success: true,
+      message: 'Withdrawal updated successfully',
+      withdrawal
+    });
+  } catch (error) {
+    console.error('Update withdrawal error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   GET /api/admin/analytics
 // @desc    Get platform analytics
 // @access  Admin

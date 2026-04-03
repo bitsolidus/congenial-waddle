@@ -100,7 +100,7 @@ const AdminLayout = () => {
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/users', icon: Users, label: 'User Management' },
     { path: '/admin/kyc', icon: FileCheck, label: 'KYC Verification' },
-    { path: '/admin/withdrawals', icon: ArrowUpRight, label: 'Withdrawals' },
+    { path: '/admin/withdrawals', icon: ArrowUpRight, label: 'Withdrawal Management' },
     { path: '/admin/transactions', icon: History, label: 'Transactions' },
     { path: '/admin/newsletter', icon: Mail, label: 'Newsletter' },
     { path: '/admin/chat', icon: MessageSquare, label: 'Live Chat' },

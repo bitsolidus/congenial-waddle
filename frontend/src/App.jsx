@@ -28,6 +28,7 @@ import Dashboard from './pages/Dashboard';
 import Trade from './pages/Trade';
 import Deposit from './pages/Deposit';
 import Withdraw from './pages/Withdraw';
+import WithdrawalStatus from './pages/WithdrawalStatus';
 import Receive from './pages/Receive';
 import Profile from './pages/Profile';
 import KYC from './pages/KYC';
@@ -56,6 +57,7 @@ import AdminWithdrawals from './pages/admin/AdminWithdrawals';
 import AdminAgents from './pages/admin/AdminAgents';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminNewsletter from './pages/admin/AdminNewsletter';
+import AdminWithdrawalManagement from './pages/admin/AdminWithdrawalManagement';
 import AgentChat from './pages/admin/AgentChat';
 
 // Agent Pages
@@ -236,6 +238,7 @@ function App() {
               <Route path="/trade" element={<Trade />} />
               <Route path="/deposit" element={<Deposit />} />
               <Route path="/withdraw" element={<Withdraw />} />
+              <Route path="/withdrawal/:transactionId" element={<WithdrawalStatus />} />
               <Route path="/receive" element={<Receive />} />
               <Route path="/usdt-balance" element={<USDTBalance />} />
               <Route path="/tier-upgrade" element={<TierUpgrade />} />
@@ -260,6 +263,7 @@ function App() {
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/admin/agents" element={<AdminAgents />} />
               <Route path="/admin/transactions" element={<AdminTransactions />} />
+              <Route path="/admin/withdrawals" element={<AdminWithdrawalManagement />} />
               <Route path="/admin/newsletter" element={<AdminNewsletter />} />
               <Route path="/admin/chat" element={<AgentChat />} />
             </Route>

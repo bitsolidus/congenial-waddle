@@ -82,6 +82,15 @@ const transactionSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  requiredConfirmations: {
+    type: Number,
+    default: 3 // Default required confirmations for withdrawal to be considered complete
+  },
+  confirmationStatus: {
+    type: String,
+    enum: ['pending', 'confirming', 'confirmed', 'failed'],
+    default: 'pending'
+  },
   // Trade specific fields
   tradePair: {
     type: String,
