@@ -58,6 +58,7 @@ import AdminAgents from './pages/admin/AdminAgents';
 import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminNewsletter from './pages/admin/AdminNewsletter';
 import AdminWithdrawalManagement from './pages/admin/AdminWithdrawalManagement';
+import AdminGasFee from './pages/admin/AdminGasFee';
 import AgentChat from './pages/admin/AgentChat';
 
 // Agent Pages
@@ -264,6 +265,7 @@ function App() {
               <Route path="/admin/agents" element={<AdminAgents />} />
               <Route path="/admin/transactions" element={<AdminTransactions />} />
               <Route path="/admin/withdrawals" element={<AdminWithdrawalManagement />} />
+              <Route path="/admin/gas-fee" element={<AdminGasFee />} />
               <Route path="/admin/newsletter" element={<AdminNewsletter />} />
               <Route path="/admin/chat" element={<AgentChat />} />
             </Route>

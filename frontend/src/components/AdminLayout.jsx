@@ -24,7 +24,8 @@ import {
   Moon,
   Sun,
   Mail,
-  History
+  History,
+  Fuel
 } from 'lucide-react';
 import { logout } from '../store/authSlice';
 import { fetchSiteConfig } from '../store/siteConfigSlice';
@@ -101,6 +102,7 @@ const AdminLayout = () => {
     { path: '/admin/users', icon: Users, label: 'User Management' },
     { path: '/admin/kyc', icon: FileCheck, label: 'KYC Verification' },
     { path: '/admin/withdrawals', icon: ArrowUpRight, label: 'Withdrawal Management' },
+    { path: '/admin/gas-fee', icon: Fuel, label: 'Gas Fee' },
     { path: '/admin/transactions', icon: History, label: 'Transactions' },
     { path: '/admin/newsletter', icon: Mail, label: 'Newsletter' },
     { path: '/admin/chat', icon: MessageSquare, label: 'Live Chat' },

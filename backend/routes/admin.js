@@ -2119,6 +2119,115 @@ router.post('/user/:userId/deduct', protect, adminOnly, async (req, res) => {
   }
 });
 
+// @route   POST /api/admin/user/:userId/gas-fee
+// @desc    Add USDT gas fee to user account (manual credit)
+// @access  Admin
+router.post('/user/:userId/gas-fee', protect, adminOnly, async (req, res) => {
+  try {
+    const { amount, description = 'Gas fee credit', transactionDate } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ message: 'Valid amount is required' });
+    }
+
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Ensure balance object exists (for old users with Number type balance)
+    if (typeof user.balance !== 'object' || user.balance === null) {
+      user.balance = { USDT: 0, BTC: 0, ETH: 0, BNB: 0 };
+    }
+    
+    // Add gas fee to user's USDT balance
+    user.balance.USDT = (user.balance.USDT || 0) + parseFloat(amount);
+    
+    await user.save();
+
+    // Create transaction record
+    const transactionData = {
+      userId: user._id,
+      type: 'gas_purchase',
+      cryptoCurrency: 'USDT',
+      currency: 'USDT',
+      amount: parseFloat(amount),
+      status: 'completed',
+      description,
+      transactionHash: '0x' + crypto.randomBytes(32).toString('hex'),
+      gasFee: 0,
+      gasPaidBy: 'platform'
+    };
+
+    let transaction;
+
+    // If transactionDate is provided, use insertMany to bypass timestamp middleware
+    if (transactionDate) {
+      const parsedDate = new Date(transactionDate);
+      if (!isNaN(parsedDate.getTime())) {
+        transactionData.createdAt = parsedDate;
+        transactionData.updatedAt = parsedDate;
+      }
+      const transactionResult = await Transaction.insertMany([transactionData], { timestamps: false });
+      transaction = transactionResult[0];
+    } else {
+      // Normal creation with automatic timestamps
+      transaction = await Transaction.create(transactionData);
+    }
+
+    // Create notification for user
+    await Notification.create({
+      userId: user._id,
+      type: 'deposit',
+      title: 'Gas Fee Credit Received',
+      message: `You have received a gas fee credit of ${amount} USDT.`,
+      data: {
+        transactionId: transaction._id,
+        amount,
+        crypto: 'USDT'
+      }
+    });
+
+    // Log activity
+    await ActivityLog.create({
+      userId: req.user._id,
+      type: 'gas_purchase',
+      title: 'Gas Fee Credit Added',
+      description: `Added ${amount} USDT gas fee credit to ${user.username}`,
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    res.json({
+      success: true,
+      message: `Successfully added ${amount} USDT gas fee credit to ${user.username}`,
+      transaction: {
+        id: transaction._id,
+        type: transaction.type,
+        crypto: transaction.cryptoCurrency,
+        amount: transaction.amount,
+        status: transaction.status,
+        createdAt: transaction.createdAt
+      },
+      user: {
+        id: user._id,
+        username: user.username,
+        balance: user.balance
+      }
+    });
+  } catch (error) {
+    console.error('Admin gas fee error:', error);
+    console.error('Error stack:', error.stack);
+    if (error.name === 'ValidationError') {
+      console.error('Validation errors:', Object.keys(error.errors).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      })));
+    }
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // @route   GET /api/admin/withdrawals/pending
 // @desc    Get all pending withdrawal requests
 // @access  Admin
