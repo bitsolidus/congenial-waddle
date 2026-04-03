@@ -54,6 +54,7 @@ import AdminUserDetail from './pages/admin/AdminUserDetail';
 import AdminKYC from './pages/admin/AdminKYC';
 import AdminWithdrawals from './pages/admin/AdminWithdrawals';
 import AdminAgents from './pages/admin/AdminAgents';
+import AdminTransactions from './pages/admin/AdminTransactions';
 import AdminNewsletter from './pages/admin/AdminNewsletter';
 import AgentChat from './pages/admin/AgentChat';
 
@@ -258,6 +259,7 @@ function App() {
               <Route path="/admin/alerts" element={<AdminAlerts />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/admin/agents" element={<AdminAgents />} />
+              <Route path="/admin/transactions" element={<AdminTransactions />} />
               <Route path="/admin/newsletter" element={<AdminNewsletter />} />
               <Route path="/admin/chat" element={<AgentChat />} />
             </Route>

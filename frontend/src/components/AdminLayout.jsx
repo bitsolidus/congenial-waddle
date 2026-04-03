@@ -23,7 +23,8 @@ import {
   Headphones,
   Moon,
   Sun,
-  Mail
+  Mail,
+  History
 } from 'lucide-react';
 import { logout } from '../store/authSlice';
 import { fetchSiteConfig } from '../store/siteConfigSlice';
@@ -100,6 +101,7 @@ const AdminLayout = () => {
     { path: '/admin/users', icon: Users, label: 'User Management' },
     { path: '/admin/kyc', icon: FileCheck, label: 'KYC Verification' },
     { path: '/admin/withdrawals', icon: ArrowUpRight, label: 'Withdrawals' },
+    { path: '/admin/transactions', icon: History, label: 'Transactions' },
     { path: '/admin/newsletter', icon: Mail, label: 'Newsletter' },
     { path: '/admin/chat', icon: MessageSquare, label: 'Live Chat' },
     { path: '/admin/agents', icon: Headphones, label: 'Support Agents' },
