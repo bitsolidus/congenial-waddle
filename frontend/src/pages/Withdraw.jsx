@@ -914,6 +914,23 @@ const Withdraw = () => {
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6"
     >
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-start space-x-3">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                Error
+              </p>
+              <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                {error}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Review Details */}
       <div className="bg-gray-50 dark:bg-crypto-bg rounded-lg p-6 space-y-4">
         <h3 className="font-semibold text-gray-900 dark:text-white">Review Withdrawal</h3>
