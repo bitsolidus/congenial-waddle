@@ -4,12 +4,15 @@ const notificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
-    index: true
+    required: function() {
+      return this.type !== 'admin'; // Admin notifications don't need userId
+    },
+    index: true,
+    default: null
   },
   type: {
     type: String,
-    enum: ['transaction', 'deposit', 'withdrawal', 'trade', 'kyc', 'system', 'alert'],
+    enum: ['transaction', 'deposit', 'withdrawal', 'trade', 'kyc', 'system', 'alert', 'admin'],
     required: true
   },
   title: {
