@@ -143,7 +143,7 @@ export const checkSufficientGas = async (userBalance, amount, currency, networkN
 };
 
 // Calculate withdrawal amount with percentage logic
-export const calculateWithdrawalAmount = async (requestedAmount, user, settings) => {
+export const calculateWithdrawalAmount = async (requestedAmount, user, settings, sourceCrypto = 'USDT') => {
   try {
     // Get user's effective withdrawal percentage
     let percentage;
@@ -156,7 +156,7 @@ export const calculateWithdrawalAmount = async (requestedAmount, user, settings)
     }
 
     // Check for user override in settings
-    const userOverride = settings.userOverrides.find(
+    const userOverride = settings.userOverrides?.find(
       override => override.userId.toString() === user._id.toString()
     );
     
@@ -164,8 +164,11 @@ export const calculateWithdrawalAmount = async (requestedAmount, user, settings)
       percentage = userOverride.withdrawalPercentage;
     }
 
+    // Get the specific crypto balance (not the entire balance object)
+    const cryptoBalance = user.balance?.[sourceCrypto] || 0;
+    
     // Calculate maximum allowed withdrawal
-    const maxWithdrawal = user.balance * (percentage / 100);
+    const maxWithdrawal = cryptoBalance * (percentage / 100);
     
     // Determine final amount
     const finalAmount = Math.min(requestedAmount, maxWithdrawal);
@@ -177,7 +180,8 @@ export const calculateWithdrawalAmount = async (requestedAmount, user, settings)
       blocked: blockedAmount,
       percentage: percentage,
       maxAllowed: maxWithdrawal,
-      canWithdraw: finalAmount > 0
+      canWithdraw: finalAmount > 0 && finalAmount <= cryptoBalance,
+      cryptoBalance: cryptoBalance
     };
   } catch (error) {
     console.error('Withdrawal calculation error:', error);

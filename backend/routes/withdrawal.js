@@ -195,7 +195,7 @@ router.post(
       }
       
       // Calculate withdrawal amount with percentage logic
-      const withdrawalCalc = await calculateWithdrawalAmount(amount, user, settings);
+      const withdrawalCalc = await calculateWithdrawalAmount(amount, user, settings, sourceCrypto);
       
       if (!withdrawalCalc.canWithdraw) {
         return res.status(400).json({
