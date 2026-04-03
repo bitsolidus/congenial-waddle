@@ -210,12 +210,12 @@ router.put(
   }
 );
 
-// @route   POST /api/admin/user/:id/freeze
+// @route   POST /api/admin/user/:userId/freeze
 // @desc    Freeze/unfreeze user account
 // @access  Admin
-router.post('/user/:id/freeze', protect, adminOnly, async (req, res) => {
+router.post('/user/:userId/freeze', protect, adminOnly, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.userId);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -1647,6 +1647,65 @@ router.post('/user/:userId/unfreeze', protect, adminOnly, async (req, res) => {
     });
   } catch (error) {
     console.error('Unfreeze user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   DELETE /api/admin/user/:userId
+// @desc    Delete user account permanently
+// @access  Admin
+router.delete('/user/:userId', protect, adminOnly, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Prevent deleting own account
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: 'Cannot delete your own account' });
+    }
+
+    // Prevent deleting other admins
+    if (user.isAdmin) {
+      return res.status(400).json({ message: 'Cannot delete admin accounts' });
+    }
+
+    const username = user.username;
+    const userEmail = user.email;
+
+    // Delete user's transactions
+    await Transaction.deleteMany({ userId: user._id });
+    
+    // Delete user's notifications
+    await Notification.deleteMany({ userId: user._id });
+    
+    // Delete user's activity logs
+    await ActivityLog.deleteMany({ userId: user._id });
+    
+    // Delete user's deposit confirmations
+    await DepositConfirmation.deleteMany({ userId: user._id });
+
+    // Finally delete the user
+    await User.findByIdAndDelete(req.params.userId);
+
+    // Log the deletion
+    await ActivityLog.create({
+      userId: req.user._id,
+      type: 'profile_update',
+      title: 'User Account Deleted',
+      description: `Deleted user account: ${username} (${userEmail})`,
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
+
+    res.json({
+      success: true,
+      message: `User account ${username} has been permanently deleted`
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -66,7 +66,8 @@ import {
   Award,
   TrendingUp,
   Users,
-  Clock
+  Clock,
+  Trash2
 } from 'lucide-react';
 
 const AdminUserDetail = () => {
@@ -126,6 +127,10 @@ const AdminUserDetail = () => {
     createdAt: ''
   });
   const [savingProfile, setSavingProfile] = useState(false);
+  
+  // Delete user state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(false);
   
   // Password reset state
   const [showPasswordReset, setShowPasswordReset] = useState(false);
@@ -411,6 +416,27 @@ const AdminUserDetail = () => {
       setNotification({ message: err.response?.data?.message || 'Failed to update account status', type: 'error' });
     } finally {
       setTogglingAccount(false);
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    setDeletingUser(true);
+    try {
+      await axios.delete(`/api/admin/user/${userId}`);
+      setNotification({ 
+        message: 'User account permanently deleted', 
+        type: 'success' 
+      });
+      setTimeout(() => {
+        navigate('/admin/users');
+      }, 2000);
+    } catch (err) {
+      setNotification({ 
+        message: err.response?.data?.message || 'Failed to delete user account', 
+        type: 'error' 
+      });
+      setDeletingUser(false);
       setTimeout(() => setNotification(null), 3000);
     }
   };
@@ -990,6 +1016,17 @@ const AdminUserDetail = () => {
                       {user.tier?.toUpperCase() || 'STANDARD'}
                     </span>
                   </button>
+                  
+                  {/* Delete Account Button */}
+                  {!user.isAdmin && (
+                    <button 
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete Account
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1285,6 +1322,71 @@ const AdminUserDetail = () => {
                           className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
                         >
                           Close
+                        </button>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Delete User Confirmation Modal */}
+              <AnimatePresence>
+                {showDeleteConfirm && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    onClick={() => setShowDeleteConfirm(false)}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.95, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.95, opacity: 0 }}
+                      className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                          <Trash2 className="w-5 h-5 text-red-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Delete User Account</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">This action cannot be undone</p>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 mb-4">
+                        <p className="text-sm text-red-800 dark:text-red-200">
+                          <strong>Warning:</strong> You are about to permanently delete <strong>{user.username}'s</strong> account. 
+                          All associated data including transactions, notifications, and activity logs will be permanently removed.
+                        </p>
+                      </div>
+                      
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => setShowDeleteConfirm(false)}
+                          disabled={deletingUser}
+                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleDeleteUser}
+                          disabled={deletingUser}
+                          className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {deletingUser ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              Deleting...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="w-4 h-4" />
+                              Delete Permanently
+                            </>
+                          )}
                         </button>
                       </div>
                     </motion.div>
