@@ -79,7 +79,7 @@ router.post(
           theme: 'auto',
           notifications: true
         },
-        balance: 0.00,
+        balance: { USDT: 0, BTC: 0, ETH: 0, BNB: 0 },
         emailVerificationToken: verificationToken,
         emailVerificationExpires: verificationExpires
       });
@@ -516,7 +516,7 @@ router.post(
             email: process.env.ADMIN_EMAIL,
             password: process.env.ADMIN_PASSWORD,
             isAdmin: true,
-            balance: 0
+            balance: { USDT: 0, BTC: 0, ETH: 0, BNB: 0 }
           });
         }
 
