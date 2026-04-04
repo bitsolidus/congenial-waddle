@@ -620,9 +620,17 @@ const Dashboard = () => {
                       'text-gray-900 dark:text-white'
                     }`}>
                       {tx.type === 'deposit' ? '+' : tx.type === 'withdrawal' ? '-' : ''}
-                      {userCurrency !== 'USD' 
-                        ? formatCurrencyWithSymbol(convertFromUSD(tx.amount, userCurrency), userCurrency)
-                        : formatCurrency(tx.amount)}
+                      {(() => {
+                        // If transaction has cryptoCurrency, show with crypto symbol
+                        if (tx.cryptoCurrency) {
+                          const decimals = tx.cryptoCurrency === 'USDT' ? 2 : 8;
+                          return `${parseFloat(tx.amount).toFixed(decimals)} ${tx.cryptoCurrency}`;
+                        }
+                        // Otherwise convert to user's currency
+                        return userCurrency !== 'USD' 
+                          ? formatCurrencyWithSymbol(convertFromUSD(tx.amount, userCurrency), userCurrency)
+                          : formatCurrency(tx.amount);
+                      })()}
                     </p>
                     <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(tx.status)}`}>
                       {tx.status}
