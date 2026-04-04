@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -22,7 +21,6 @@ import { toast } from 'react-toastify';
 import Pagination from '../../components/Pagination';
 
 const AdminWithdrawals = () => {
-  const { token } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState('withdrawals'); // 'withdrawals' or 'gas-purchases'
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -52,9 +50,7 @@ const AdminWithdrawals = () => {
       if (search) params.append('search', search);
       if (statusFilter) params.append('status', statusFilter);
 
-      const response = await axios.get(`${endpoint}?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${endpoint}?${params.toString()}`);
 
       setTransactions(response.data.transactions || []);
       setTotalPages(response.data.pagination?.pages || 1);
@@ -65,7 +61,7 @@ const AdminWithdrawals = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, currentPage, search, statusFilter, token]);
+  }, [activeTab, currentPage, search, statusFilter]);
 
   useEffect(() => {
     fetchTransactions();
@@ -85,9 +81,7 @@ const AdminWithdrawals = () => {
         payload.transactionHash = transactionHash;
       }
 
-      await axios.put(endpoint, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(endpoint, payload);
 
       toast.success(`${activeTab === 'withdrawals' ? 'Withdrawal' : 'Gas purchase'} approved successfully`);
       setShowApproveModal(false);
@@ -119,8 +113,6 @@ const AdminWithdrawals = () => {
       await axios.put(endpoint, { 
         reason: rejectReason,
         adminNotes 
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       toast.success(`${activeTab === 'withdrawals' ? 'Withdrawal' : 'Gas purchase'} rejected`);
