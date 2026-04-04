@@ -95,10 +95,14 @@ router.get('/users', protect, adminOnly, async (req, res) => {
       .limit(limit);
     
     const total = await User.countDocuments(query);
+
+    // Get current crypto prices for portfolio value calculation
+    const cryptoPrices = await getCryptoPrices();
     
     res.json({
       success: true,
       users,
+      cryptoPrices,
       pagination: {
         page,
         limit,

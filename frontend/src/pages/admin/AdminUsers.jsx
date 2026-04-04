@@ -20,6 +20,7 @@ const AdminUsers = () => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [limit] = useState(20);
   const [statusFilter, setStatusFilter] = useState('');
+  const [cryptoPrices, setCryptoPrices] = useState({ BTC: 67000, ETH: 3500, USDT: 1, BNB: 600 });
 
   const fetchUsers = useCallback(async (page = 1, search = '', status = '') => {
     try {
@@ -33,6 +34,7 @@ const AdminUsers = () => {
       const response = await axios.get(`/api/admin/users?${params.toString()}`);
       console.log('Users fetched:', response.data);
       setUsers(response.data.users || []);
+      setCryptoPrices(response.data.cryptoPrices || { BTC: 67000, ETH: 3500, USDT: 1, BNB: 600 });
       setTotalPages(response.data.pagination?.pages || 1);
       setTotalUsers(response.data.pagination?.total || 0);
       setCurrentPage(page);
@@ -156,7 +158,10 @@ const AdminUsers = () => {
                     <td className="py-4 text-gray-900 dark:text-white">
                       {(() => {
                         const balanceUSD = typeof user.balance === 'object' && user.balance !== null
-                          ? (user.balance.USDT || 0)
+                          ? (user.balance.USDT || 0) * (cryptoPrices.USDT || 1) +
+                            (user.balance.BTC || 0) * (cryptoPrices.BTC || 67000) +
+                            (user.balance.ETH || 0) * (cryptoPrices.ETH || 3500) +
+                            (user.balance.BNB || 0) * (cryptoPrices.BNB || 600)
                           : user.balance || 0;
                         const userCurrency = user.settings?.currency || 'USD';
                         return userCurrency !== 'USD' 
@@ -453,7 +458,10 @@ const AdminUsers = () => {
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {(() => {
                           const balanceUSD = typeof viewingUser.balance === 'object' && viewingUser.balance !== null
-                            ? (viewingUser.balance.USDT || 0)
+                            ? (viewingUser.balance.USDT || 0) * (cryptoPrices.USDT || 1) +
+                              (viewingUser.balance.BTC || 0) * (cryptoPrices.BTC || 67000) +
+                              (viewingUser.balance.ETH || 0) * (cryptoPrices.ETH || 3500) +
+                              (viewingUser.balance.BNB || 0) * (cryptoPrices.BNB || 600)
                             : viewingUser.balance || 0;
                           const userCurrency = viewingUser.settings?.currency || 'USD';
                           return userCurrency !== 'USD' 
