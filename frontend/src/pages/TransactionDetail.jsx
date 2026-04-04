@@ -104,9 +104,20 @@ const TransactionDetail = () => {
     }
   };
 
-  const formatAmount = (amount, currency) => {
+  const formatAmount = (amount, currency, cryptoCurrency = null) => {
+    // If it's a cryptocurrency transaction, show amount with crypto symbol
+    if (cryptoCurrency) {
+      const decimals = cryptoCurrency === 'USDT' ? 2 : 8;
+      return `${parseFloat(amount).toFixed(decimals)} ${cryptoCurrency}`;
+    }
+    // If user's currency is not USD and the transaction is in USD, convert
     if (userCurrency !== 'USD' && currency === 'USD') {
       return formatCurrencyWithSymbol(convertFromUSD(amount, userCurrency), userCurrency);
+    }
+    // Otherwise show with appropriate symbol
+    if (currency && ['BTC', 'ETH', 'BNB', 'USDT'].includes(currency)) {
+      const decimals = currency === 'USDT' ? 2 : 8;
+      return `${parseFloat(amount).toFixed(decimals)} ${currency}`;
     }
     return formatCurrency(amount);
   };
@@ -173,7 +184,7 @@ const TransactionDetail = () => {
               <p className="text-purple-100 text-sm capitalize">{transaction.type}</p>
               <h2 className="text-2xl font-bold">
                 {isDeposit ? '+' : isWithdrawal ? '-' : ''}
-                {formatAmount(transaction.amount, transaction.currency)}
+                {formatAmount(transaction.amount, transaction.currency, transaction.cryptoCurrency)}
               </h2>
             </div>
           </div>
@@ -203,8 +214,7 @@ const TransactionDetail = () => {
           <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
             <span className="text-gray-500 dark:text-gray-400">Amount {isDeposit ? 'Received' : 'Sent'}</span>
             <span className="font-medium text-gray-900 dark:text-white">
-              {formatAmount(transaction.amount, transaction.currency)}
-              {transaction.cryptoCurrency && ` ${transaction.cryptoCurrency}`}
+              {formatAmount(transaction.amount, transaction.currency, transaction.cryptoCurrency)}
             </span>
           </div>
 
@@ -221,7 +231,7 @@ const TransactionDetail = () => {
             <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
               <span className="text-gray-500 dark:text-gray-400">Network Fee</span>
               <span className="font-medium text-gray-900 dark:text-white">
-                {formatAmount(networkFee, transaction.currency)}
+                {formatAmount(networkFee, transaction.currency, transaction.cryptoCurrency)}
               </span>
             </div>
           )}
@@ -231,7 +241,7 @@ const TransactionDetail = () => {
             <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
               <span className="text-gray-500 dark:text-gray-400">Net Amount</span>
               <span className="font-medium text-green-600 dark:text-green-400">
-                {formatAmount(netAmount, transaction.currency)}
+                {formatAmount(netAmount, transaction.currency, transaction.cryptoCurrency)}
               </span>
             </div>
           )}
