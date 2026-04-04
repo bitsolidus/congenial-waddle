@@ -37,6 +37,7 @@ const Profile = () => {
     phone: '',
     address: '',
     city: '',
+    state: '',
     country: '',
     dateOfBirth: '',
     currency: 'USD',
@@ -56,6 +57,7 @@ const Profile = () => {
         phone: user.phone || user?.kycData?.phoneNumber || '',
         address: user.address || user?.kycData?.address || '',
         city: user.city || user?.kycData?.city || '',
+        state: user.state || user?.kycData?.state || '',
         country: user.country || user?.kycData?.country || '',
         dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : 
                      user?.kycData?.dateOfBirth ? new Date(user.kycData.dateOfBirth).toISOString().split('T')[0] : '',
@@ -593,6 +595,27 @@ const Profile = () => {
             ) : (
               <p className="text-gray-900 dark:text-white">
                 {user?.city || user?.kycData?.city || 'Not set'}
+              </p>
+            )}
+          </div>
+
+          {/* State/Province */}
+          <div>
+            <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-1">
+              <MapPin className="h-4 w-4" />
+              State/Province
+            </label>
+            {isEditing ? (
+              <input
+                type="text"
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                className="input-field w-full"
+                placeholder="Enter state or province"
+              />
+            ) : (
+              <p className="text-gray-900 dark:text-white">
+                {user?.state || user?.kycData?.state || 'Not set'}
               </p>
             )}
           </div>

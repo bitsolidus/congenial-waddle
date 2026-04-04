@@ -357,6 +357,12 @@ const AdminKYC = () => {
                         </span>
                       </div>
                       <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                        <span className="text-gray-500 dark:text-gray-400">State/Province</span>
+                        <span className="text-gray-900 dark:text-white font-medium">
+                          {selectedSubmission.kycData?.state || 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
                         <span className="text-gray-500 dark:text-gray-400">Country</span>
                         <span className="text-gray-900 dark:text-white font-medium">
                           {selectedSubmission.kycData?.country || 'N/A'}

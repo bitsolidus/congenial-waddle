@@ -65,6 +65,7 @@ const KYC = () => {
     nationality: '',
     address: '',
     city: '',
+    state: '',
     country: '',
     postalCode: '',
     phoneNumber: '',
@@ -100,6 +101,7 @@ const KYC = () => {
         phoneNumber: user.phone || '',
         address: user.address || '',
         city: user.city || '',
+        state: user.state || '',
         country: user.country || '',
       };
 
@@ -423,7 +425,7 @@ const KYC = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400">Address</p>
               <p className="text-gray-900 dark:text-white font-medium">
                 {user?.kycData?.address ? 
-                  `${user.kycData.address}, ${user.kycData.city}, ${user.kycData.country} ${user.kycData.postalCode || ''}` : 
+                  `${user.kycData.address}, ${user.kycData.city}${user.kycData?.state ? `, ${user.kycData.state}` : ''}, ${user.kycData.country} ${user.kycData.postalCode || ''}` : 
                   'N/A'}
               </p>
             </div>
@@ -708,16 +710,15 @@ const KYC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        State/Province *
+                        State/Province
                       </label>
                       <input
                         type="text"
-                        name="postalCode"
-                        value={formData.postalCode}
+                        name="state"
+                        value={formData.state || ''}
                         onChange={handleInputChange}
                         className="input-field w-full"
                         placeholder="State or Province"
-                        required
                       />
                     </div>
                     <div>
@@ -726,8 +727,8 @@ const KYC = () => {
                       </label>
                       <input
                         type="text"
-                        name="country"
-                        value={formData.country}
+                        name="postalCode"
+                        value={formData.postalCode}
                         onChange={handleInputChange}
                         className="input-field w-full"
                         placeholder="Postal Code"

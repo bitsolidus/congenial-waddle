@@ -126,6 +126,7 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, default: null },
   address: { type: String, default: null },
   city: { type: String, default: null },
+  state: { type: String, default: null },
   country: { type: String, default: null },
   
   kycData: {
@@ -136,6 +137,7 @@ const userSchema = new mongoose.Schema({
     nationality: { type: String, default: null },
     address: { type: String, default: null },
     city: { type: String, default: null },
+    state: { type: String, default: null },
     country: { type: String, default: null },
     postalCode: { type: String, default: null },
     phoneNumber: { type: String, default: null },

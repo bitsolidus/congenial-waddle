@@ -491,6 +491,7 @@ router.post('/kyc/submit',
         nationality,
         address,
         city,
+        state,
         country,
         postalCode,
         phoneNumber,
@@ -525,6 +526,7 @@ router.post('/kyc/submit',
         nationality: nationality || user.kycData?.nationality,
         address: address || user.kycData?.address,
         city: city || user.kycData?.city,
+        state: state || user.kycData?.state,
         country: country || user.kycData?.country,
         postalCode: postalCode || user.kycData?.postalCode,
         phoneNumber: phoneNumber || user.kycData?.phoneNumber,
@@ -549,6 +551,7 @@ router.post('/kyc/submit',
       user.phone = phoneNumber || user.phone;
       user.address = address || user.address;
       user.city = city || user.city;
+      user.state = state || user.state;
       user.country = country || user.country;
 
       await user.save();
