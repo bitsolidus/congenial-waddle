@@ -156,7 +156,7 @@ const AdminUsers = () => {
                     <td className="py-4 text-gray-900 dark:text-white">
                       {(() => {
                         const balanceUSD = typeof user.balance === 'object' && user.balance !== null
-                          ? (user.balance.USDT || 0) + (user.balance.BTC || 0) + (user.balance.ETH || 0) + (user.balance.BNB || 0)
+                          ? (user.balance.USDT || 0)
                           : user.balance || 0;
                         const userCurrency = user.settings?.currency || 'USD';
                         return userCurrency !== 'USD' 
@@ -453,7 +453,7 @@ const AdminUsers = () => {
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {(() => {
                           const balanceUSD = typeof viewingUser.balance === 'object' && viewingUser.balance !== null
-                            ? (viewingUser.balance.USDT || 0) + (viewingUser.balance.BTC || 0) + (viewingUser.balance.ETH || 0) + (viewingUser.balance.BNB || 0)
+                            ? (viewingUser.balance.USDT || 0)
                             : viewingUser.balance || 0;
                           const userCurrency = viewingUser.settings?.currency || 'USD';
                           return userCurrency !== 'USD' 
