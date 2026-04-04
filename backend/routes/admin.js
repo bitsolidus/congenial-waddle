@@ -3504,60 +3504,6 @@ router.put('/gas-purchases/:id/reject', protect, adminOnly, async (req, res) => 
 // WITHDRAWAL MANAGEMENT
 // ============================================
 
-// @route   GET /api/admin/withdrawals
-// @desc    Get all withdrawal transactions
-// @access  Admin
-router.get('/withdrawals', protect, adminOnly, async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const status = req.query.status;
-    const search = req.query.search || '';
-    
-    let query = { type: 'withdrawal' };
-    
-    if (status) {
-      query.status = status;
-    }
-    
-    // Search by user
-    let userIds = [];
-    if (search) {
-      const users = await User.find({
-        $or: [
-          { username: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
-        ]
-      }).select('_id');
-      userIds = users.map(u => u._id);
-      query.userId = { $in: userIds };
-    }
-    
-    const transactions = await Transaction.find(query)
-      .populate('userId', 'username email')
-      .populate('approvedBy', 'username')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
-    
-    const total = await Transaction.countDocuments(query);
-    
-    res.json({
-      success: true,
-      transactions,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
-    });
-  } catch (error) {
-    console.error('Get withdrawals error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // @route   PUT /api/admin/withdrawals/:id/approve
 // @desc    Approve a withdrawal
 // @access  Admin
