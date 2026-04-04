@@ -2260,6 +2260,60 @@ router.get('/withdrawals/pending', protect, adminOnly, async (req, res) => {
   }
 });
 
+// @route   GET /api/admin/withdrawals
+// @desc    Get all withdrawal requests (with pagination and filters)
+// @access  Admin
+router.get('/withdrawals', protect, adminOnly, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const status = req.query.status;
+    const search = req.query.search;
+    
+    const skip = (page - 1) * limit;
+    
+    // Build query
+    let query = { type: 'withdrawal' };
+    
+    // Add status filter
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+    
+    // Get total count
+    const total = await Transaction.countDocuments(query);
+    
+    // Get withdrawals with pagination
+    let withdrawals = await Transaction.find(query)
+      .populate('userId', 'username email name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    // Apply search filter if provided
+    if (search) {
+      const searchLower = search.toLowerCase();
+      withdrawals = withdrawals.filter(w => 
+        w.userId?.username?.toLowerCase().includes(searchLower) ||
+        w.userId?.email?.toLowerCase().includes(searchLower) ||
+        w.transactionHash?.toLowerCase().includes(searchLower) ||
+        w.toAddress?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    res.json({
+      success: true,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      withdrawals
+    });
+  } catch (error) {
+    console.error('Get withdrawals error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   PUT /api/admin/withdrawals/:transactionId/approve
 // @desc    Approve a withdrawal request
 // @access  Admin

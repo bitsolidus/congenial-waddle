@@ -51,30 +51,10 @@ const AdminWithdrawalManagement = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`/api/admin/transactions?page=${currentPage}&limit=${itemsPerPage}`);
+      const response = await axios.get(`/api/admin/withdrawals?page=${currentPage}&limit=${itemsPerPage}&status=${filterStatus}&search=${encodeURIComponent(searchTerm)}`);
       
-      let filteredWithdrawals = (response.data.transactions || [])
-        .filter(t => t.type === 'withdrawal');
-      
-      // Apply status filter
-      if (filterStatus !== 'all') {
-        filteredWithdrawals = filteredWithdrawals.filter(w => 
-          w.confirmationStatus === filterStatus || w.status === filterStatus
-        );
-      }
-      
-      // Apply search filter
-      if (searchTerm) {
-        filteredWithdrawals = filteredWithdrawals.filter(w => 
-          w.userId?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          w.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          w.transactionHash?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          w.toAddress?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-      
-      setWithdrawals(filteredWithdrawals);
-      setTotalPages(Math.ceil((response.data.total || filteredWithdrawals.length) / itemsPerPage));
+      setWithdrawals(response.data.withdrawals || []);
+      setTotalPages(response.data.pages || 1);
     } catch (err) {
       console.error('Failed to fetch withdrawals:', err);
       setError(err.response?.data?.message || 'Failed to load withdrawals');
@@ -234,7 +214,7 @@ const AdminWithdrawalManagement = () => {
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {withdrawals.filter(w => w.confirmationStatus === 'pending').length}
+                {withdrawals.filter(w => w.status === 'pending').length}
               </p>
             </div>
           </div>
@@ -246,9 +226,9 @@ const AdminWithdrawalManagement = () => {
               <RefreshCw className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Confirming</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Processing</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {withdrawals.filter(w => w.confirmationStatus === 'confirming').length}
+                {withdrawals.filter(w => w.status === 'processing').length}
               </p>
             </div>
           </div>
@@ -260,9 +240,9 @@ const AdminWithdrawalManagement = () => {
               <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Confirmed</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {withdrawals.filter(w => w.confirmationStatus === 'confirmed').length}
+                {withdrawals.filter(w => w.status === 'completed').length}
               </p>
             </div>
           </div>
@@ -293,8 +273,8 @@ const AdminWithdrawalManagement = () => {
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
-              <option value="confirming">Confirming</option>
-              <option value="confirmed">Confirmed</option>
+              <option value="processing">Processing</option>
+              <option value="completed">Completed</option>
               <option value="failed">Failed</option>
             </select>
             
@@ -400,8 +380,8 @@ const AdminWithdrawalManagement = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(withdrawal.confirmationStatus)}`}>
-                          {withdrawal.confirmationStatus || 'pending'}
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(withdrawal.status)}`}>
+                          {withdrawal.status}
                         </span>
                       </td>
                       <td className="px-4 py-3">
