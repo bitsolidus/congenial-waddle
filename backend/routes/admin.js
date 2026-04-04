@@ -2303,10 +2303,13 @@ router.get('/withdrawals', protect, adminOnly, async (req, res) => {
 
     res.json({
       success: true,
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-      withdrawals
+      transactions: withdrawals,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
     });
   } catch (error) {
     console.error('Get withdrawals error:', error);
